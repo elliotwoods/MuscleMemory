@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+tinydb
+tensorflow
+tf_agents
