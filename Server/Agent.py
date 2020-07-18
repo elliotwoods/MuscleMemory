@@ -13,8 +13,8 @@ tf.compat.v1.enable_v2_behavior()
 
 default_options = {
 	"state_dimensions" : 2,
-	"action_count" : 3,
-	"fc_layer_params" : [10, 10],
+	"action_count" : 5,
+	"fc_layer_params" : [10],
 	"learning_rate" : 0.001
 }
 
@@ -44,10 +44,19 @@ class Agent:
 
 		# Reset the training step
 		self.agent.train_step_counter.assign(0)
+
+		# invoke the model once
+		self.q_network(tf.constant([[0, 0]]))[0]
 	
 	def get_model_byte_string(self):
+		#def representative_dataset():
+		#	for i in range(500):
+		#		yield([tf.constant([[0, 0]], dtype=np.dtype('float32'))])
+
 		converter = tf.lite.TFLiteConverter.from_keras_model(self.q_network)
 		converter.optimizations = [tf.lite.Optimize.DEFAULT]
+		#converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+		#converter.representative_dataset = representative_dataset
 		quantized_model = converter.convert()
 		return quantized_model
 
