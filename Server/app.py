@@ -39,35 +39,48 @@ class StartSessionRequest(BaseModel):
 
 
 @app.post("/startSession")
-def new_session(args: dict):
-	def action():
-		if not 'client_id' in args:
-			raise Exception('Missing client_id')
-		if not 'options' in args:
-			args['options'] = {}
-		
+def new_session(request: StartSessionRequest):
+	def action():	
 		query = db.Query()
 
 		# remove existing sessions
-		db.sessions.remove(query.client_id == args['client_id'])
+		db.sessions.remove(query.client_id == request.client_id)
 
 		# remove existing samples
-		db.samples.remove(query.client_id == args['client_id'])
+		db.samples.remove(query.client_id == request.client_id)
 
 		# record the session started
 		document_id = db.sessions.insert({
-			'client_id' : args['client_id'],
+			'client_id' : request.client_id,
 			'start_time' : datetime.now()
 		})
 
 		# create the agent
-		agent = agents.create_agent(args['client_id'], args['options'])
+		agent = agents.create_agent(request.client_id, request.options)
 
 		return {
-			"client_id" : args['client_id'],
+			"client_id" : request.client_id,
 			"document_id" : document_id,
 			"model" : agent.get_model_string()
 		}
 	result = simple_api(action)()
 	return result
 	
+class RemoteUpdateRequest(BaseModel):
+	client_id: str
+	states: list
+	actions: list
+	rewards: list
+
+@app.post("/remoteUpdate")
+def remoteUpdate(request: RemoteUpdateRequest):
+	def action():
+		agent = agents.get_agent(request.client_id)
+		
+		agent.update(request.states, request.actions, request.rewards)
+
+		return {
+			"model" : agent.get_model_string()
+		}
+	result = simple_api(action)()
+	return result
