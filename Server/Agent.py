@@ -9,10 +9,10 @@ tf.compat.v1.enable_v2_behavior()
 default_options = {
 	"state_dimensions" : 2,
 	"action_count" : 5,
-	"hidden_layers" : [4],
+	"hidden_layers" : [16, 16, 16],
 	"learning_rate" : 0.00025,
 	"gamma" : 0.99, # discount factor,
-	"batch_size" : 32
+	"batch_size" : 64
 }
 
 class Episode(BaseModel):
@@ -57,7 +57,7 @@ class Agent:
 
 		# optimiser and loss function
 		self.optimiser = tf.keras.optimizers.Adam(learning_rate=self.options['learning_rate'])
-		self.loss_function = tf.keras.losses.Huber()
+		self.loss_function = tf.keras.losses.MSE
 
 		# initialise the RL parts
 		self.history = History()

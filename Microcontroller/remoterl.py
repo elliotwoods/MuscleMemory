@@ -44,6 +44,7 @@ class Controller:
         response = post("/startSession", {
             "client_id" : id,
             "options" : {
+                "state_dimensions" : 3,
                 "action_count" : action_count
             }
         })
@@ -78,7 +79,7 @@ class Controller:
         self.value = encoder.value()
         
     def update_action(self):
-        state = [self.value, self.value - self.last_value]
+        state = [self.value, self.value - self.last_value, self.torque]
         self.states.append(state)
         
         on_policy = random() > max(self.epsilon, self.epsilon_min)
@@ -95,7 +96,7 @@ class Controller:
         self.torque = min(self.torque, 1)
         self.torque = max(self.torque, -1)
         
-        print(action, self.torque, state)
+        print(state, action)
         
         motor.set_torque(self.torque)
         #motor.set_torque(action / (self.action_count - 1) * 2 - 1) # map 0..action count to -1..1
