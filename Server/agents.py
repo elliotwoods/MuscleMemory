@@ -1,14 +1,15 @@
-from Agent import Agent
+from DQNAgent import DQNAgent
+from DDPGAgent import DDPGAgent
 
-agents = {}
+client_agents = {}
 
 def get_agent(client_id):
-	if not client_id in agents:
+	if not client_id in client_agents:
 		raise Exception("No agent found for client {}".format(client_id))
-	return agents[client_id]
+	return client_agents[client_id]
 
 def create_agent(client_id, options):
-	global agents
-	agent = Agent(options)
-	agents[client_id] = agent
+	global client_agents
+	agent = DDPGAgent(options)
+	client_agents[client_id] = agent
 	return agent

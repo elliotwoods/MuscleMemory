@@ -9,7 +9,7 @@ tf.compat.v1.enable_v2_behavior()
 default_options = {
 	"state_dimensions" : 2,
 	"action_count" : 5,
-	"hidden_layers" : [16, 16, 16],
+	"hidden_layers" : [16, 16],
 	"learning_rate" : 0.00025,
 	"gamma" : 0.99, # discount factor,
 	"batch_size" : 64
@@ -32,9 +32,9 @@ class History:
 	def __len__(self):
 		return len(self.states)
 
-class Agent:
+class DQNAgent:
 	def __init__(self, options = {}):
-		super(Agent, self).__init__()
+		super(DQNAgent, self).__init__()
 
 		# apply default options
 		self.options = {**default_options, **options}
