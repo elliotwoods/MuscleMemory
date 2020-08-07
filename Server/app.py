@@ -84,3 +84,9 @@ def remoteUpdate(request: RemoteUpdateRequest):
 		}
 	result = simple_api(action)()
 	return result
+
+
+@app.get("/saveMemory")
+@simple_api
+def saveMemory():
+	agents.save_memory()
