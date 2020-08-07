@@ -15,13 +15,8 @@
 			"name": "Uvicorn",
 			"type": "python",
 			"request": "launch",
-			"program": "main.py",
+			"program": "Server/main.py",
 			"console": "integratedTerminal"
-		},
-		{
-			"name": "Tensorboard",
-			"type": "launch",
-			""
 		}
 	]
 }

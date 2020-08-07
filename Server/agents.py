@@ -13,3 +13,7 @@ def create_agent(client_id, options):
 	agent = DDPGAgent(client_id, options)
 	client_agents[client_id] = agent
 	return agent
+
+def save_memory():
+	for agent_name in client_agents:
+		client_agents[agent_name].replay_memory.save(agent_name + ".npz")
