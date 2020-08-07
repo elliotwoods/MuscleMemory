@@ -17,6 +17,11 @@
 			"request": "launch",
 			"program": "main.py",
 			"console": "integratedTerminal"
+		},
+		{
+			"name": "Tensorboard",
+			"type": "launch",
+			""
 		}
 	]
 }
