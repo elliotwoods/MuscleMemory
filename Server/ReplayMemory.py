@@ -40,6 +40,9 @@ class ReplayMemory:
 		# Randomly sample indices
 		batch_indices = np.random.choice(record_range, batch_size)
 
+		# HACK - only take the first samples repeatedly
+		#batch_indices = np.arange(batch_size)
+
 		# Convert to tensors
 		state_batch = tf.convert_to_tensor(self.state_buffer[batch_indices])
 		action_batch = tf.convert_to_tensor(self.action_buffer[batch_indices])

@@ -10,6 +10,6 @@ def get_agent(client_id):
 
 def create_agent(client_id, options):
 	global client_agents
-	agent = DDPGAgent(options)
+	agent = DDPGAgent(client_id, options)
 	client_agents[client_id] = agent
 	return agent

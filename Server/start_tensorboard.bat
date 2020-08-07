@@ -1,0 +1,1 @@
+tensorboard --logdir logs --debugger_port 7000

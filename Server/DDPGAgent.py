@@ -1,14 +1,19 @@
 import numpy as np
 import tensorflow as tf
+
 import rl
 from tensorflow.keras import layers, models
+import tensorboard
 
 from binascii import b2a_base64
-from pydantic import BaseModel
+import datetime
 
 from ReplayMemory import ReplayMemory
 
 tf.compat.v1.enable_v2_behavior()
+
+# Enable tensorboard debugging - currenty doesn't seem to work
+#tf.debugging.experimental.enable_dump_debug_info("debugging")
 
 default_options = {
 	"state_count" : 2,
@@ -20,14 +25,15 @@ default_options = {
 	"learning_rate" : 0.001,
 	"gamma" : 0.99, # discount factor,
 	"batch_size" : 64,
-	"batch_runs" : 16,
 	"buffer_size" : 100000,
 	"tau" : 1e-3 # target model update coefficient
 }
 
 class DDPGAgent:
-	def __init__(self, options = {}):
+	def __init__(self, client_id, options = {}):
 		super(DDPGAgent, self).__init__()
+
+		self.client_id = client_id
 
 		# apply default options
 		self.options = options = {**default_options, **options}
@@ -85,6 +91,11 @@ class DDPGAgent:
 		self.critic_optimizer = tf.keras.optimizers.Adam(learning_rate=options['learning_rate'])
 		self.loss_function = tf.keras.losses.MAE
 
+		# create the logger
+		self.log_dir="logs/{}".format(datetime.datetime.now().strftime("%Y-%m-%d/%H.%M.%S"))
+		self.tensorboard = tf.summary.create_file_writer(self.log_dir)
+		self.episode = 0
+		self.time_step = 0
 
 	def get_model_byte_string(self):
 		converter = tf.lite.TFLiteConverter.from_keras_model(self.actor_model)
@@ -109,9 +120,21 @@ class DDPGAgent:
 
 		for i in range(count):
 			self.replay_memory.record(states[i], actions[i], rewards[i], states[i + 1])
+			critic_loss, actor_loss = self.train()
+		
+			with self.tensorboard.as_default():
+				record_index = self.time_step
+				tf.summary.scalar('critic_loss', critic_loss, step=record_index)
+				tf.summary.scalar('actor_loss', actor_loss, step=record_index)
+				tf.summary.scalar('mean_reward', np.mean(np.array(rewards)), step=record_index)
+				tf.summary.scalar('state', states[i][0], step=record_index)
+				tf.summary.scalar('action', actions[i], step=record_index)
+				tf.summary.scalar('reward', rewards[i], step=record_index)
 			
-		for i in range(self.options['batch_runs']):
-			self.train()
+			print("Agent [{}] time step {}".format(self.client_id, self.time_step))
+
+			self.time_step += 1
+		self.episode += 1
 
 
 	def train(self):
@@ -122,7 +145,7 @@ class DDPGAgent:
 			y = reward_batch + self.options['gamma'] * self.critic_model_target([next_state_batch, next_actions])
 			critic_value = self.critic_model([state_batch, action_batch])
 			critic_loss = self.loss_function(y, critic_value)
-
+		
 		critic_grad = tape.gradient(critic_loss, self.critic_model.trainable_variables)
 		self.critic_optimizer.apply_gradients(
 			zip(critic_grad, self.critic_model.trainable_variables)
@@ -141,6 +164,8 @@ class DDPGAgent:
 		)
 
 		self.update_target_critic()
+
+		return tf.reduce_mean(critic_loss), tf.reduce_mean(actor_loss)
 
 
 	# This update target parameters slowly
