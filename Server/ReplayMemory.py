@@ -50,3 +50,21 @@ class ReplayMemory:
 		next_state_batch = tf.convert_to_tensor(self.next_state_buffer[batch_indices])
 
 		return state_batch, action_batch, reward_batch, next_state_batch
+
+	def save(self, filename):
+		with open(filename, 'wb') as file:
+			np.savez(file
+				, state_buffer=self.state_buffer
+				, action_buffer=self.action_buffer
+				, reward_buffer=self.reward_buffer
+				, next_state_buffer=self.next_state_buffer
+				, buffer_counter=self.buffer_counter)
+	
+	def load(self, filename):
+		with open(filename, 'rb') as file:
+			load_data = np.load(filename)
+		self.state_buffer = load_data['state_buffer']
+		self.action_buffer = load_data['action_buffer']
+		self.reward_buffer = load_data['reward_buffer']
+		self.next_state_buffer = load_data['next_state_buffer']
+		self.buffer_counter = load_data['buffer_counter'].item()

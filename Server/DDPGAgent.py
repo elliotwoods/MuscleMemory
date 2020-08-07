@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 
-import rl
 from tensorflow.keras import layers, models
 import tensorboard
 
@@ -13,7 +12,7 @@ from ReplayMemory import ReplayMemory
 tf.compat.v1.enable_v2_behavior()
 
 # Enable tensorboard debugging - currenty doesn't seem to work
-#tf.debugging.experimental.enable_dump_debug_info("debugging")
+#tf.debugging.experimental.enable_dump_debug_info("logs_debug")
 
 default_options = {
 	"state_count" : 2,
@@ -30,14 +29,7 @@ default_options = {
 }
 
 class DDPGAgent:
-	def __init__(self, client_id, options = {}):
-		super(DDPGAgent, self).__init__()
-
-		self.client_id = client_id
-
-		# apply default options
-		self.options = options = {**default_options, **options}
-
+	def init_actor(self, options):
 		# create the actor
 		x = input_layer = layers.Input(shape=(options['state_count'],))
 
@@ -51,7 +43,9 @@ class DDPGAgent:
 
 		self.actor_model = tf.keras.Model(input_layer, x)
 		self.actor_model_target = models.clone_model(self.actor_model)
-
+	
+	
+	def init_critic(self, options):
 		# create the critic
 		x = state_input = layers.Input(shape=(options['state_count'],))
 		
@@ -75,11 +69,22 @@ class DDPGAgent:
 			x = layers.Dense(hidden_layer_size, activation="relu")(x)
 			x = layers.BatchNormalization()(x)
 		
-		x = layers.Dense(1)(x)
+		x = layers.Dense(1, activation='linear')(x)
 
 		self.critic_model = tf.keras.Model([state_input, action_input], x)
 		self.critic_model_target = models.clone_model(self.critic_model)
-		
+
+
+	def __init__(self, client_id, options = {}):
+		super(DDPGAgent, self).__init__()
+
+		self.client_id = client_id
+
+		# apply default options
+		self.options = options = {**default_options, **options}
+
+		self.init_actor(options)
+		self.init_critic(options)
 
 		# create replay memory
 		self.replay_memory = ReplayMemory(options['action_count']
@@ -92,7 +97,7 @@ class DDPGAgent:
 		self.loss_function = tf.keras.losses.MAE
 
 		# create the logger
-		self.log_dir="logs/{}".format(datetime.datetime.now().strftime("%Y-%m-%d/%H.%M.%S"))
+		self.log_dir="logs/{}".format(datetime.datetime.now().strftime("%Y-%m-%d/%H.%M"))
 		self.tensorboard = tf.summary.create_file_writer(self.log_dir)
 		self.episode = 0
 		self.time_step = 0
