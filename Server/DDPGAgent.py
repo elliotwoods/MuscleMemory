@@ -11,6 +11,8 @@ from ReplayMemory import ReplayMemory
 
 tf.compat.v1.enable_v2_behavior()
 
+from layers import OUNoise
+
 # Enable tensorboard debugging - currenty doesn't seem to work
 #tf.debugging.experimental.enable_dump_debug_info("logs_debug")
 
@@ -29,6 +31,33 @@ default_options = {
 }
 
 class DDPGAgent:
+	def __init__(self, client_id, options = {}):
+		super(DDPGAgent, self).__init__()
+
+		self.client_id = client_id
+
+		# apply default options
+		self.options = options = {**default_options, **options}
+
+		self.init_actor(options)
+		self.init_critic(options)
+
+		# create replay memory
+		self.replay_memory = ReplayMemory(options['action_count']
+			, options['state_count']
+			, options['buffer_size'])
+
+		# create the optimisers
+		self.actor_optimizer = tf.keras.optimizers.Adam(learning_rate=options['learning_rate'])
+		self.critic_optimizer = tf.keras.optimizers.Adam(learning_rate=options['learning_rate'])
+		self.loss_function = tf.keras.losses.MAE
+
+		# create the logger
+		self.log_dir="logs/{}".format(datetime.datetime.now().strftime("%Y-%m-%d/%H.%M"))
+		self.tensorboard = tf.summary.create_file_writer(self.log_dir)
+		self.episode = 0
+		self.time_step = 0
+
 	def init_actor(self, options):
 		# create the actor
 		x = input_layer = layers.Input(shape=(options['state_count'],))
@@ -43,6 +72,10 @@ class DDPGAgent:
 
 		self.actor_model = tf.keras.Model(input_layer, x)
 		self.actor_model_target = models.clone_model(self.actor_model)
+
+		# make exploration model
+		x = OUNoise(0, 2.0)(x)
+		self.actor_with_exploration = tf.keras.Model(input_layer, x)
 	
 	
 	def init_critic(self, options):
@@ -75,35 +108,10 @@ class DDPGAgent:
 		self.critic_model_target = models.clone_model(self.critic_model)
 
 
-	def __init__(self, client_id, options = {}):
-		super(DDPGAgent, self).__init__()
-
-		self.client_id = client_id
-
-		# apply default options
-		self.options = options = {**default_options, **options}
-
-		self.init_actor(options)
-		self.init_critic(options)
-
-		# create replay memory
-		self.replay_memory = ReplayMemory(options['action_count']
-			, options['state_count']
-			, options['buffer_size'])
-
-		# create the optimisers
-		self.actor_optimizer = tf.keras.optimizers.Adam(learning_rate=options['learning_rate'])
-		self.critic_optimizer = tf.keras.optimizers.Adam(learning_rate=options['learning_rate'])
-		self.loss_function = tf.keras.losses.MAE
-
-		# create the logger
-		self.log_dir="logs/{}".format(datetime.datetime.now().strftime("%Y-%m-%d/%H.%M"))
-		self.tensorboard = tf.summary.create_file_writer(self.log_dir)
-		self.episode = 0
-		self.time_step = 0
-
 	def get_model_byte_string(self):
-		converter = tf.lite.TFLiteConverter.from_keras_model(self.actor_model)
+		converter = tf.lite.TFLiteConverter.from_keras_model(self.actor_with_exploration)
+		converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS
+			, tf.lite.OpsSet.SELECT_TF_OPS]
 		converter.optimizations = [tf.lite.Optimize.DEFAULT]
 		#converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 		#converter.representative_dataset = representative_dataset

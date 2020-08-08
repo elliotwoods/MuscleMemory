@@ -18,13 +18,13 @@ class Motor:
         self.A = PWM(pins.motor_A, freq=1000, duty=0)
         self.B = PWM(pins.motor_B, freq=1000, duty=0)
         
-        # since we're using 12VDC motors on a 24VDC source
         
+        # since we may be using 12VDC motors on a 24VDC source
         if source_voltage is None:
             raise Exception("No source_voltage specified")
         
         self.min_duty = 512
-        self.max_duty = 1023 * source_voltage / 12
+        self.max_duty = 1023 if source_voltage <= 12 else 12 / source_voltage
         
         self.set_torque(0)
         
@@ -74,4 +74,5 @@ class Motor:
         self.recent_update = False
         
         
-motor = Motor()
+motor = Motor(7)
+motor.min_duty = 1023 / 5

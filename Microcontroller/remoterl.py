@@ -3,7 +3,7 @@ import gc
 from wifi import wifi
 from ubinascii import b2a_base64, a2b_base64
 import tensorflow as tf
-from motor import Motor
+from motor import motor
 from encoder import encoder
 from oled import oled
 from time import sleep_ms
@@ -11,8 +11,6 @@ from random import random, randrange
 
 base_url = "http://172.30.1.55:8000"
 id = b2a_base64(wifi.config('mac'))[:-1].decode('utf-8')
-motor = Motor(7.7)
-motor.min_duty = 1023 / 5
 
 def get(url):
     response = urequests.get(base_url + url).json()
@@ -40,11 +38,11 @@ def find_max(values):
     
 class Controller:
     def __init__(self, action_count=3):
-        print("Loading network...")
+        print("Loading model...")
         response = post("/startSession", {
             "client_id" : id,
             "options" : {
-                "state_dimensions" : 3,
+                "state_dimensions" : 2,
                 "action_count" : action_count
             }
         })
@@ -79,7 +77,8 @@ class Controller:
         self.value = encoder.value()
         
     def update_action(self):
-        state = [self.value, self.value - self.last_value, self.torque]
+        #state = [self.value, self.value - self.last_value, self.torque]
+        state = [self.value, self.value - self.last_value]
         self.states.append(state)
         
         on_policy = random() > max(self.epsilon, self.epsilon_min)
@@ -92,14 +91,15 @@ class Controller:
             action = randrange(self.action_count)
             #print("OFF {} -> {}".format(state, action))
         
-        self.torque += (action - 1) / 10
-        self.torque = min(self.torque, 1)
-        self.torque = max(self.torque, -1)
+        #self.torque += (action - 1) / 10
+        #self.torque = min(self.torque, 1)
+        #self.torque = max(self.torque, -1)
+        #motor.set_torque(self.torque)
         
-        print(state, action)
+        #print(state, action)
+        print(self.value)
         
-        motor.set_torque(self.torque)
-        #motor.set_torque(action / (self.action_count - 1) * 2 - 1) # map 0..action count to -1..1
+        motor.set_torque(action / (self.action_count - 1) * 2 - 1) # map 0..action count to -1..1
         
         self.actions.append(action)
         
