@@ -2,6 +2,12 @@
 import numpy as np
 import tensorflow as tf
 
+
+def filter_trajectory(s, a, r, s_):
+	max_velocity = 2000
+	if abs(s_[0] - s[0]) > max_velocity or abs(s[1]) > max_velocity or abs(s_[1]) > max_velocity:
+		raise Exception("Invalid trajectory", s, a, r, s_)
+
 #adapted from https://keras.io/examples/rl/ddpg_pendulum/
 class ReplayMemory:
 	def __init__(self, action_count, state_count, buffer_capacity=100000):
@@ -21,6 +27,8 @@ class ReplayMemory:
 
 	# Takes (s,a,r,s') obervation tuple as input
 	def record(self, state, action, reward, next_state):
+		filter_trajectory(state, action, reward, next_state)
+
 		# Set index to zero if buffer_capacity is exceeded,
 		# replacing old records
 		index = self.buffer_counter % self.buffer_capacity
