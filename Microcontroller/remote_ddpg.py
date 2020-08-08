@@ -13,6 +13,9 @@ from math import sqrt
 base_url = "http://172.30.1.55:8000"
 id = b2a_base64(wifi.config('mac'))[:-1].decode('utf-8')
 
+# We're going to ignore the low PWM mode
+motor.min_duty = 0
+
 def get(url):
     response = urequests.get(base_url + url).json()
     if not response['success']:
@@ -93,7 +96,7 @@ class Controller:
         self.rewards = []
         
         self.torque = 0
-        self.noise = OUActionNoise(0, 0.5)
+        self.noise = OUActionNoise(0, 2.0)
         
         self.update_action()
     
@@ -107,15 +110,18 @@ class Controller:
         self.states.append(state)
         
         action = self.model.invoke(state)[0] + self.noise()
+        #action = self.noise()
         #print(action, self.value)
         
+        # clamp action range (especially for recording)
+        action = max(min(action, 1.0), -1.0)
         motor.set_torque(action)
         
         self.actions.append(action)
                      
     def update_reward(self):
         value = self.value
-        self.rewards.append(-(value * value))
+        self.rewards.append(-abs(value))
         
     def update(self):
         self.update_value()
@@ -147,9 +153,12 @@ def run():
         if not episode is 0:
             controller.remote_update()
         
-        if abs(encoder.value()) > 1 << 15:
-            encoder.reset()
+        if abs(encoder.value()) > 1 << 12:
+            encoder.clear()
+            controller.start_episode()
             
         for t in range(100):
             controller.update()
-        sleep_ms(10)
+            sleep_ms(50)
+
+run()
