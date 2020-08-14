@@ -4,6 +4,17 @@ An open source 'industrial servo motor' which employs Reinforcement Learning to 
 
 ![image](.github/introduction.png)
 
+# Architecture
+
+* Server
+  * High performance hardware (e.g. desktrop CPU + GPU)
+  * FastAPI REST service
+  * TensorFlow implemented RL algorithms (e.g. DDPG / NAF)
+* Client
+  * Low cost hardware (e.g. ESP32 microcontroller)
+  * MicroPython
+  * [TensorFlow Lite module](https://github.com/elliotwoods/micropython/tree/elliot-modules/modules/tensorflow)
+  * (download model from server, run actor, gather samples, send to server) : repeat
 
 ## Prior work
 
