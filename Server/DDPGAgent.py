@@ -11,8 +11,6 @@ from ReplayMemory import ReplayMemory
 
 tf.compat.v1.enable_v2_behavior()
 
-from layers import OUNoise
-
 # Enable tensorboard debugging - currenty doesn't seem to work
 #tf.debugging.experimental.enable_dump_debug_info("logs_debug")
 
@@ -72,11 +70,6 @@ class DDPGAgent:
 
 		self.actor_model = tf.keras.Model(input_layer, x)
 		self.actor_model_target = models.clone_model(self.actor_model)
-
-		# make exploration model
-		x = OUNoise(0, 2.0)(x)
-		self.actor_with_exploration = tf.keras.Model(input_layer, x)
-	
 	
 	def init_critic(self, options):
 		# create the critic
@@ -109,7 +102,7 @@ class DDPGAgent:
 
 
 	def get_model_byte_string(self):
-		converter = tf.lite.TFLiteConverter.from_keras_model(self.actor_with_exploration)
+		converter = tf.lite.TFLiteConverter.from_keras_model(self.actor_model)
 		converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS
 			, tf.lite.OpsSet.SELECT_TF_OPS]
 		converter.optimizations = [tf.lite.Optimize.DEFAULT]
