@@ -7,5 +7,5 @@ An open source 'industrial servo motor' which employs Reinforcement Learning to 
 
 ## Prior work
 
-Muscle Memory builds on the work of previous projects, most notably (Mechaduino)[https://github.com/jcchurch13/Mechaduino-Firmware] by Tropical Labs.
+Muscle Memory builds on the work of previous projects, most notably [Mechaduino](https://github.com/jcchurch13/Mechaduino-Firmware) by Tropical Labs.
 
