@@ -4,6 +4,10 @@ An open source 'industrial servo motor' which employs Reinforcement Learning to 
 
 ![image](.github/introduction.png)
 
+# Project status
+
+We are currently in early prototyping phase, and are exepecting to be able to have the project in a state where other people can pick up a servo and run with it by the end of 2019. In the mean time if you would like to get involved with development and prototyping then please get in touch via elliot@kimchiandchips.com.
+
 # Architecture
 
 * Server
@@ -20,3 +24,6 @@ An open source 'industrial servo motor' which employs Reinforcement Learning to 
 
 Muscle Memory builds on the work of previous projects, most notably [Mechaduino](https://github.com/jcchurch13/Mechaduino-Firmware) by Tropical Labs.
 
+# Credits
+
+Muscle Memory is a project of Kimchi and Chips art studio, and is partly funded by the Arts Council of Korea via the State, Action, Reward project.
