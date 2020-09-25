@@ -18,8 +18,7 @@ class Oled:
         time.sleep_ms(50)
         pins.oled_reset.on()
         
-        self.i2c = I2C(-1, scl=pins.oled_scl, sda=pins.oled_sda)
-        self.oled = ssd1306.SSD1306_I2C(128, 64, self.i2c)
+        self.oled = ssd1306.SSD1306_I2C(128, 64, pins.i2c)
         
     def display(self, messages, print_messages = True):        
         y = 10
