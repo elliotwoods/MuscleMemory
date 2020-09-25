@@ -1,25 +1,29 @@
-from machine import Pin
+from machine import Pin, I2C, DAC, SPI
+
+spi_baud_rate = 100000
 
 class Pins:
     def __init__(self):
-        self.motor_A = Pin(12)
-        self.motor_B = Pin(13)
-        self.hall_encoder_A = Pin(14, Pin.IN, Pin.PULL_UP)
-        self.hall_encoder_B = Pin(27, Pin.IN, Pin.PULL_UP)
-        #self.current_sense = Pin(26, Pin.IN)
-        #self.rgb = Pin(25, Pin.OUT)
+        self.motor_1 = Pin(32)
+        self.motor_2 = Pin(33)
+        self.motor_3 = Pin(14)
+        self.motor_4 = Pin(27)
+        self.motor_vref_a = Pin(25)
+        self.motor_vref_b = Pin(26)
         
-        #self.vcc_sense = Pin(17, Pin.IN)
-        self.dial_a = Pin(5, Pin.IN, Pin.PULL_UP)
-        self.dial_b = Pin(18, Pin.IN, Pin.PULL_UP)
-        self.dial_button = Pin(23, Pin.IN, Pin.PULL_UP)
-        #self.can_speed_select = Pin(19, Pin.OUT)
-        #self.can_rxd = Pin(22)
-        #self.can_txd = Pin(21)        
+        self.dial_a = Pin(34, Pin.IN)
+        self.dial_b = Pin(35, Pin.IN)
+        self.dial_push = Pin(39, Pin.IN)
         
         self.oled_reset = Pin(16, Pin.OUT)
-        self.oled_scl = Pin(15)
-        self.oled_sda = Pin(4)
+        
+        self.i2c_scl = Pin(15)
+        self.i2c_sda = Pin(4)
+        self.i2c = I2C(-1, scl=self.i2c_scl, sda=self.i2c_sda)
+        
+        self.spi = SPI(2, baudrate=spi_baud_rate, polarity=0, phase=1, bits=8, firstbit=SPI.MSB, sck=Pin(18), mosi=Pin(23), miso=Pin(19))
+        self.encoder_cs = Pin(5, Pin.OUT)
+        self.encoder_cs.on()
         
 pins = Pins()
 print('init pins')
