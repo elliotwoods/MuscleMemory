@@ -1,9 +1,11 @@
 #include "MotorDriver.h"
 
 //----------
-MotorDriver::MotorDriver(const Configuration & configuration)
-: configuration(configuration)
+void
+MotorDriver::setup(const Configuration & configuration)
 {
+	this->configuration = configuration;
+
 	// Initalise GPIO digital outputs (Coils)
 	for(uint8_t i=0; i<4; i++) {
 		const auto & pin = this->configuration.pinArray[i];
@@ -74,4 +76,17 @@ MotorDriver::setTorque(int8_t torque, uint8_t cyclePosition)
 	gpio_set_level(this->configuration.coilPins.coil_A_negative, coil_A < 0);
 	gpio_set_level(this->configuration.coilPins.coil_B_positive, coil_B >= 0);
 	gpio_set_level(this->configuration.coilPins.coil_B_negative, coil_B < 0);
+}
+
+//----------
+void
+MotorDriver::step(uint8_t index, uint8_t current)
+{
+	for(uint8_t i=0; i<4; i++) {
+		gpio_set_level(this->configuration.pinArray[i], i == index);
+	}
+
+	for(uint8_t i=0; i<2; i++) {
+		dac_output_voltage(this->configuration.dacArray[i], current);
+	}
 }

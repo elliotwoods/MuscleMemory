@@ -6,15 +6,17 @@
 #include <math.h>
 #include <stdlib.h>
 
+#ifndef PI
 #define PI (acos(0) * 2)
+#endif
 
 class MotorDriver {
 public:
 	struct Configuration {
 		struct CoilPins {
 			gpio_num_t coil_A_positive;
-			gpio_num_t coil_A_negative;
 			gpio_num_t coil_B_positive;
+			gpio_num_t coil_A_negative;
 			gpio_num_t coil_B_negative;
 		};
 
@@ -34,9 +36,14 @@ public:
 		};
 	};
 
-	MotorDriver(const Configuration & configuration);
+	void setup(const Configuration & configuration);
 
+	/// Apply a force with magnitude and direction defined by torque
 	void setTorque(int8_t torque, uint8_t cyclePosition);
+
+	/// Perform a traditional step (This is not used during runtime).
+	/// index = 0...3
+	void step(uint8_t index, uint8_t current);
 private:
 	void calculateCosTable();
 	Configuration configuration;
