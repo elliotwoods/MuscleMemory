@@ -15,8 +15,6 @@ void setup()
     can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
     can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
 
-    printf("%d\n",123);
-
     //Install CAN driver
     if (can_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
         printf("Driver installed\n");
