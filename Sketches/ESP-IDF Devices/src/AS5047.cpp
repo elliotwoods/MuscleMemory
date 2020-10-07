@@ -64,8 +64,8 @@ AS5047::AS5047()
 			deviceConfiguration.queue_size = 2;
 
 			deviceConfiguration.spics_io_num = GPIO_NUM_5;
-			deviceConfiguration.cs_ena_pretrans = 0;
-			deviceConfiguration.cs_ena_posttrans = 0;
+			deviceConfiguration.cs_ena_pretrans = 2;
+			deviceConfiguration.cs_ena_posttrans = 2;
 
 			//deviceConfiguration.input_delay_ns = 50;
 			//deviceConfiguration.flags = SPI_DEVICE_BIT_LSBFIRST;
@@ -96,6 +96,7 @@ AS5047::getErrors()
 	else {
 		this->errors |= Errors::errorReported;
 
+		this->readRegister(0x0001);
 		auto value = this->readRegister(0x0001);
 		printf("Error response : %d\n", value);
 		this->errors |= value;
