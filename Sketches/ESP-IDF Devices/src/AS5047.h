@@ -5,19 +5,22 @@
 class AS5047 {
     static uint16_t calcParity(uint16_t);
 public:
-    struct Errors {
-        bool hasErrors = false;
-        bool framingError = false;
-        bool invalidCommand = false;
-        bool parityError = false;
+    enum Errors : uint8_t {
+        framingError = 1,
+        invalidCommand = 1 << 1,
+        parityError = 1 << 2,
+
+        errorReported = 1 << 7 // We received an error bit in the response to a request
     };
 
     AS5047();
     uint16_t getPosition();
-    Errors getErrors();
+    uint8_t getErrors();
+    void clearErrors();
 protected:
     uint16_t readRegister(uint16_t request);
     uint16_t parseResponse(uint16_t); ///< Returns the value and sets the local error bit
     spi_device_handle_t deviceHandle;
-    bool hasError = false;
+    bool hasIncomingError = false;
+    uint8_t errors;
 };
