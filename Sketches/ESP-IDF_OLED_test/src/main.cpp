@@ -38,3 +38,29 @@ void loop()
 	} while (u8g2.nextPage());
 
 }
+
+
+
+class Panel {
+public:
+	virtual void draw();
+	virtual void up();
+	virtual void down();
+	virtual void enter();
+};
+
+class IntegerDial {
+public:
+	void draw() override;
+	void up() override;
+	void down() override;
+	void enter() override {
+		panelManager.up();
+	}
+};
+
+class PanelManager {
+public:
+private:
+	std::queue<Panel*> displayStack;
+};
