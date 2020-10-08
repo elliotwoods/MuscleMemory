@@ -3,7 +3,10 @@
 #include "U8g2lib.h"
 #include "driver/can.h"
 #include "sdkconfig.h"
+
 #include <string>
+#include <map>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -177,3 +180,60 @@ void loop()
 	}
 }
 
+
+
+
+
+
+
+class Registry {
+public:
+	enum RegisterType : uint16_t {
+		CurrentPosition = 0,
+		CurrentVelocity = 1,
+		TargetPosition = 2,
+		TargetVelocity = 3,
+
+		CurrentI = 10,
+		MaximumI = 11,
+		CurrentVBus = 12
+	};
+
+	struct Register {
+		std::string name;
+		int32_t data;
+	};
+
+	std::map<RegisterType, Register> registers {
+		{ RegisterType::CurrentPosition, {
+			"CurrentPosition"
+			, 0
+		}},
+		{ RegisterType::CurrentVelocity, {
+			"CurrentVelocity"
+			, 0
+		}},
+		{ RegisterType::TargetPosition, {
+			"TargetPosition"
+			, 0
+		}},
+		{ RegisterType::TargetVelocity, {
+			"TargetVelocity"
+			, 0
+		}},
+		{ RegisterType::CurrentI, {
+			"CurrentI"
+			, 0
+		}},
+		{ RegisterType::MaximumI, {
+			"MaximumI"
+			, 0
+		}},
+		{ RegisterType::CurrentVBus, {
+			"CurrentVBus"
+			, 0
+		}}
+	};
+
+	
+};
