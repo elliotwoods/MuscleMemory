@@ -58,7 +58,7 @@ AS5047::AS5047()
 		{
 			deviceConfiguration.mode = 1;
 
-			deviceConfiguration.clock_speed_hz = 100000;
+			deviceConfiguration.clock_speed_hz = SPI_MASTER_FREQ_20M;
 			//deviceConfiguration.input_delay_ns = 10;
 			
 			deviceConfiguration.queue_size = 2;
