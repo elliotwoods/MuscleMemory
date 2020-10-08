@@ -1,5 +1,4 @@
 #include "I2C.h"
-#include "driver/i2c.h"
 
 //----------
 I2C &
@@ -50,4 +49,13 @@ I2C::scan()
     }
 
     return results;
+}
+
+//----------
+bool
+I2C::perform(i2c_cmd_handle_t cmd)
+{
+    auto result = i2c_master_cmd_begin(i2c_port_t::I2C_NUM_0, cmd, 50 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    return result == ESP_OK;
 }

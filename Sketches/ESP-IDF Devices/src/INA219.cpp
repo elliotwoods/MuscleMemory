@@ -1,4 +1,5 @@
 #include "INA219.h"
+#include "I2C.h"
 
 //---------
 INA219::INA219()
@@ -7,15 +8,13 @@ INA219::INA219()
 
 //---------
 void
-INA219::init(const INA219::Configuration &configuration, uint8_t address)
+INA219::init(const INA219::Configuration &configuration)
 {
 	this->configuration = configuration;
 
 	this->reset();
 	this->setConfiguration();
 	this->setCalibration();
-
-
 }
 
 //---------
@@ -49,22 +48,60 @@ INA219::getBusVoltage()
 
 //---------
 uint16_t
-INA219::readRegister(Register register)
+INA219::readRegister(Register registerAddress)
 {
-	return 0;
+	{
+		auto cmd = i2c_cmd_link_create();
+		i2c_master_start(cmd);
+		{
+			i2c_master_write_byte(cmd, (this->configuration.address << 1) | I2C_MASTER_WRITE, true);
+			i2c_master_write_byte(cmd, (uint8_t) registerAddress, true);
+		}
+		i2c_master_stop(cmd);
+		I2C::X().perform(cmd);
+	}
+
+	uint16_t value;
+	auto data = (uint8_t *) &value;
+	{
+		auto cmd = i2c_cmd_link_create();
+		i2c_master_start(cmd);
+		{
+			i2c_master_write_byte(cmd, (this->configuration.address << 1) | I2C_MASTER_READ, true);
+			i2c_master_read_byte(cmd, data + 1, i2c_ack_type_t::I2C_MASTER_ACK);
+			i2c_master_read_byte(cmd, data, i2c_ack_type_t::I2C_MASTER_ACK);
+		}
+		i2c_master_stop(cmd);
+		I2C::X().perform(cmd);
+	}
+
+	return value;
 }
 
 //---------
 void
-INA219::writeRegister(Register register, uint16_t value)
+INA219::writeRegister(Register registerAddress, uint16_t value)
 {
+	auto data = (uint8_t*) &value;
+
+	auto cmd = i2c_cmd_link_create();
+	i2c_master_start(cmd);
+	{
+		i2c_master_write_byte(cmd, (this->configuration.address << 1) | I2C_MASTER_WRITE, true);
+		i2c_master_write_byte(cmd, (uint8_t) registerAddress, true);
+		i2c_master_write_byte(cmd, data[1], true);
+		i2c_master_write_byte(cmd, data[0], true);
+	}
+	i2c_master_stop(cmd);
+
+	I2C::X().perform(cmd);
 }
 
 //---------
 void
 INA219::reset()
 {
-	this->writeRegister(Register::Configuration, 1 << 15);
+	this->writeRegister(Register::Configuration, 0xF000);
 }
 
 //---------
@@ -86,6 +123,9 @@ INA219::setConfiguration()
 	}
 
 	this->writeRegister(Register::Configuration, value);
+
+	printf("Calibration set to : %#04x\n", value);
+	printf("Read back : %#04x\n", this->readRegister(Register::Configuration));
 }
 
 //---------
@@ -120,4 +160,21 @@ INA219::calculateGain()
 	{
 		this->configuration.gain = Configuration::Gain_8_Range_320mV;
 	}
+}
+
+//---------
+void
+INA219::printDebug()
+{
+	printf("Current : %f\n", this->getCurrent());
+	printf("Bus voltage : %f\n", this->getBusVoltage());
+	printf("Errors : %d\n", this->errors);
+	printf("\n");
+}
+
+//---------
+void
+INA219::drawDebug(U8G2 & oled)
+{
+
 }

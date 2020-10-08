@@ -162,3 +162,55 @@ AS5047::parseResponse(uint16_t response)
 	auto value = response & ((1 << 14) - 1);
 	return value;
 }
+
+//----------
+void
+AS5047::printDebug()
+{
+	auto currentPosition = this->getPosition();
+	printf("pos : %d \n", currentPosition);
+
+	for(int i=15; i>=0; i--) {
+		printf((currentPosition >> i) & 1 ? "1" : "0");
+	}
+	printf("\n");
+
+	{
+		auto errors = this->getErrors();
+		if(errors != 0) {
+			Serial.println("Some error");
+
+			if(errors & AS5047::Errors::framingError) {
+				Serial.println("Framing error");
+			
+			}if(errors & AS5047::Errors::invalidCommand) {
+				Serial.println("Invalid command");
+			}
+			if(errors & AS5047::Errors::parityError) {
+				Serial.println("Parity error");
+			}
+		}
+	}
+}
+
+//----------
+void
+AS5047::drawDebug(U8G2 & oled)
+{
+	auto currentPosition = this->getPosition();
+
+	oled.setFont(u8g2_font_fub11_tf);
+
+	uint16_t y = 1;
+	{
+		char message[100];
+		sprintf(message, "Enc : %d", currentPosition);
+		oled.drawStr(0,y++ * 16,message);
+	}
+
+	{
+		char message[100];
+		sprintf(message, "Error : %d", this->getErrors());
+		oled.drawStr(0, y++ * 16, message);
+	}
+}
