@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
+#include "U8g2lib.h"
 
 class AS5047 {
     static uint16_t calcParity(uint16_t);
@@ -17,6 +18,9 @@ public:
     uint16_t getPosition();
     uint8_t getErrors();
     void clearErrors();
+
+    void printDebug();
+    void drawDebug(U8G2 &);
 protected:
     uint16_t readRegister(uint16_t request);
     uint16_t parseResponse(uint16_t); ///< Returns the value and sets the local error bit
