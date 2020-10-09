@@ -40,28 +40,29 @@ EncoderCalibration::calibrate(AS5047 & encoder
 			if(cycle % 2 == 0) {
 				// step forwards
 				for(uint16_t step = 0; step < settings.stepsPerRevolution; step++) {
-					motorDriver.step(step % 4, settings.current);
-
-					vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
-
-					accumulatedEncoderValue[step]+= encoder.getPosition();
-					visitsPerStep[step]++;
+					this->recordStep(step
+						, encoder
+						, motorDriver
+						, accumulatedEncoderValue
+						, visitsPerStep);
 				}
 			}
 			else {
 				// step backwards
 				for(uint16_t step = settings.stepsPerRevolution - 1; step > 0; step--) {
-					motorDriver.step(step % 4, settings.current);
-
-					vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
-
-					accumulatedEncoderValue[step]+= encoder.getPosition();
-					visitsPerStep[step]++;
+					this->recordStep(step
+						, encoder
+						, motorDriver
+						, accumulatedEncoderValue
+						, visitsPerStep);
 				}
 			}
 
 			vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
 		}
+
+		printf("\n");
+
 
 		for(uint16_t i=0; i<settings.stepsPerRevolution; i++) {
 			if(i > 0) {
@@ -78,4 +79,34 @@ EncoderCalibration::calibrate(AS5047 & encoder
 		delete[] visitsPerStep;
 	}
 
+}
+
+//----------
+void
+EncoderCalibration::recordStep(uint16_t stepIndex
+	, AS5047 & encoder
+	, MotorDriver & motorDriver
+	, uint32_t * accumulatedEncoderValue
+	, uint8_t * visitsPerStep)
+{
+	motorDriver.step(stepIndex % 4, this->settings.current);
+
+	vTaskDelay(this->settings.stepHoldTimeMS / portTICK_PERIOD_MS);
+
+	auto position = encoder.getPosition();
+
+	if(stepIndex == 0 && position > 1 << 13) {
+		// Ee've underflowed the encoder - don't record this sample
+		return;
+	}
+	if(stepIndex == this->settings.stepsPerRevolution - 1 && position < 1 << 13)
+	{
+		// We've overflowed the encoder - offset the sample
+		position += 1 << 14;
+	}
+
+	accumulatedEncoderValue[stepIndex]+= position;
+	visitsPerStep[stepIndex]++;
+	
+	printf("%d, ", position);	
 }
