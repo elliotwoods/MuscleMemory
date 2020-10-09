@@ -11,8 +11,10 @@
 #endif
 
 class MotorDriver {
-public:
+public:	
 	struct Configuration {
+		Configuration();
+		
 		struct CoilPins {
 			gpio_num_t coil_A_positive;
 			gpio_num_t coil_B_positive;
@@ -22,7 +24,7 @@ public:
 
 		union {
 			CoilPins coilPins;
-			gpio_num_t pinArray[4];
+			gpio_num_t coilPinArray[4];
 		};
 
 		struct VREFDACs {
@@ -31,12 +33,12 @@ public:
 		};
 
 		union {
-			VREFDACs vrefDACs;
-			dac_channel_t dacArray[2];
+			VREFDACs vrefDacs;
+			dac_channel_t vrefDacArray[2];
 		};
 	};
 
-	void setup(const Configuration & configuration);
+	void init(const Configuration & = Configuration());
 
 	/// Apply a force with magnitude and direction defined by torque
 	void setTorque(int8_t torque, uint8_t cyclePosition);

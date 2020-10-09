@@ -1,4 +1,4 @@
-// referencining https://github.com/johngineer/ArduinoINA219/blob/master/INA219.cpp
+#pragma once
 
 #include "stdint.h"
 #include "U8G2lib.h"
@@ -18,6 +18,10 @@ public:
 
 	struct Configuration
 	{
+		Configuration() {
+			
+		}
+
 		enum VoltageRange : uint8_t
 		{
 			From_0_to_16V = 0,
@@ -92,7 +96,7 @@ public:
 	};
 
 	INA219();
-	void init(const Configuration &);
+	void init(const Configuration & = Configuration());
 
 	float getCurrent();
 	float getPower();
