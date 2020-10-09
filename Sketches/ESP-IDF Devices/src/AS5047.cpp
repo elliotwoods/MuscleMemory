@@ -24,7 +24,8 @@ AS5047::calcParity(uint16_t value)
 }
 
 //---------
-AS5047::AS5047()
+void
+AS5047::init()
 {
 	// Setup the CSn line
 	// ESP_ERROR_CHECK(
@@ -58,7 +59,7 @@ AS5047::AS5047()
 		{
 			deviceConfiguration.mode = 1;
 
-			deviceConfiguration.clock_speed_hz = SPI_MASTER_FREQ_20M;
+			deviceConfiguration.clock_speed_hz = 100000;
 			//deviceConfiguration.input_delay_ns = 10;
 			
 			deviceConfiguration.queue_size = 2;
@@ -76,13 +77,25 @@ AS5047::AS5047()
 			, &this->deviceHandle);
 		ESP_ERROR_CHECK(result);
 	}
+
+	// Prepare a get position request
+	{
+		spi_transaction_t transaction = {0};
+		{
+			transaction.length = 16;
+			transaction.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+			transaction.tx_data[0] = 0xFF;
+			transaction.tx_data[1] = 0xFF;
+		}
+		spi_device_transmit(this->deviceHandle, &transaction);
+	}
 }
 
 //----------
 uint16_t
 AS5047::getPosition()
 {
-	auto value = this->readRegister(0xFFFF);
+	auto value = this->readRegister(Register::PositionCompensated);
 	return value;
 }
 
@@ -96,8 +109,7 @@ AS5047::getErrors()
 	else {
 		this->errors |= Errors::errorReported;
 
-		this->readRegister(0x0001);
-		auto value = this->readRegister(0x0001);
+		auto value = this->readRegister(Register::Errors);
 		printf("Error response : %d\n", value);
 		this->errors |= value;
 		this->hasIncomingError = false;
@@ -114,42 +126,49 @@ AS5047::clearErrors()
 
 //----------
 uint16_t
-AS5047::readRegister(uint16_t nextRequest)
+AS5047::readRegister(Register registerAddress)
 {
-	// read
-	nextRequest |= (1 << 14);
+	// If we're not getting position, then send request for that register
+	if(registerAddress != Register::PositionCompensated) {
+		// Prepare the request
+		auto request = (uint16_t) registerAddress;
+		{
+			// read
+			request |= (1 << 14);
 
-	// parity
-	nextRequest |= AS5047::calcParity(nextRequest) << 15;
+			// parity
+			request |= AS5047::calcParity(request) << 15;
+		}
+		
+		spi_transaction_t transaction = {0};
+		{
+			transaction.length = 16;
+			transaction.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+			transaction.tx_data[0] = ((uint8_t*)& request)[1];
+			transaction.tx_data[1] = ((uint8_t*)& request)[0];
+		}
+		spi_device_transmit(this->deviceHandle, &transaction);
+	}
 
 	uint16_t response = 0;
 
-	spi_transaction_t transaction = {0};
+	// Perform the transaction
 	{
-		transaction.length = 16;
-		transaction.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
-		transaction.tx_data[0] = ((uint8_t*)& nextRequest)[1];
-		transaction.tx_data[1] = ((uint8_t*)& nextRequest)[0];
+		spi_transaction_t transaction = {0};
+		{
+			transaction.length = 16;
+			transaction.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+			transaction.tx_data[0] = 0xFF;
+			transaction.tx_data[1] = 0xFF;
+		}
+
+		auto result = spi_device_transmit(this->deviceHandle, &transaction);
+		ESP_ERROR_CHECK(result);
+		
+		((uint8_t*)&response)[0] = transaction.rx_data[1];
+		((uint8_t*)&response)[1] = transaction.rx_data[0];
 	}
 
-	// Set Csn
-	// ESP_ERROR_CHECK(
-	// 	gpio_set_level(GPIO_NUM_5, 0)
-	// );
-	// {
-	// 	vTaskDelay(10 / portTICK_PERIOD_MS);
-	// }
-
-	auto result = spi_device_transmit(this->deviceHandle, &transaction);
-
-	// ESP_ERROR_CHECK(
-	// 	gpio_set_level(GPIO_NUM_5, 1)
-	// );
-
-	((uint8_t*)&response)[0] = transaction.rx_data[1];
-	((uint8_t*)&response)[1] = transaction.rx_data[0];
-
-	ESP_ERROR_CHECK(result);
 
 	return this->parseResponse(response);
 }
@@ -158,7 +177,7 @@ AS5047::readRegister(uint16_t nextRequest)
 uint16_t
 AS5047::parseResponse(uint16_t response)
 {
-	this->hasIncomingError |= (response >> 13) & 1;
+	this->hasIncomingError |= (response >> 14) & 1;
 	auto value = response & ((1 << 14) - 1);
 	return value;
 }

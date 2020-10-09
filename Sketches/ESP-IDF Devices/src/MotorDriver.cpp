@@ -1,22 +1,34 @@
 #include "MotorDriver.h"
 
 //----------
+MotorDriver::Configuration::Configuration()
+{
+	this->coilPins.coil_A_positive = GPIO_NUM_32;
+	this->coilPins.coil_B_positive = GPIO_NUM_14;
+	this->coilPins.coil_A_negative = GPIO_NUM_33;
+	this->coilPins.coil_B_negative = GPIO_NUM_27;
+
+	this->vrefDacs.A = DAC_GPIO25_CHANNEL;
+	this->vrefDacs.B = DAC_GPIO26_CHANNEL;
+}
+
+//----------
 void
-MotorDriver::setup(const Configuration & configuration)
+MotorDriver::init(const MotorDriver::Configuration & configuration)
 {
 	this->configuration = configuration;
 
 	// Initalise GPIO digital outputs (Coils)
 	for(uint8_t i=0; i<4; i++) {
-		const auto & pin = this->configuration.pinArray[i];
-		gpio_reset_pin(pin);
-		gpio_set_direction(pin, GPIO_MODE_OUTPUT);
-		gpio_set_level(pin, 0);
+		const auto & coilPin = this->configuration.coilPinArray[i];
+		gpio_reset_pin(coilPin);
+		gpio_set_direction(coilPin, GPIO_MODE_OUTPUT);
+		gpio_set_level(coilPin, 0);
 	}
 
 	// Initialise DAC outputs (VREFs)
 	for(uint8_t i=0; i<2; i++) {
-		const auto & dac = this->configuration.dacArray[i];
+		const auto & dac = this->configuration.vrefDacArray[i];
 		dac_output_enable(dac);
 		dac_output_voltage(dac, 0);
 	}
@@ -63,13 +75,13 @@ MotorDriver::setTorque(int8_t torque, uint8_t cyclePosition)
 	// Coil A
 	{
 		uint8_t voltage = uint8_t (((uint16_t) abs(coil_A) * (uint16_t) abs(torque)) / (uint16_t) (256 * 128));
-		dac_output_voltage(this->configuration.vrefDACs.A, voltage);
+		dac_output_voltage(this->configuration.vrefDacs.A, voltage);
 	}
 
 	// Coil B
 	{
 		uint8_t voltage = uint8_t (((uint16_t) abs(coil_B) * (uint16_t) abs(torque)) / (uint16_t) (256 * 128));
-		dac_output_voltage(this->configuration.vrefDACs.B, voltage);
+		dac_output_voltage(this->configuration.vrefDacs.B, voltage);
 	}
 
 	gpio_set_level(this->configuration.coilPins.coil_A_positive, coil_A >= 0);
@@ -83,10 +95,10 @@ void
 MotorDriver::step(uint8_t index, uint8_t current)
 {
 	for(uint8_t i=0; i<4; i++) {
-		gpio_set_level(this->configuration.pinArray[i], i == index);
+		gpio_set_level(this->configuration.coilPinArray[i], i == index);
 	}
 
 	for(uint8_t i=0; i<2; i++) {
-		dac_output_voltage(this->configuration.dacArray[i], current);
+		dac_output_voltage(this->configuration.vrefDacArray[i], current);
 	}
 }

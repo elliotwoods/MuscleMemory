@@ -5,16 +5,17 @@
 #include "U8g2lib.h"
 #include "I2C.h"
 #include "INA219.h"
+#include "EncoderCalibration.h"
 
 AS5047 as5047;
 
-#define ENABLE_OLED
+//#define ENABLE_OLED
 
 #ifdef ENABLE_OLED
 U8G2_SSD1306_128X64_NONAME_1_SW_I2C oled(U8G2_R0, 15, 4, 16);
 #endif
 
-MotorDriver motor;
+MotorDriver motorDriver;
 INA219 ina219;
 
 void setup()
@@ -26,6 +27,8 @@ void setup()
 	}
 	Serial.println("Serial initialised");
 
+	as5047.init();
+	
 	// motor_setup(32, 33, 14, 27, 200);
 	// set_speed(20);
 
@@ -41,13 +44,8 @@ void setup()
 	// 	//delay(1000);
 	// }
 
-	MotorDriver::Configuration configuration;
-	{
-		configuration.coilPins = MotorDriver::Configuration::CoilPins{ GPIO_NUM_32, GPIO_NUM_14, GPIO_NUM_33, GPIO_NUM_27};
-		configuration.vrefDACs = MotorDriver::Configuration::VREFDACs{ DAC_GPIO25_CHANNEL, DAC_GPIO26_CHANNEL };
-	}
-	motor.setup(configuration);
-	motor.setTorque(0, 0);
+	motorDriver.init();
+	motorDriver.setTorque(0, 0);
 
 
 #ifdef ENABLE_OLED
@@ -75,7 +73,10 @@ void setup()
 	}
 
 	// Initialise INA219
-	ina219.init(INA219::Configuration());
+	ina219.init();
+
+	EncoderCalibration encoderCalibration;
+	encoderCalibration.calibrate(as5047, motorDriver);
 }
 
 uint8_t stepIndex;
@@ -94,12 +95,9 @@ void loop()
 	//motor.setTorque(1, 0);
 	//delay(100);
 	//motor.setTorque(0, 0);
-	
-	motor.step(stepIndex, 64);
-	stepIndex = (stepIndex + 1) % 4;
 
-	as5047.printDebug();
-	ina219.printDebug();
+	//as5047.printDebug();
+	//ina219.printDebug();
 	//delay(10);
 
 #ifdef ENABLE_OLED

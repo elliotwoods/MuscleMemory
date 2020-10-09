@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdlib.h>
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
@@ -14,7 +16,16 @@ public:
         errorReported = 1 << 7 // We received an error bit in the response to a request
     };
 
-    AS5047();
+    enum class Register : uint16_t {
+        None = 0
+        , Errors = 0x0001
+        , Diagnostics = 0x3FFC
+        , CordicMagnitude = 0x3FFD
+        , PositionRaw = 0x3FFE
+        , PositionCompensated = 0x3FFF
+    };
+
+    void init();
     uint16_t getPosition();
     uint8_t getErrors();
     void clearErrors();
@@ -22,7 +33,7 @@ public:
     void printDebug();
     void drawDebug(U8G2 &);
 protected:
-    uint16_t readRegister(uint16_t request);
+    uint16_t readRegister(Register);
     uint16_t parseResponse(uint16_t); ///< Returns the value and sets the local error bit
     spi_device_handle_t deviceHandle;
     bool hasIncomingError = false;
