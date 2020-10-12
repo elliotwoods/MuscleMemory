@@ -6,58 +6,46 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "esp_system.h"
+#include "GuiController.h"
 
 #include "Registry.h"
+#include "Panels/RegisterList.h"
+#include "Dial.h"
 
 extern "C"
 {
 #include <u8g2_esp32_hal.h>
 }
 
+#include "rotary_encoder.h"
+
 U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, 15, 4, 16);
 
-// Set Addresses for CAN communication ---------------------------
+// Set device ID ---------------------------
 typedef uint16_t DeviceID;
 DeviceID device = 1;
 
-enum Operation : uint8_t
-{
-	WriteRequest = 0,
-	ReadRequest = 1,
-	ReadResponse = 2
-};
-
 //-----------------------------------------------------------------
 
-// OLED Update
-void draw()
-{
-	auto & registry = Registry::X();
+// OLED Part -----------------------------------------------------
+uint8_t registerySize = Registry::X().registers.size();
+uint8_t maxRows = 4;
+uint8_t totalPages = registerySize / maxRows + (registerySize % maxRows>0);
+uint8_t selectPage = 0;
+uint8_t depth = 0;
 
-	u8g2.firstPage();
-	char message[100];
+void turn(int32_t position, int8_t direction){
+	printf( "Rotary Encoder: position %d, direction %d. /n", position,direction);
 
-	do
-	{
-		u8g2.setFont(u8g2_font_profont10_mr);
-
-		int y = 1;
-
-		{
-			sprintf(message, "Device ID: %d", device);
-			u8g2.drawStr(5, y++ * 10, message);
-		}
-
-		for (const auto &it : registry.registers)
-		{
-			sprintf(message, "%s : %d", it.second.name.c_str(), it.second.value);
-			u8g2.drawStr(5, y++ * 10, message);
-		}
-
-	} while (u8g2.nextPage());
 }
 
+void select(){
+	printf("Rotary Encoder: pushed.\n");
+}
+
+// CAN communication part -----------------------------------------------------
 // Transmit Part
 template <typename T>
 void writeAndMove(uint8_t *&data, const T &value)
@@ -67,7 +55,7 @@ void writeAndMove(uint8_t *&data, const T &value)
 }
 
 void transmitting(uint16_t targetID
-	, Operation operation
+	, Registry::Operation operation
 	, Registry::RegisterType registerID
 	, uint32_t value)
 {
@@ -129,7 +117,7 @@ void receiving(void *pvParameter)
 			//Read the data out
 			auto &targetID = readAndMove<int16_t>(dataMover);
 			//--------------------------------------------------------------- add filter step later?
-			auto &operation = readAndMove<Operation>(dataMover);
+			auto &operation = readAndMove<Registry::Operation>(dataMover);
 			auto &registerID = readAndMove<Registry::RegisterType>(dataMover);
 			auto &value = readAndMove<int32_t>(dataMover);
 			printf(" op: %d \n", operation);
@@ -137,18 +125,18 @@ void receiving(void *pvParameter)
 
 			switch (operation)
 			{
-			case Operation::WriteRequest:
+			case Registry::Operation::WriteRequest:
 				printf(" * WriteRequest from %d ,", senderID);
 				printf(" * regID %d value %d \n", registerID, value);
 				registry.registers[registerID].value = value;
 				break;
-			case Operation::ReadRequest:
+			case Registry::Operation::ReadRequest:
 				printf(" * ReadRequest from %d ,", senderID);
 				printf(" * regID %d \n", registerID);
 				value = registry.registers[registerID].value;
-				transmitting(senderID, Operation::ReadResponse, registerID, value);
+				transmitting(senderID, Registry::Operation::ReadResponse, registerID, value);
 				break;
-			case Operation::ReadResponse:
+			case Registry::Operation::ReadResponse:
 				printf(" * ReadResponse from %d,", senderID);
 				printf(" * regID %d value %d \n", registerID, value);
 				break;
@@ -160,13 +148,21 @@ void receiving(void *pvParameter)
 		}
 	}
 }
+// CAN communication part END-----------------------------------------------------
 
 void setup()
 {
 	Serial.begin(115200);
 
+	// set DeviceID if needed
+	if(device!=0){
+		auto & registry = Registry::X();
+		registry.registers[Registry::RegisterType::deviceID].value = device;
+	}
+	
 	// set OLED ---------------------------------------------------------
 	u8g2.begin();
+	GuiController::X().init(u8g2, std::make_shared<Panels::RegisterList>());
 
 	// set CAN ----------------------------------------------------------
 	//Initialize configuration structures using macro initializers
@@ -197,28 +193,30 @@ void setup()
 		return;
 	}
 
-	// create new Thread for receiving
-	xTaskCreate(&receiving, "RECEIVING", 2048, NULL, 5, NULL);
+
+	xTaskCreate(&receiving, "RECEIVING", 2048, NULL, 5, NULL);	// start CAN receiving Task
+
+	initDial();
 }
 
 uint32_t _msg = 100;
 bool trg = true;
 void loop()
 {
-	draw();
-	delay(500);
+	GuiController::X().update();
+	delay(10);	
 
-	if (device == 1 && trg)
-	{
-		trg = false;
-		delay(1000);
-		transmitting(2, Operation::WriteRequest, Registry::RegisterType::CurrentPosition, 33);
-		delay(500);
-		transmitting(2, Operation::WriteRequest, Registry::RegisterType::CurrentVelocity, 33);
-		delay(500);
-		transmitting(2, Operation::WriteRequest, Registry::RegisterType::TargetPosition, 33);
-		delay(500);
-		transmitting(2, Operation::ReadRequest, Registry::RegisterType::CurrentVelocity, 0);
-		delay(5000);
-	}
+	// if (device == 1 && trg)
+	// {
+	// 	trg = false;
+	// 	delay(1000);
+	// 	transmitting(2, Registry::Operation::WriteRequest, Registry::RegisterType::CurrentPosition, 33);
+	// 	delay(500);
+	// 	transmitting(2, Registry::Operation::WriteRequest, Registry::RegisterType::CurrentVelocity, 33);
+	// 	delay(500);
+	// 	transmitting(2, Registry::Operation::WriteRequest, Registry::RegisterType::TargetPosition, 33);
+	// 	delay(500);
+	// 	transmitting(2, Registry::Operation::ReadRequest, Registry::RegisterType::CurrentVelocity, 0);
+	// 	delay(5000);
+	// }
 }
