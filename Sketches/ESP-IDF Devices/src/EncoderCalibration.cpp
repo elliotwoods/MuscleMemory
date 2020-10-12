@@ -1,11 +1,27 @@
 #include "EncoderCalibration.h"
 
 //----------
+EncoderCalibration::~EncoderCalibration()
+{
+	this->clear();
+}
+
+//----------
+void
+EncoderCalibration::clear()
+{
+	if(this->stepCycleCalibration.encoderValuePerStepCycle) {
+		delete[] this->stepCycleCalibration.encoderValuePerStepCycle;
+	}
+}
+
+//----------
 void
 EncoderCalibration::calibrate(AS5047 & encoder
 	, MotorDriver & motorDriver
 	, const Settings & settings)
 {
+	this->clear();
 	this->settings = settings;
 
 	// Step up to the lowest encoder value
@@ -15,15 +31,18 @@ EncoderCalibration::calibrate(AS5047 & encoder
 		motorDriver.step(step++, settings.current);
 		auto startValue = encoder.getPosition();
 
-		printf("Stepping to lowest encoder value (start value = %d)...\n", startValue);
+		//printf("Stepping to lowest encoder value (start value = %d)...\n", startValue);
 
 		do {
 			motorDriver.step(step++ % 4, settings.current);
 			vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
 		} while (encoder.getPosition() > startValue);
 
-		printf("Encoder is now : %d \n", encoder.getPosition());
+		//printf("Encoder is now : %d \n", encoder.getPosition());
 	}
+
+	vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
+
 	
 	// Record data
 	{
@@ -61,24 +80,70 @@ EncoderCalibration::calibrate(AS5047 & encoder
 			vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
 		}
 
-		printf("\n");
+		//printf("\n");
 
 
+		// Take the averaged value
+		auto averagedValue = new uint16_t[settings.stepsPerRevolution];
 		for(uint16_t i=0; i<settings.stepsPerRevolution; i++) {
 			if(i > 0) {
-				printf(", ");
+				//printf(", ");
 			}
 			
-			auto averagedValue = accumulatedEncoderValue[i] / visitsPerStep[i];
-			printf("%d", averagedValue);
+			averagedValue[i] = accumulatedEncoderValue[i] / visitsPerStep[i];
+			//printf("%d", averagedValue[i]);
 		}
-		printf("\n");
-		
+		//printf("\n");
 
+		// Create the StepCycleCalibration
+		{
+			this->stepCycleCalibration.stepCycleCount = settings.stepsPerRevolution / 4;
+			this->stepCycleCalibration.encoderValuePerStepCycle = new uint16_t[this->stepCycleCalibration.stepCycleCount];
+			for(uint16_t i=0; i<settings.stepsPerRevolution; i+= 4) {
+				this->stepCycleCalibration.encoderValuePerStepCycle[i / 4] = averagedValue[i];
+			}
+			this->stepCycleCalibration.encoderPerStepCycle = (1 << 14) / this->stepCycleCalibration.stepCycleCount; // gradient
+		}
+
+		delete[] averagedValue;
 		delete[] accumulatedEncoderValue;
 		delete[] visitsPerStep;
 	}
+}
 
+//----------
+PositionWithinStepCycle
+EncoderCalibration::getPositionWithinStepCycle(EncoderReading encoderReading) const
+{
+	if(!this->stepCycleCalibration.encoderValuePerStepCycle) {
+#ifndef NDEBUG
+		printf("No calibration\n");
+#endif
+		return 0;
+	}
+
+	if(encoderReading < this->stepCycleCalibration.encoderValuePerStepCycle[0]) {
+		// we're before the first recorded step, so cycle it around to the end
+		encoderReading += 1 << 14;
+	}
+
+	for(size_t i=0; i<this->stepCycleCalibration.stepCycleCount; i++) {
+		auto encoderReadingAtStartOfStepCycle = this->stepCycleCalibration.encoderValuePerStepCycle[i];
+
+		if(i + 1 >= this->stepCycleCalibration.stepCycleCount
+		|| (
+			encoderReading >= encoderReadingAtStartOfStepCycle
+			&& encoderReading < this->stepCycleCalibration.encoderValuePerStepCycle[i + 1]
+		)) {
+			auto encoderReadingWithinCycle = encoderReading - encoderReadingAtStartOfStepCycle;
+			return (uint8_t)(
+				(uint32_t) encoderReadingWithinCycle
+				 * (uint32_t) 255
+				 / this->stepCycleCalibration.encoderPerStepCycle
+			);
+		}
+	}
+	return 0;
 }
 
 //----------
@@ -107,6 +172,4 @@ EncoderCalibration::recordStep(uint16_t stepIndex
 
 	accumulatedEncoderValue[stepIndex]+= position;
 	visitsPerStep[stepIndex]++;
-	
-	printf("%d, ", position);	
 }
