@@ -3,12 +3,13 @@
 #include <set>
 #include "stdint.h"
 
-class I2C {
+class I2C
+{
 public:
-    static I2C & X();
-    void init();
-    std::set<uint8_t> scan();
+	static I2C &X();
+	void init();
+	std::set<uint8_t> scan();
 
-    /// Returns true if EDS_OK
-    bool perform(i2c_cmd_handle_t);
+	/// Returns true if EDS_OK
+	bool perform(i2c_cmd_handle_t);
 };
