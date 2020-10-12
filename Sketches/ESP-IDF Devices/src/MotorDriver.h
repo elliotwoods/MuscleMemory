@@ -6,6 +6,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "DataTypes.h"
+
 #ifndef PI
 #define PI (acos(0) * 2)
 #endif
@@ -41,7 +43,7 @@ public:
 	void init(const Configuration & = Configuration());
 
 	/// Apply a force with magnitude and direction defined by torque
-	void setTorque(int8_t torque, uint8_t cyclePosition);
+	void setTorque(Torque, PositionWithinStepCycle);
 
 	/// Perform a traditional step (This is not used during runtime).
 	/// index = 0...3

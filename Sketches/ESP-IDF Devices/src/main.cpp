@@ -6,8 +6,8 @@
 #include "I2C.h"
 #include "INA219.h"
 #include "EncoderCalibration.h"
+#include "DriveController.h"
 
-AS5047 as5047;
 
 //#define ENABLE_OLED
 
@@ -16,49 +16,16 @@ U8G2_SSD1306_128X64_NONAME_1_SW_I2C oled(U8G2_R0, 15, 4, 16);
 #endif
 
 MotorDriver motorDriver;
+AS5047 as5047;
+EncoderCalibration encoderCalibration;
+DriveController driveController(motorDriver, as5047, encoderCalibration);
+
 INA219 ina219;
 
 void setup()
 {
+	// Initialise Serial
 	Serial.begin(115200);
-
-	while (!Serial) {
-		delay(100);
-	}
-	Serial.println("Serial initialised");
-
-	as5047.init();
-	
-	// motor_setup(32, 33, 14, 27, 200);
-	// set_speed(20);
-
-	// for (int i = 0; i < 2; i++)
-	// {
-	// 	step(10);
-	// 	delay(1000);
-	// 	//step(10);
-	// 	//delay(1000);
-	// 	step(-13);
-	// 	delay(1000);
-	// 	//step(-7);
-	// 	//delay(1000);
-	// }
-
-	motorDriver.init();
-	motorDriver.setTorque(0, 0);
-
-
-#ifdef ENABLE_OLED
-	oled.begin();
-#endif
-
-	// Reset the OLED
-	{
-		gpio_set_direction(GPIO_NUM_16, gpio_mode_t::GPIO_MODE_OUTPUT);
-		gpio_set_level(GPIO_NUM_16, 0);
-		delay(10);
-		gpio_set_level(GPIO_NUM_16, 1);
-	}
 
 	// Initialise I2C
 	{
@@ -72,11 +39,26 @@ void setup()
 		printf("\n");
 	}
 
-	// Initialise INA219
+	// Initialise devices
+	as5047.init();
+	motorDriver.init();
+	motorDriver.setTorque(0, 0);
 	ina219.init();
 
-	EncoderCalibration encoderCalibration;
+	// Perform encoder calibration
 	encoderCalibration.calibrate(as5047, motorDriver);
+
+#ifdef ENABLE_OLED
+	oled.begin();
+
+	// Reset the OLED
+	{
+		gpio_set_direction(GPIO_NUM_16, gpio_mode_t::GPIO_MODE_OUTPUT);
+		gpio_set_level(GPIO_NUM_16, 0);
+		delay(10);
+		gpio_set_level(GPIO_NUM_16, 1);
+	}
+#endif
 }
 
 uint8_t stepIndex;
@@ -92,13 +74,10 @@ void draw() {
 
 void loop()
 {
-	//motor.setTorque(1, 0);
-	//delay(100);
-	//motor.setTorque(0, 0);
-
-	//as5047.printDebug();
-	//ina219.printDebug();
 	//delay(10);
+	//printf("\n");
+
+	driveController.applyTorque(16);
 
 #ifdef ENABLE_OLED
 	oled.firstPage();

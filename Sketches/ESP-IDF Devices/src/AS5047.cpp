@@ -92,7 +92,7 @@ AS5047::init()
 }
 
 //----------
-uint16_t
+EncoderReading
 AS5047::getPosition()
 {
 	auto value = this->readRegister(Register::PositionCompensated);

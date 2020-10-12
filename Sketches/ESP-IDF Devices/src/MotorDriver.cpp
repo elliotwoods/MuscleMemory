@@ -54,7 +54,7 @@ MotorDriver::calculateCosTable()
 
 //----------
 void
-MotorDriver::setTorque(int8_t torque, uint8_t cyclePosition)
+MotorDriver::setTorque(Torque torque, PositionWithinStepCycle positionWithinStepCycle)
 {
 	bool positiveDirection = torque >= 0;
 
@@ -64,29 +64,34 @@ MotorDriver::setTorque(int8_t torque, uint8_t cyclePosition)
 	int8_t coil_B;
 
 	if(positiveDirection) {
-		coil_A = this->cosTableFull[cyclePosition + (uint8_t) 64];
-		coil_B = this->cosTableFull[cyclePosition];
+		coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 64];
+		coil_B = this->cosTableFull[positionWithinStepCycle];
 	}
 	else {
-		coil_A = this->cosTableFull[cyclePosition - (uint8_t) 64];
-		coil_B = this->cosTableFull[cyclePosition + (uint8_t) 128];
+		coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 64];
+		coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
 	}
+
+	//printf("Torque: %d\n", torque);
+	//printf("Coils: %d, %d\n", coil_A, coil_B);
 
 	// Coil A
 	{
-		uint8_t voltage = uint8_t (((uint16_t) abs(coil_A) * (uint16_t) abs(torque)) / (uint16_t) (256 * 128));
-		dac_output_voltage(this->configuration.vrefDacs.A, voltage);
+		uint8_t referenceVoltage = uint8_t (((uint16_t) abs(coil_A) * (uint16_t) abs(torque)) / (uint16_t) (64));
+		dac_output_voltage(this->configuration.vrefDacs.A, referenceVoltage);
+		//printf("Coil A reference voltage: %d\n", referenceVoltage);
 	}
 
 	// Coil B
 	{
-		uint8_t voltage = uint8_t (((uint16_t) abs(coil_B) * (uint16_t) abs(torque)) / (uint16_t) (256 * 128));
-		dac_output_voltage(this->configuration.vrefDacs.B, voltage);
+		uint8_t referenceVoltage = uint8_t (((uint16_t) abs(coil_B) * (uint16_t) abs(torque)) / (uint16_t) (64));
+		dac_output_voltage(this->configuration.vrefDacs.B, referenceVoltage);
+		//printf("Coil B reference voltage: %d\n", referenceVoltage);
 	}
 
-	gpio_set_level(this->configuration.coilPins.coil_A_positive, coil_A >= 0);
+	gpio_set_level(this->configuration.coilPins.coil_A_positive, coil_A > 0);
 	gpio_set_level(this->configuration.coilPins.coil_A_negative, coil_A < 0);
-	gpio_set_level(this->configuration.coilPins.coil_B_positive, coil_B >= 0);
+	gpio_set_level(this->configuration.coilPins.coil_B_positive, coil_B > 0);
 	gpio_set_level(this->configuration.coilPins.coil_B_negative, coil_B < 0);
 }
 
