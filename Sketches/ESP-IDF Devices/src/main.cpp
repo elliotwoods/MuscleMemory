@@ -72,12 +72,22 @@ void draw() {
 }
 #endif
 
+
 void loop()
 {
 	//delay(10);
 	//printf("\n");
-
-	driveController.applyTorque(16);
+	int number = 5000;
+	int list[] = {16,-32,64,-96,127,-255};
+	for(int l=0;l<6;l++){
+		printf("Running at %d torque\n", list[l]);
+		printf("------------new Torque: %d \n", list[l]);
+		for(int i=0;i<number;i++){
+			driveController.applyTorque(list[l],i==0||i==number-1);
+		}
+		delay(1000);
+	}
+	delay(3000);
 
 #ifdef ENABLE_OLED
 	oled.firstPage();

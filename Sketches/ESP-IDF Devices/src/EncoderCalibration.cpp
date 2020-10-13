@@ -25,20 +25,22 @@ EncoderCalibration::calibrate(AS5047 & encoder
 	this->settings = settings;
 
 	// Step up to the lowest encoder value
+	uint8_t firstStep;
 	{
 
 		uint8_t step = 0;
-		motorDriver.step(step++, settings.current);
+		motorDriver.step(++step, settings.current);
 		auto startValue = encoder.getPosition();
 
 		//printf("Stepping to lowest encoder value (start value = %d)...\n", startValue);
 
 		do {
-			motorDriver.step(step++ % 4, settings.current);
+			motorDriver.step(++step % 4, settings.current);
 			vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
 		} while (encoder.getPosition() > startValue);
 
-		//printf("Encoder is now : %d \n", encoder.getPosition());
+		printf("Encoder is now : %d , First step : %d \n", encoder.getPosition(), step);
+		firstStep = step;
 	}
 
 	vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
@@ -58,28 +60,33 @@ EncoderCalibration::calibrate(AS5047 & encoder
 
 			if(cycle % 2 == 0) {
 				// step forwards
-				for(uint16_t step = 0; step < settings.stepsPerRevolution; step++) {
+				for(uint16_t step = firstStep ; step < settings.stepsPerRevolution + firstStep; step++) {
 					this->recordStep(step
 						, encoder
 						, motorDriver
 						, accumulatedEncoderValue
 						, visitsPerStep);
+					
 				}
 			}
 			else {
 				// step backwards
-				for(uint16_t step = settings.stepsPerRevolution - 1; step > 0; step--) {
+				for(uint16_t step = settings.stepsPerRevolution - 1 + firstStep; step > firstStep-1; step--) {
 					this->recordStep(step
 						, encoder
 						, motorDriver
 						, accumulatedEncoderValue
 						, visitsPerStep);
+					//printf(" BB step %d, visits %d \n", step, visitsPerStep[step]);
 				}
 			}
 
 			vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
 		}
-
+		printf("------------- visits array----------- \n");
+		for(int i = 0;i<sizeof(uint8_t) * settings.stepsPerRevolution;i++){
+			printf("%d - %d \n", i, visitsPerStep[i]);
+		}
 		//printf("\n");
 
 
@@ -89,7 +96,10 @@ EncoderCalibration::calibrate(AS5047 & encoder
 			if(i > 0) {
 				//printf(", ");
 			}
-			
+			if(visitsPerStep[i] == 0) {
+				printf("Error : 0 visits for step index %d\n", i);
+				abort();
+			}
 			averagedValue[i] = accumulatedEncoderValue[i] / visitsPerStep[i];
 			//printf("%d", averagedValue[i]);
 		}
@@ -159,17 +169,22 @@ EncoderCalibration::recordStep(uint16_t stepIndex
 	vTaskDelay(this->settings.stepHoldTimeMS / portTICK_PERIOD_MS);
 
 	auto position = encoder.getPosition();
-
+	
 	if(stepIndex == 0 && position > 1 << 13) {
-		// Ee've underflowed the encoder - don't record this sample
+		// We've underflowed the encoder - don't record this sample
 		return;
+	}
+	if(position> 1<<14){
+		position -= 1 << 14;
 	}
 	if(stepIndex == this->settings.stepsPerRevolution - 1 && position < 1 << 13)
 	{
 		// We've overflowed the encoder - offset the sample
 		position += 1 << 14;
 	}
-
-	accumulatedEncoderValue[stepIndex]+= position;
-	visitsPerStep[stepIndex]++;
+	
+	uint8_t realStep = stepIndex % this->settings.stepsPerRevolution;
+	//printf(" Real step %d, position %d \n", realStep, position);
+	accumulatedEncoderValue[realStep]+= position;
+	visitsPerStep[realStep]++;
 }

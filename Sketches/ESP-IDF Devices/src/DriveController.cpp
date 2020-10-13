@@ -21,12 +21,13 @@ DriveController::init()
 
 //----------
 void
-DriveController::applyTorque(Torque torque)
+DriveController::applyTorque(Torque torque, bool track)
 {
 	auto encoderReading = this->as5047.getPosition();
 	auto positionWithinStepCycle = this->encoderCalibration.getPositionWithinStepCycle(encoderReading);
 	this->motorDriver.setTorque(torque, positionWithinStepCycle);
-
-	//printf("EncoderReading : %d\n", as5047.getPosition());
-	//printf("PositionWithinStepCycle: %d\n", positionWithinStepCycle);
+	if(track){
+		printf("EncoderReading : \t %d", encoderReading);
+		printf("\t PositionWithinStepCycle: \t %d \n", positionWithinStepCycle);
+	}
 }

@@ -9,7 +9,7 @@ public:
 	DriveController(MotorDriver &, AS5047 &, EncoderCalibration &);
 
 	void init();
-	void applyTorque(Torque);
+	void applyTorque(Torque,bool);
 private:
 	MotorDriver & motorDriver;
 	AS5047 & as5047;

@@ -27,7 +27,7 @@ public:
 	enum Access {
 		ReadOnly
 		, ReadWrite
-	}
+	};
 	
 	struct Register {
 		std::string name;
