@@ -1,3 +1,22 @@
+/**
+#include "Arduino.h"
+#include "Dial.h"
+
+Dial dial;
+void setup()
+{
+
+    Serial.begin(115200);
+    dial.init(gpio_num_t::GPIO_NUM_34, gpio_num_t::GPIO_NUM_35);
+}
+
+void loop() {
+    delay(1000);
+    printf("Dial position : %d\n", dial.getPosition());
+}
+**/
+
+
 #include "Arduino.h"
 
 #include <stdbool.h>
@@ -5,15 +24,11 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
-#include "rotary_encoder.h"
+#include "Dial.h"
 
 // Rotary Encoder part
 QueueHandle_t rot_enc_event_queue;
-#define ROT_ENC_A_GPIO  GPIO_NUM_34
-#define ROT_ENC_B_GPIO  GPIO_NUM_35
-#define ENABLE_HALF_STEPS false  // Set to true to enable tracking of rotary encoder at half step resolution
-#define RESET_AT          0      // Set to a positive non-zero number to reset the position if this value is exceeded
-#define FLIP_DIRECTION    false  // Set to true to reverse the clockwise/counterclockwise sense
+Dial dial;
 
 // Rotary Encoder Push button part
 #define ROT_ENC_PUSH_GPIO  GPIO_NUM_39
@@ -52,25 +67,15 @@ static void ROT_ENC_PUSH_event(void* arg)
 }
 
 static void ROT_ENC_event(void *pvParameter) {
-    // Initialise the rotary encoder device with the GPIOs for A and B signals
-    rotary_encoder_info_t info;
-    rotary_encoder_init(&info, ROT_ENC_A_GPIO, ROT_ENC_B_GPIO);
-    rotary_encoder_enable_half_steps(&info, ENABLE_HALF_STEPS);
-    rotary_encoder_flip_direction(&info);
-
-    // Create a queue for events from the rotary encoder driver.
-    // Tasks can read from this queue to receive up to date position information.
-    rot_enc_event_queue = rotary_encoder_create_queue();
-    rotary_encoder_set_queue(&info, rot_enc_event_queue);
+    int16_t dialPosition = 0;
 
     while(1) {
-        rotary_encoder_event_t event;
-        if (xQueueReceive(rot_enc_event_queue, &event, 1000 / portTICK_PERIOD_MS) == pdTRUE)
-        {
-            printf( "Event: position %d, direction %s", event.state.position,
-                     event.state.direction ? (event.state.direction == ROTARY_ENCODER_DIRECTION_CLOCKWISE ? "CW" : "CCW") : "NOT_SET");
-            printf("\n");
+        int16_t newPosition = -dial.getPosition();
+        if(dialPosition!=newPosition){
+            printf("Dial position : %d\n", newPosition);
+            dialPosition = newPosition; 
         }
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -79,6 +84,7 @@ void setup()
 {
 
     Serial.begin(115200);
+    dial.init(gpio_num_t::GPIO_NUM_34, gpio_num_t::GPIO_NUM_35);
 
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);                                // install gpio isr service
     xTaskCreate(&ROT_ENC_event, "ROT_ENC_event", 2048, NULL, 10, NULL);             // start Rotary Encoder Task
