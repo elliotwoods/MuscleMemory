@@ -83,7 +83,7 @@ void loop()
 	//delay(1);
 	//printf("\n");
 
-	driveController.applyTorque(64, false);;
+	driveController.applyTorque(4, false);;
 
 #ifdef ENABLE_OLED
 	oled.firstPage();
