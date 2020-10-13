@@ -19,7 +19,11 @@ extern "C"
 #include <u8g2_esp32_hal.h>
 }
 
-#include "rotary_encoder.h"
+// Rotary Encoder part
+Dial dial;
+
+
+
 
 U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, 15, 4, 16);
 
@@ -36,14 +40,7 @@ uint8_t totalPages = registerySize / maxRows + (registerySize % maxRows>0);
 uint8_t selectPage = 0;
 uint8_t depth = 0;
 
-void turn(int32_t position, int8_t direction){
-	printf( "Rotary Encoder: position %d, direction %d. /n", position,direction);
 
-}
-
-void select(){
-	printf("Rotary Encoder: pushed.\n");
-}
 
 // CAN communication part -----------------------------------------------------
 // Transmit Part
@@ -154,6 +151,10 @@ void setup()
 {
 	Serial.begin(115200);
 
+	// set Rotary encoder
+	dial.init(gpio_num_t::GPIO_NUM_34, gpio_num_t::GPIO_NUM_35);
+	initDial();
+
 	// set DeviceID if needed
 	if(device!=0){
 		auto & registry = Registry::X();
@@ -196,7 +197,7 @@ void setup()
 
 	xTaskCreate(&receiving, "RECEIVING", 2048, NULL, 5, NULL);	// start CAN receiving Task
 
-	initDial();
+	
 }
 
 uint32_t _msg = 100;
