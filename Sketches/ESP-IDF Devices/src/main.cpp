@@ -53,11 +53,10 @@ void setup()
 	// Initialise devices
 	as5047.init();
 	motorDriver.init();
-	motorDriver.setTorque(0, 0);
 	ina219.init();
 
 	// Perform encoder calibration
-	//encoderCalibration.calibrate(as5047, motorDriver);
+	encoderCalibration.calibrate(as5047, motorDriver);
 
 #ifdef ENABLE_OLED
 	u8g2_Setup_ssd1306_i2c_128x64_noname_1(oled.getU8g2()
@@ -75,28 +74,16 @@ uint16_t currentPosition;
 
 #ifdef ENABLE_OLED
 void draw() {
-	oled.drawCircle(64,32,20);
-	oled.drawLine(64,32,64,15);
+	as5047.drawDebug(oled);
 }
 #endif
 
-
 void loop()
 {
-	delay(10);
+	delay(100);
 	//printf("\n");
 
-	int number = 5000;
-	int list[] = {16,-32,64,-96,127,-255};
-	for(int l=0;l<6;l++){
-		printf("Running at %d torque\n", list[l]);
-		printf("------------new Torque: %d \n", list[l]);
-		for(int i=0;i<number;i++){
-			driveController.applyTorque(list[l],i==0||i==number-1);
-		}
-		delay(1000);
-	}
-	delay(3000);
+	driveController.applyTorque(64, true);;
 
 #ifdef ENABLE_OLED
 	oled.firstPage();
