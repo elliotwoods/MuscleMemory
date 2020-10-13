@@ -206,17 +206,4 @@ void loop()
 	GuiController::X().update();
 	delay(10);	
 
-	// if (device == 1 && trg)
-	// {
-	// 	trg = false;
-	// 	delay(1000);
-	// 	transmitting(2, Registry::Operation::WriteRequest, Registry::RegisterType::CurrentPosition, 33);
-	// 	delay(500);
-	// 	transmitting(2, Registry::Operation::WriteRequest, Registry::RegisterType::CurrentVelocity, 33);
-	// 	delay(500);
-	// 	transmitting(2, Registry::Operation::WriteRequest, Registry::RegisterType::TargetPosition, 33);
-	// 	delay(500);
-	// 	transmitting(2, Registry::Operation::ReadRequest, Registry::RegisterType::CurrentVelocity, 0);
-	// 	delay(5000);
-	// }
 }

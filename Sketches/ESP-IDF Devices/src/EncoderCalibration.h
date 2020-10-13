@@ -12,7 +12,7 @@ public:
 		Settings() { }
 		uint16_t stepsPerRevolution = 360 / 1.8;
 		uint8_t current = 64; // Equivalent amperes value 
-		uint8_t cycles = 1; // Iterations to run the calibration routine for
+		uint8_t cycles = 2; // Iterations to run the calibration routine for
 
 		/// The amount of time to hold the step for before taking a reading
 		/// Note : this also affects the speed of the calibration routine

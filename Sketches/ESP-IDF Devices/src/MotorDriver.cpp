@@ -72,8 +72,8 @@ MotorDriver::setTorque(Torque torque, PositionWithinStepCycle positionWithinStep
 		coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
 	}
 
-	//printf("Torque: %d\n", torque);
-	//printf("Coils: %d, %d\n", coil_A, coil_B);
+	//printf("\t Torque: \t %d", torque);
+	//printf("\t Coils: \t %d, %d\n", coil_A, coil_B);
 
 	// Coil A
 	{
