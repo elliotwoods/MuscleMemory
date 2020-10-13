@@ -1,22 +1,3 @@
-/**
-#include "Arduino.h"
-#include "Dial.h"
-
-Dial dial;
-void setup()
-{
-
-    Serial.begin(115200);
-    dial.init(gpio_num_t::GPIO_NUM_34, gpio_num_t::GPIO_NUM_35);
-}
-
-void loop() {
-    delay(1000);
-    printf("Dial position : %d\n", dial.getPosition());
-}
-**/
-
-
 #include "Arduino.h"
 
 #include <stdbool.h>
