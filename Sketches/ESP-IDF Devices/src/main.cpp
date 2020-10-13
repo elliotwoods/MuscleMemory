@@ -9,7 +9,7 @@
 #include "U8g2lib.h"
 #include "U8G2HAL.h"
 
-#define ENABLE_OLED
+//#define ENABLE_OLED
 
 #ifdef ENABLE_OLED
 U8G2 oled;
@@ -80,10 +80,10 @@ void draw() {
 
 void loop()
 {
-	delay(100);
+	//delay(1);
 	//printf("\n");
 
-	driveController.applyTorque(64, true);;
+	driveController.applyTorque(64, false);;
 
 #ifdef ENABLE_OLED
 	oled.firstPage();
@@ -92,3 +92,11 @@ void loop()
 	} while (oled.nextPage());
 #endif
 }
+
+
+// core 1 - 
+// 	applyTorque function
+// core 0 -
+// 	print some stuff to screen (position, velocity)
+// 	try different current values
+// 	try different phase offsets
