@@ -1,10 +1,10 @@
 #include "sine_stepper.h"
 
-#include "driver/dac.h"
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
+#include "driver/dac.h"
 #include "esp_timer.h"
 #include "sdkconfig.h"
 #include <math.h>

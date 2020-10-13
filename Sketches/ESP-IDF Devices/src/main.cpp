@@ -2,17 +2,17 @@
 #include "sine_stepper.h"
 #include "AS5047.h"
 #include "MotorDriver.h"
-#include "U8g2lib.h"
 #include "I2C.h"
 #include "INA219.h"
 #include "EncoderCalibration.h"
 #include "DriveController.h"
+#include "U8g2lib.h"
+#include "U8G2HAL.h"
 
-
-//#define ENABLE_OLED
+#define ENABLE_OLED
 
 #ifdef ENABLE_OLED
-U8G2_SSD1306_128X64_NONAME_1_SW_I2C oled(U8G2_R0, 15, 4, 16);
+U8G2 oled;
 #endif
 
 MotorDriver motorDriver;
@@ -26,6 +26,17 @@ void setup()
 {
 	// Initialise Serial
 	Serial.begin(115200);
+
+#ifdef ENABLE_OLED
+	// Reset the OLED
+	{
+		gpio_set_direction(GPIO_NUM_16, gpio_mode_t::GPIO_MODE_OUTPUT);
+		gpio_set_level(GPIO_NUM_16, 0);
+		delay(41);
+		gpio_set_level(GPIO_NUM_16, 1);
+		delay(41);
+	}
+#endif
 
 	// Initialise I2C
 	{
@@ -46,18 +57,16 @@ void setup()
 	ina219.init();
 
 	// Perform encoder calibration
-	encoderCalibration.calibrate(as5047, motorDriver);
+	//encoderCalibration.calibrate(as5047, motorDriver);
 
 #ifdef ENABLE_OLED
+	u8g2_Setup_ssd1306_i2c_128x64_noname_1(oled.getU8g2()
+		, U8G2_R0
+		, u8g2_byte_hw_i2c_esp32
+		, u8g2_gpio_and_delay_esp32);
+	u8x8_SetPin(oled.getU8x8(), U8X8_PIN_RESET, GPIO_NUM_16);
+	u8x8_SetI2CAddress(oled.getU8x8(), 0x3c);
 	oled.begin();
-
-	// Reset the OLED
-	{
-		gpio_set_direction(GPIO_NUM_16, gpio_mode_t::GPIO_MODE_OUTPUT);
-		gpio_set_level(GPIO_NUM_16, 0);
-		delay(10);
-		gpio_set_level(GPIO_NUM_16, 1);
-	}
 #endif
 }
 
@@ -68,15 +77,15 @@ uint16_t currentPosition;
 void draw() {
 	oled.drawCircle(64,32,20);
 	oled.drawLine(64,32,64,15);
-	as5047.drawDebug(oled);
 }
 #endif
 
 
 void loop()
 {
-	//delay(10);
+	delay(10);
 	//printf("\n");
+
 	int number = 5000;
 	int list[] = {16,-32,64,-96,127,-255};
 	for(int l=0;l<6;l++){
