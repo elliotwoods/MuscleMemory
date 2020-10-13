@@ -8,6 +8,16 @@
 #include "DriveController.h"
 #include "U8g2lib.h"
 #include "U8G2HAL.h"
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+
+
+// for Micro Seconds 
+// for using: ets_delay_us(value)
+// ** It is mentioned as Prototype library ** 
+#include <rom/ets_sys.h>	
 
 //#define ENABLE_OLED
 
@@ -21,6 +31,54 @@ EncoderCalibration encoderCalibration;
 DriveController driveController(motorDriver, as5047, encoderCalibration);
 
 INA219 ina219;
+
+#ifdef ENABLE_OLED
+void draw() {
+
+	as5047.drawDebug(oled);
+}
+#endif
+
+void sendTorque(void *pvParameter){
+	while(1){
+		int8_t TQ[5] = {8,16,24,32,64};
+		for(int j = 0; j<5; j++){
+
+
+			uint16_t count = 0;
+			int8_t tq = TQ[j];
+			int64_t lastPosition = encoderCalibration.currentPosition(as5047);
+			int64_t totalPosition = 0;
+			auto start = micros();
+			while(micros() < start + 1e6) {
+				driveController.applyTorque(tq, false);
+				int64_t nowPosition = encoderCalibration.currentPosition(as5047);
+				if(lastPosition> 1<<13 &&  nowPosition< 1<<8){
+					totalPosition += 1<<14;
+				}
+				if(nowPosition> 1<<13 &&  lastPosition< 1<<8){
+					totalPosition -= 1<<14;
+				}
+				totalPosition += nowPosition-lastPosition;
+				//printf("last %lld, now %lld, = %lld\n", lastPosition, nowPosition, nowPosition-lastPosition);
+				lastPosition = nowPosition;
+				
+				count++;
+			}
+			
+			printf("----------------------Touque: %d. Velocity  %lld (/s). %d ticks \n", tq, totalPosition, count);
+		#ifdef ENABLE_OLED
+			oled.firstPage();
+			do {
+				draw();
+			} while (oled.nextPage());
+		#endif
+			delay(1000);
+		};
+		delay(5000);
+	}
+}
+
 
 void setup()
 {
@@ -57,6 +115,7 @@ void setup()
 
 	// Perform encoder calibration
 	encoderCalibration.calibrate(as5047, motorDriver);
+	xTaskCreate(&sendTorque, "sendTorque", 2048, NULL, 5, NULL);
 
 #ifdef ENABLE_OLED
 	u8g2_Setup_ssd1306_i2c_128x64_noname_1(oled.getU8g2()
@@ -72,25 +131,19 @@ void setup()
 uint8_t stepIndex;
 uint16_t currentPosition;
 
-#ifdef ENABLE_OLED
-void draw() {
-	as5047.drawDebug(oled);
-}
-#endif
+
+
+
 
 void loop()
 {
 	//delay(1);
 	//printf("\n");
+	//ets_delay_us(50);
+	//driveController.applyTorque(64, false);
+	
 
-	driveController.applyTorque(64, false);;
 
-#ifdef ENABLE_OLED
-	oled.firstPage();
-	do {
-		draw();
-	} while (oled.nextPage());
-#endif
 }
 
 
