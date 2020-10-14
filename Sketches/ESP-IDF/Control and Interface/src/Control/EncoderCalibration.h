@@ -25,8 +25,10 @@ namespace Control {
 		~EncoderCalibration();
 		
 		void clear();
-		void load(uint16_t & position);
-		void save(uint16_t & position);
+		void load(FILE *);
+		void save(FILE *);
+		bool load();
+		bool save();
 
 		void calibrate(Devices::AS5047 &
 			, Devices::MotorDriver &

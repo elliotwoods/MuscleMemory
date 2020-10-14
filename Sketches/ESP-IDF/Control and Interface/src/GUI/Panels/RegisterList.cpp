@@ -31,7 +31,7 @@ namespace GUI {
 				this->viewOffset = this->cursorPosition - this->viewableItems + 1;
 			}
 
-			printf("Cursor position : %d\n", cursorPosition);
+			//printf("Cursor position : %d\n", cursorPosition);
 		}
 
 		void
