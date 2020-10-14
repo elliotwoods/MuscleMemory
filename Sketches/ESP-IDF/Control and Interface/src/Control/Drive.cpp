@@ -1,4 +1,7 @@
 #include "Drive.h"
+#include "Registry.h"
+
+auto & registry = Registry::X();
 
 namespace Control {
 	//----------
@@ -31,5 +34,11 @@ namespace Control {
 			printf("EncoderReading : \t %d", encoderReading);
 			printf("\t PositionWithinStepCycle: \t %d \n", positionWithinStepCycle);
 		}
+
+		registry.controlLoopWrite({
+			encoderReading
+			, this->as5047.getErrors()
+			, 0
+		});
 	}
 }

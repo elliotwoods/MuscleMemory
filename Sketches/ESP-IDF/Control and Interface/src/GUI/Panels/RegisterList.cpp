@@ -49,7 +49,7 @@ namespace GUI {
 					break;
 				}
 
-				auto & registerItem = * this->registers[listIndex];
+				auto & registerItem = * this->registers.at(listIndex);
 				
 				
 				char message[100];

@@ -12,6 +12,8 @@
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
 
+#include "Registry.h"
+
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047;
 Devices::INA219 ina219;
@@ -67,6 +69,7 @@ initController()
 void
 updateInterface()
 {
+	Registry::X().update();
 	GUI::Controller::X().update();
 	//Network::processMessages();
 }

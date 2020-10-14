@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FreeRTOS.h"
+
 #include <map>
 #include <string>
 #include <limits>
@@ -9,7 +11,8 @@ public:
 	enum RegisterType : uint16_t {
 		DeviceID = 0,
 
-		Errors = 5,
+		EncoderReading = 5,
+		EncoderErrors = 6,
 
 		Position = 10,
 		Velocity = 11,
@@ -38,95 +41,47 @@ public:
 		, ReadWrite
 	};
 	
-	struct Register {
+	class Register {
+	public:
+		Register(const std::string & name
+			, int32_t value
+			, Access);
+		Register(const std::string & name
+			, int32_t value
+			, Access
+			, int32_t min
+			, int32_t max);
+		
+		const std::string & getName();
+		const Access & getAccess();
+		const Range & getRange();
+
+		int32_t getValue();
+		void  setValue(int32_t);
+	
 		const std::string name;
 		int32_t value;
-		const Range range;
 		const Access access;
+		const Range range;
 	};
 
-	std::map<RegisterType, Register> registers {
-		{ RegisterType::DeviceID, {
-			"DeviceID"
-			, 1
-			, Range {
-				true
-				, 1
-				, 1023
-			}
-			, Access::ReadWrite
-		}},
-		{ RegisterType::Errors, {
-			"Errors"
-			, 0
-			, Range {
-				false
-			}
-			, Access::ReadWrite
-		}},
-		{ RegisterType::Position, {
-			"Position"
-			, 0
-			, Range {
-				false
-			}
-			, Access::ReadOnly
-		}},
-		{ RegisterType::Velocity, {
-			"Veloctity"
-			, 0
-			, Range {
-				false
-			}
-			, Access::ReadOnly
-		}},
-		{ RegisterType::TargetPosition, {
-			"TargetPosition"
-			, 0
-			, Range {
-				false
-			}
-			, Access::ReadWrite
-		}},
-		{ RegisterType::TargetVelocity, {
-			"TargetVelocity"
-			, 0
-			, Range {
-				false
-			}
-			, Access::ReadWrite
-		}},
-		{ RegisterType::Current, {
-			"Current"
-			, 0
-			, Range {
-				false
-			}
-			, Access::ReadOnly
-		}},
-		{ RegisterType::MaximumCurrent, {
-			"MaximumCurrent"
-			, 0
-			, Range {
-				true
-				, 0
-				, 4
-			}
-			, Access::ReadWrite
-		}},
-		{ RegisterType::BusVoltage, {
-			"BusVoltage"
-			, 0
-			, Range {
-				true
-				, 0
-				, 4
-			}
-			, Access::ReadOnly
-		}}
+	struct ControlLoopWrites {
+		int32_t encoderReading;
+		int32_t encoderErrors;
+		int32_t position;
 	};
+
+	#include "registers.h"
 
 	static Registry & X();
+
 private:
-	Registry() { }
+	Registry();
+public:
+	void update();
+	void controlLoopWrite(ControlLoopWrites &&);
+private:
+	ControlLoopWrites controlLoopWritesIncoming, controlLoopWritesBack;
+	SemaphoreHandle_t controlLoopWritesMutex;
+	bool controlLoopWritesNew = false;
 };
