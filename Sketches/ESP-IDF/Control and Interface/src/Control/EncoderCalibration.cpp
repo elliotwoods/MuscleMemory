@@ -1,5 +1,7 @@
 #include "EncoderCalibration.h"
-#include <EEPROM.h>
+#include "stdio.h"
+
+const char filePath[] = "/appdata/encoder.dat";
 
 namespace Control {
 	//----------
@@ -21,17 +23,14 @@ namespace Control {
 	//----------
 	template<typename T>
 	void
-	loadItem(uint16_t & position, T & data)
+	loadItem(FILE * file, T & data)
 	{
-		auto rawData = (uint8_t*) & data;
-		for(uint16_t i=0; i<sizeof(data); i++) {
-			*rawData++ = EEPROM.read(position++);
-		}
+		fread(&data, sizeof(T), 1, file);
 	}
 
 	template<typename T>
 	void
-	loadArray(uint16_t & position, T *& data)
+	loadArray(FILE * file, T *& data)
 	{
 		if(data) {
 			delete[] data;
@@ -39,51 +38,84 @@ namespace Control {
 		}
 
 		size_t size;
-		loadItem(position, size);
+		loadItem(file, size);
 
 		data = new T[size];
-		for(size_t i=0; i<size; i++) {
-			loadItem(position, data[i]);
-		}
+		fread(data, sizeof(T), size, file);
 	}
 
 	void
-	EncoderCalibration::load(uint16_t & position)
+	EncoderCalibration::load(FILE * file)
 	{
-		loadItem(position, this->stepCycleCalibration.stepCycleCount);
-		loadItem(position, this->stepCycleCalibration.encoderPerStepCycle);
-		loadArray(position, this->stepCycleCalibration.encoderValuePerStepCycle);
+		loadItem(file, this->stepCycleCalibration.stepCycleCount);
+		loadItem(file, this->stepCycleCalibration.encoderPerStepCycle);
+		loadArray(file, this->stepCycleCalibration.encoderValuePerStepCycle);
 	}
 
+	//----------
+	bool
+	EncoderCalibration::load()
+	{
+		auto fileExists = access(filePath, F_OK) != -1;
+		if(fileExists) {
+			FILE * file;
+			if((file = fopen(filePath, "rb"))) {
+				load(file);
+				fclose(file);
+			}
+			else {
+				printf("Failed to open file for reading : %s\n", filePath);
+				return false;
+			}
+		}
+		else {
+			printf("Cannot load EncoderCalibration : the file %s does not exist\n", filePath);
+			return false;
+		}
+		
+		return true;
+	}
 
 	//----------
 	template<typename T>
 	void
-	saveItem(uint16_t & position, const T & data)
+	saveItem(FILE * file, const T & data)
 	{
-		auto rawData = (uint8_t*) & data;
-		for(uint16_t i=0; i<sizeof(data); i++) {
-			EEPROM.write(position++, *rawData++);
-		}
+		fwrite(&data, sizeof(T), 1, file);
 	}
 
 	template<typename T>
 	void
-	saveArray(uint16_t & position, const T * data, size_t size)
+	saveArray(FILE * file, const T * data, size_t size)
 	{
-		saveItem(position, size);
-		for(size_t i=0; i<size; i++) {
-			saveItem(position, data[i]);
-		}
+		saveItem(file, size);
+		fwrite(data, sizeof(T), size, file);
 	}
 
 	void
-	EncoderCalibration::save(uint16_t & position)
+	EncoderCalibration::save(FILE * file)
 	{
-		saveItem(position, this->stepCycleCalibration.stepCycleCount);
-		saveItem(position, this->stepCycleCalibration.encoderPerStepCycle);
-		saveArray(position, this->stepCycleCalibration.encoderValuePerStepCycle, this->stepCycleCalibration.stepCycleCount);
+		saveItem(file, this->stepCycleCalibration.stepCycleCount);
+		saveItem(file, this->stepCycleCalibration.encoderPerStepCycle);
+		saveArray(file, this->stepCycleCalibration.encoderValuePerStepCycle, this->stepCycleCalibration.stepCycleCount);
 	}
+
+	//----------
+	bool
+	EncoderCalibration::save()
+	{
+		FILE * file;
+		if((file = fopen(filePath, "wb"))) {
+			save(file);
+			fclose(file);
+			return true;
+		}
+		else {
+			printf("Failed to open file for writing : %s\n", filePath);
+			return false;
+		}
+	}
+
 
 	//----------
 	void

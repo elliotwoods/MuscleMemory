@@ -4,6 +4,7 @@
 #include "Devices/MotorDriver.h"
 #include "Devices/I2C.h"
 #include "Devices/INA219.h"
+#include "Devices/FileSystem.h"
 
 #include "Control/EncoderCalibration.h"
 #include "Control/Drive.h"
@@ -14,6 +15,7 @@
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047;
 Devices::INA219 ina219;
+Devices::FileSystem fileSystem;
 
 Control::EncoderCalibration encoderCalibration;
 Control::Drive drive(motorDriver, as5047, encoderCalibration);
@@ -41,24 +43,23 @@ initDevices()
 	as5047.init();
 	motorDriver.init();
 	ina219.init();
+	fileSystem.mount("appdata", "/appdata", true, 2);
 }
 
 //----------
 void
 initController()
 {
-	// Perform encoder calibration
-	const bool performCalibration = true;
-	if(performCalibration) {
-		encoderCalibration.calibrate(as5047, motorDriver);
-		{
-			uint16_t position = 0;
-			encoderCalibration.save(position);
-		}
+	if(encoderCalibration.load()) {
+		printf("Motor calibration loaded\n");
 	}
 	else {
-		uint16_t position = 0;
-		encoderCalibration.load(position);
+		// Perform encoder calibration
+		encoderCalibration.calibrate(as5047, motorDriver);
+		if(!encoderCalibration.save()) {
+			abort();
+		}
+		printf("Motor calibration saved\n");
 	}
 }
 
