@@ -158,6 +158,15 @@ EncoderCalibration::getPositionWithinStepCycle(EncoderReading encoderReading) co
 }
 
 //----------
+uint16_t
+EncoderCalibration::currentPosition(AS5047 & encoder)
+{
+	auto position = encoder.getPosition();
+	return position;
+}
+
+
+//----------
 void
 EncoderCalibration::recordStep(uint16_t stepIndex
 	, AS5047 & encoder
