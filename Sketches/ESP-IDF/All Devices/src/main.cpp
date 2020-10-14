@@ -143,6 +143,10 @@ void loop()
 	//driveController.applyTorque(64, false);
 	
 
+<<<<<<< HEAD:Sketches/ESP-IDF Devices/src/main.cpp
+=======
+	driveController.applyTorque(4, false);;
+>>>>>>> 638cc3f7c65dc9b88ca7c029a3d160cbd110d29f:Sketches/ESP-IDF/All Devices/src/main.cpp
 
 }
 
