@@ -7,16 +7,18 @@
 class Registry {
 public:
 	enum RegisterType : uint16_t {
-		deviceID = 0,
+		DeviceID = 0,
 
-		CurrentPosition = 10,
-		CurrentVelocity = 11,
+		Errors = 5,
+
+		Position = 10,
+		Velocity = 11,
 		TargetPosition = 12,
 		TargetVelocity = 13,
 
-		CurrentI = 20,
-		MaximumI = 21,
-		CurrentVBus = 22
+		Current = 20,
+		MaximumCurrent = 21,
+		BusVoltage = 22
 	};
 
 	enum Operation : uint8_t {
@@ -25,71 +27,106 @@ public:
 		ReadResponse = 2
 	};
 
+	struct Range {
+		bool limited;
+		int32_t min;
+		int32_t max;
+	};
+
 	enum Access {
 		ReadOnly
 		, ReadWrite
 	};
 	
 	struct Register {
-		std::string name;
+		const std::string name;
 		int32_t value;
-		int32_t min;
-		int32_t max;
-		Access access;
+		const Range range;
+		const Access access;
 	};
 
 	std::map<RegisterType, Register> registers {
-		{ RegisterType::deviceID, {
-			"deviceID"
-			, 0
-			, 0, 1024
+		{ RegisterType::DeviceID, {
+			"DeviceID"
+			, 1
+			, Range {
+				true
+				, 1
+				, 1023
+			}
 			, Access::ReadWrite
-		}},		
-		{ RegisterType::CurrentPosition, {
-			"CurrentPosition"
+		}},
+		{ RegisterType::Errors, {
+			"Errors"
 			, 0
-			, std::numeric_limits<int32_t>::min()
-			, std::numeric_limits<int32_t>::max()
+			, Range {
+				false
+			}
+			, Access::ReadWrite
+		}},
+		{ RegisterType::Position, {
+			"Position"
+			, 0
+			, Range {
+				false
+			}
 			, Access::ReadOnly
 		}},
-		{ RegisterType::CurrentVelocity, {
-			"CurrentVelocity"
+		{ RegisterType::Velocity, {
+			"Veloctity"
 			, 0
-			, std::numeric_limits<int32_t>::min()
-			, std::numeric_limits<int32_t>::max()
+			, Range {
+				false
+			}
 			, Access::ReadOnly
 		}},
 		{ RegisterType::TargetPosition, {
 			"TargetPosition"
 			, 0
-			, std::numeric_limits<int32_t>::min()
-			, std::numeric_limits<int32_t>::max()
+			, Range {
+				false
+			}
 			, Access::ReadWrite
 		}},
 		{ RegisterType::TargetVelocity, {
 			"TargetVelocity"
 			, 0
-			, std::numeric_limits<int32_t>::min()
-			, std::numeric_limits<int32_t>::max()
+			, Range {
+				false
+			}
 			, Access::ReadWrite
 		}},
-		{ RegisterType::CurrentI, {
-			"CurrentI"
+		{ RegisterType::Current, {
+			"Current"
 			, 0
-			, 0, 32
+			, Range {
+				false
+			}
 			, Access::ReadOnly
 		}},
-		{ RegisterType::MaximumI, {
-			"MaximumI"
+		{ RegisterType::MaximumCurrent, {
+			"MaximumCurrent"
 			, 0
+			, Range {
+				true
+				, 0
+				, 4
+			}
+			, Access::ReadWrite
 		}},
-		{ RegisterType::CurrentVBus, {
-			"CurrentVBus"
+		{ RegisterType::BusVoltage, {
+			"BusVoltage"
 			, 0
+			, Range {
+				true
+				, 0
+				, 4
+			}
+			, Access::ReadOnly
 		}}
 	};
 
-    static Registry & X();
+	static Registry & X();
 private:
-    Registry() { }
+	Registry() { }
 };

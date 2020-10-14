@@ -48,7 +48,7 @@ void
 initController()
 {
 	// Perform encoder calibration
-	const bool performCalibration = false;
+	const bool performCalibration = true;
 	if(performCalibration) {
 		encoderCalibration.calibrate(as5047, motorDriver);
 		{
@@ -64,9 +64,10 @@ initController()
 
 //----------
 void
-interfaceLoop()
+updateInterface()
 {
 	GUI::Controller::X().update();
+	//Network::processMessages();
 }
 
 //----------
@@ -75,7 +76,7 @@ runInterface(void*)
 {
 	while(true) {
 		vTaskDelay(10 / portTICK_PERIOD_MS);
-		interfaceLoop();
+		updateInterface();
 	}
 }
 
@@ -96,7 +97,7 @@ initInterface()
 //----------
 void controlLoop()
 {
-	drive.applyTorque(4, false);;
+	drive.applyTorque(4, false);
 }
 
 #ifdef ARDUINO
