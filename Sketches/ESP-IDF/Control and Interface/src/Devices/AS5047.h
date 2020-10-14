@@ -11,7 +11,6 @@
 
 namespace Devices {
 	class AS5047 {
-		static uint16_t calcParity(uint16_t);
 	public:
 		enum Errors : uint8_t {
 			framingError = 1,
