@@ -15,12 +15,15 @@ namespace Devices {
 	uint16_t
 	AS5047::calcParity(uint16_t value)
 	{
+		return __builtin_parity(value);
+		
 		// From https://www.tutorialspoint.com/cplusplus-program-to-find-the-parity-of-a-number-efficiently#:~:text=Parity%20is%20defined%20as%20the,parity%20is%20called%20odd%20parity.
 		uint16_t y = value;
 		y ^= (value >> 1);
 		y ^= (value >> 2);
 		y ^= (value >> 4);
 		y ^= (value >> 8);
+		
 		return y & 1;
 	}
 
@@ -69,7 +72,7 @@ namespace Devices {
 				deviceConfiguration.cs_ena_pretrans = 2;
 				deviceConfiguration.cs_ena_posttrans = 2;
 
-				//deviceConfiguration.input_delay_ns = 50;
+				deviceConfiguration.input_delay_ns = 51;
 				//deviceConfiguration.flags = SPI_DEVICE_BIT_LSBFIRST;
 			};
 
@@ -111,7 +114,7 @@ namespace Devices {
 			this->errors |= Errors::errorReported;
 
 			auto value = this->readRegister(Register::Errors);
-			printf("Error response : %d\n", value);
+			//printf("Error response : %d\n", value);
 			this->errors |= value;
 			this->hasIncomingError = false;
 			return this->errors;
