@@ -28,6 +28,7 @@ public:
 		, const Settings & settings = Settings());
 
 	PositionWithinStepCycle getPositionWithinStepCycle(EncoderReading) const;
+	uint16_t currentPosition(AS5047 & encoder);
 private:
 	struct {
 		uint16_t * encoderValuePerStepCycle = nullptr;
