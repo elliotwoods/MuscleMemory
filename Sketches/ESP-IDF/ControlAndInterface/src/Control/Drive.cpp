@@ -1,16 +1,19 @@
 #include "Drive.h"
 #include "Registry.h"
-
 auto & registry = Registry::X();
 
 namespace Control {
 	//----------
 	Drive::Drive(Devices::MotorDriver & motorDriver
 		, Devices::AS5047 & as5047
-		, EncoderCalibration & encoderCalibration)
+		, EncoderCalibration & encoderCalibration
+		, MultiTurn & multiTurn
+		, Agent & agent)
 	: motorDriver(motorDriver)
 	, as5047(as5047)
 	, encoderCalibration(encoderCalibration) 
+	, multiTurn(multiTurn)
+	, agent(agent)
 	{
 		
 	}
@@ -20,20 +23,19 @@ namespace Control {
 	void
 	Drive::init()
 	{
-		
+
 	}
 
 	//----------
 	void
-	Drive::applyTorque(Torque torque, bool debug)
+	Drive::update()
 	{
 		auto encoderReading = this->as5047.getPosition();
 		auto positionWithinStepCycle = this->encoderCalibration.getPositionWithinStepCycle(encoderReading);
+
+		int8_t torque;
+
 		this->motorDriver.setTorque(torque, positionWithinStepCycle);
-		if(debug){
-			printf("EncoderReading : \t %d", encoderReading);
-			printf("\t PositionWithinStepCycle: \t %d \n", positionWithinStepCycle);
-		}
 
 		registry.controlLoopWrite({
 			encoderReading
