@@ -11,17 +11,17 @@ public:
 	enum RegisterType : uint16_t {
 		DeviceID = 0,
 
-		EncoderReading = 5,
-		EncoderErrors = 6,
 
-		Position = 10,
+		MultiTurnPosition = 10,
 		Velocity = 11,
 		TargetPosition = 12,
-		TargetVelocity = 13,
 
-		Current = 20,
-		MaximumCurrent = 21,
-		BusVoltage = 22
+		EncoderReading = 21,
+		EncoderErrors = 22,
+
+		Current = 30,
+		MaximumCurrent = 31,
+		BusVoltage = 32
 	};
 
 	enum Operation : uint8_t {
@@ -52,12 +52,15 @@ public:
 			, int32_t min
 			, int32_t max);
 		
+		/*
+		// Not using this for now
 		const std::string & getName();
 		const Access & getAccess();
 		const Range & getRange();
 
 		int32_t getValue();
 		void  setValue(int32_t);
+		*/
 	
 		const std::string name;
 		int32_t value;
@@ -68,7 +71,11 @@ public:
 	struct ControlLoopWrites {
 		int32_t encoderReading;
 		int32_t encoderErrors;
-		int32_t position;
+		int32_t multiTurnPosition;
+	};
+
+	struct ControlLoopReads {
+		int32_t targetPosition;
 	};
 
 	#include "registers.h"
@@ -80,8 +87,12 @@ private:
 public:
 	void update();
 	void controlLoopWrite(ControlLoopWrites &&);
+	void controlLoopRead(ControlLoopReads &);
 private:
 	ControlLoopWrites controlLoopWritesIncoming, controlLoopWritesBack;
 	SemaphoreHandle_t controlLoopWritesMutex;
 	bool controlLoopWritesNew = false;
+
+	ControlLoopReads controlLoopReads;
+	SemaphoreHandle_t controlLoopReadsMutex;
 };
