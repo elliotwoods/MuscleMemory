@@ -1,5 +1,3 @@
-#include <Arduino.h>
-
 #include "Devices/AS5047.h"
 #include "Devices/MotorDriver.h"
 #include "Devices/I2C.h"
@@ -27,7 +25,9 @@ void
 initDevices()
 {
 	// Initialise Serial
-	Serial.begin(115200);
+	{
+		
+	}
 
 	// Initialise I2C
 	{
