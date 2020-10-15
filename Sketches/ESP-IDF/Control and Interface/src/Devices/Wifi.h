@@ -1,9 +1,9 @@
 #pragma once
 
 namespace Devices {
-	class WLAN {
+	class Wifi {
 	public:
-		WLAN();
+		Wifi();
 	};
 }
 
