@@ -31,28 +31,37 @@ Registry::X() {
 Registry::Registry()
 {
 	this->controlLoopWritesMutex = xSemaphoreCreateMutex();
+	this->controlLoopReadsMutex = xSemaphoreCreateMutex();
 }
 
 //----------
 void
 Registry::update()
 {
-	bool newData = false;
-
-	// Write all data incoming from control loop into registers
-	if(xSemaphoreTake(this->controlLoopWritesMutex, portMAX_DELAY)) {
-		if(this->controlLoopWritesNew) {
-			std::swap(this->controlLoopWritesIncoming, this->controlLoopWritesBack);
-			this->controlLoopWritesNew = false;
-			newData = true;
-			xSemaphoreGive(this->controlLoopWritesMutex);
-		}
+	// Handle data outgoing to control loop
+	if(xSemaphoreTake(this->controlLoopReadsMutex, portMAX_DELAY)) {
+		this->controlLoopReads.targetPosition = this->registers.at(RegisterType::TargetPosition).value;
 	}
 
-	if(newData) {
-		this->registers.at(RegisterType::EncoderReading).value = this->controlLoopWritesBack.encoderReading;
-		this->registers.at(RegisterType::EncoderErrors).value = this->controlLoopWritesBack.encoderErrors;
-		this->registers.at(RegisterType::Position).value = this->controlLoopWritesBack.position;
+	// Handle data incoming from control loop
+	{
+		bool newData = false;
+
+		// Write all data incoming from control loop into registers
+		if(xSemaphoreTake(this->controlLoopWritesMutex, portMAX_DELAY)) {
+			if(this->controlLoopWritesNew) {
+				std::swap(this->controlLoopWritesIncoming, this->controlLoopWritesBack);
+				this->controlLoopWritesNew = false;
+				newData = true;
+				xSemaphoreGive(this->controlLoopWritesMutex);
+			}
+		}
+
+		if(newData) {
+			this->registers.at(RegisterType::EncoderReading).value = this->controlLoopWritesBack.encoderReading;
+			this->registers.at(RegisterType::EncoderErrors).value = this->controlLoopWritesBack.encoderErrors;
+			this->registers.at(RegisterType::MultiTurnPosition).value = this->controlLoopWritesBack.multiTurnPosition;
+		}
 	}
 }
 
@@ -65,5 +74,16 @@ Registry::controlLoopWrite(ControlLoopWrites && controlLoopWrites)
 		std::swap(controlLoopWrites, this->controlLoopWritesIncoming);
 		this->controlLoopWritesNew = true;
 		xSemaphoreGive(this->controlLoopWritesMutex);
+	}
+}
+
+//----------
+void
+Registry::controlLoopRead(ControlLoopReads & controlLoopReads)
+{
+	
+	if(xSemaphoreTake(this->controlLoopReadsMutex, portMAX_DELAY)) {
+		controlLoopReads = this->controlLoopReads;
+		xSemaphoreGive(this->controlLoopReadsMutex);
 	}
 }
