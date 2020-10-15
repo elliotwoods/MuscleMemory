@@ -3,14 +3,20 @@
 #include "Devices/I2C.h"
 #include "Devices/INA219.h"
 #include "Devices/FileSystem.h"
+#include "Devices/Wifi.h"
 
 #include "Control/EncoderCalibration.h"
+#include "Control/MultiTurn.h"
+#include "Control/Agent.h"
 #include "Control/Drive.h"
 
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
 
 #include "Registry.h"
+#include "WifiConfig.h"
+
+#include "cJSON.h"
 
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047;
@@ -18,7 +24,9 @@ Devices::INA219 ina219;
 Devices::FileSystem fileSystem;
 
 Control::EncoderCalibration encoderCalibration;
-Control::Drive drive(motorDriver, as5047, encoderCalibration);
+Control::MultiTurn multiTurn(as5047, encoderCalibration);
+Control::Agent agent;
+Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn, agent);
 
 //----------
 void
@@ -26,7 +34,8 @@ initDevices()
 {
 	// Initialise Serial
 	{
-		
+		// For now we use Arduino - we change this later
+		Serial.begin(115200);
 	}
 
 	// Initialise I2C
@@ -46,6 +55,7 @@ initDevices()
 	motorDriver.init();
 	ina219.init();
 	fileSystem.mount("appdata", "/appdata", true, 2);
+	Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
 }
 
 //----------
@@ -63,6 +73,9 @@ initController()
 		}
 		printf("Motor calibration saved\n");
 	}
+
+	multiTurn.init();
+	drive.init();
 }
 
 //----------
@@ -101,7 +114,7 @@ initInterface()
 //----------
 void controlLoop()
 {
-	drive.applyTorque(4, false);
+	drive.update();
 }
 
 #ifdef ARDUINO
