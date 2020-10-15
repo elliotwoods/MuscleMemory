@@ -14,30 +14,29 @@ namespace Control {
 	void
 	MultiTurn::init()
 	{
-		this->priorEncoderReading = as5047.getPosition();
-		this->position = this->priorEncoderReading;
+		this->priorSingleTurnPosition = as5047.getPosition();
+		this->position = this->priorSingleTurnPosition;
 	}
 
 	//-----------
 	void
-	MultiTurn::update()
+	MultiTurn::update(PositionWithinShaftCycle currentSingleTurnPosition)
 	{
-		auto currentEncoderReading = as5047.getPosition();
-		if(this->priorEncoderReading > HALF_WAY && currentEncoderReading < HALF_WAY)
+		if(this->priorSingleTurnPosition > HALF_WAY && currentSingleTurnPosition < HALF_WAY)
 		{
 			this->turns++;
 		}
-		else if(this->priorEncoderReading < HALF_WAY && currentEncoderReading > HALF_WAY)
+		else if(this->priorSingleTurnPosition < HALF_WAY && currentSingleTurnPosition > HALF_WAY)
 		{
 			this->turns--;
 		}
-		this->position = (((int32_t) this->turns) << 14) + (int32_t) currentEncoderReading;
-		this->priorEncoderReading = currentEncoderReading;
+		this->position = (((int32_t) this->turns) << 14) + (int32_t) currentSingleTurnPosition;
+		this->priorSingleTurnPosition = currentSingleTurnPosition;
 	}
 
 	//-----------
 	int32_t
-	MultiTurn::getPosition() const
+	MultiTurn::getMultiTurnPosition() const
 	{
 		return this->position;
 	}
