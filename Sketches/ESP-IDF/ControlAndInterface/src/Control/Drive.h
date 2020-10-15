@@ -24,5 +24,12 @@ namespace Control {
 		EncoderCalibration & encoderCalibration;
 		MultiTurn & multiTurn;
 		Agent & agent;
+
+		MultiTurnPosition priorPosition;
+		int64_t priorTime;
+
+		bool hasPriorState = false;
+		Agent::State priorState;
+		float priorAction;
 	};
 }

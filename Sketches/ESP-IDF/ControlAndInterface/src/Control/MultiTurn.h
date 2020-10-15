@@ -8,13 +8,13 @@ namespace Control {
 	public:
 		MultiTurn(Devices::AS5047 &, EncoderCalibration &);
 		void init();
-		void update();
-		int32_t getPosition() const;
+		void update(PositionWithinShaftCycle);
+		MultiTurnPosition getMultiTurnPosition() const;
 	private:
 		Devices::AS5047 & as5047;
 		EncoderCalibration & encoderCalibration;
-		uint16_t priorEncoderReading = 0;
-		int16_t turns = 0;
-		int32_t position = 0;
+		PositionWithinShaftCycle priorSingleTurnPosition = 0;
+		Turns turns = 0;
+		MultiTurnPosition position = 0;
 	};
 }
