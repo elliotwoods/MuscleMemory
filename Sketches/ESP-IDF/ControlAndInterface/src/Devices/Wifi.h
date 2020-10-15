@@ -2,8 +2,11 @@
 
 namespace Devices {
 	class Wifi {
+	private:
+		Wifi() {}
 	public:
-		Wifi();
+		static Wifi & X();
+		void init();
 	};
 }
 

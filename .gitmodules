@@ -1,0 +1,3 @@
+[submodule "Sketches/ESP-IDF/ControlAndInterface/lib/u8g2"]
+	path = Sketches/ESP-IDF/ControlAndInterface/lib/u8g2
+	url = https://github.com/olikraus/u8g2.git

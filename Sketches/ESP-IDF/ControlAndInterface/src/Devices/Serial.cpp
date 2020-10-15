@@ -1,5 +1,7 @@
 #include "Serial.h"
 
+#include "driver/gpio.h"
+#include "driver/uart.h"
 
 namespace Devices {
 	//---------

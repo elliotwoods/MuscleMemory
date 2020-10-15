@@ -1,5 +1,7 @@
 #include "MotorDriver.h"
 
+#include "driver/dac.h"
+
 namespace Devices {
 	//----------
 	MotorDriver::Configuration::Configuration()
@@ -9,8 +11,8 @@ namespace Devices {
 		this->coilPins.coil_A_negative = GPIO_NUM_33;
 		this->coilPins.coil_B_negative = GPIO_NUM_27;
 
-		this->vrefDacs.A = DAC_GPIO25_CHANNEL;
-		this->vrefDacs.B = DAC_GPIO26_CHANNEL;
+		this->vrefDacs.A = dac_channel_t::DAC_CHANNEL_1;//DAC_GPIO25_CHANNEL;
+		this->vrefDacs.B = dac_channel_t::DAC_CHANNEL_2;//DAC_GPIO26_CHANNEL;
 	}
 
 	//----------

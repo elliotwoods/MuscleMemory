@@ -46,6 +46,7 @@ initDevices()
 	motorDriver.init();
 	ina219.init();
 	fileSystem.mount("appdata", "/appdata", true, 2);
+	Wifi::X().init();
 }
 
 //----------
@@ -122,4 +123,17 @@ loop()
 	controlLoop();
 }
 
+#else
+//----------
+void
+main()
+{
+	initDevices();
+	initController();
+	initInterface();
+
+	while(true) {
+		controlLoop();
+	}
+}
 #endif
