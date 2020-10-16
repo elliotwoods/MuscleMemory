@@ -18,8 +18,8 @@ std::map<RegisterType, Register> registers {
 		, Access::ReadOnly
 	}},
 
-	{ RegisterType::Position, {
-		"Position"
+	{ RegisterType::MultiTurnPosition, {
+		"MultiTurnPosition"
 		, 0
 		, Access::ReadOnly
 	}},
@@ -33,11 +33,6 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadWrite
 	}},
-	{ RegisterType::TargetVelocity, {
-		"TargetVelocity"
-		, 0
-		, Access::ReadWrite
-	}},
 	{ RegisterType::Current, {
 		"Current"
 		, 0
@@ -45,10 +40,10 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::MaximumCurrent, {
 		"MaximumCurrent"
-		, 0
+		, 2000 // value in mA
 		, Access::ReadWrite
 		, 0
-		, 4
+		, 4000
 	}},
 	{ RegisterType::BusVoltage, {
 		"BusVoltage"
