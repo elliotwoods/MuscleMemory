@@ -61,6 +61,9 @@ namespace Devices {
 			auto result = httpClient.POST((uint8_t*) contentString, strlen(contentString));
 			if(result == 200) {
 				response = cJSON_Parse(httpClient.getString().c_str());
+				if(!response) {
+					printf("[Wifi] : Error parsing response : \n %s \n", httpClient.getString().c_str());
+				}
 			}
 			httpClient.end();
 		}
