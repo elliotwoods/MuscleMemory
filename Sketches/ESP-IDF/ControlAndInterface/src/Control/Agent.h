@@ -3,6 +3,15 @@
 #include "DataTypes.h"
 #include "cJSON.h"
 #include <string>
+#include <vector>
+
+const size_t heapAlignment = 16;
+const size_t heapAreaSize = 64 * 1024;
+
+namespace tflite {
+	class Model;
+	class MicroInterpreter;
+}
 
 namespace Control {
 	class Agent {
@@ -14,6 +23,8 @@ namespace Control {
 			Velocity velocity;
 			Current current;
 		};
+		Agent();
+		~Agent();
 
 		void init();
 		float selectAction(const State &);
@@ -24,8 +35,13 @@ namespace Control {
 			);
 	private:
 		std::string clientID;
+		std::vector<uint8_t> modelString;
 		void processIncoming(cJSON *);
-		const void* model = nullptr;
+
+		const tflite::Model* model = nullptr;
+		tflite::MicroInterpreter * interpreter = nullptr;
 		bool initialised = false;
+
+		uint8_t * heapArea = nullptr;
 	};
 }
