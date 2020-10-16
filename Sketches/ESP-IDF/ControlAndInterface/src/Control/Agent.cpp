@@ -4,6 +4,7 @@
 #include "../Devices/Wifi.h"
 #include "esp_err.h"
 #include "esp_system.h"
+#include "esp_heap_caps.h"
 
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
@@ -11,9 +12,29 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
-#include "crypto/base64.h"
+extern "C" {
+	#include "crypto/base64.h"
+}
+
+tflite::MicroErrorReporter micro_error_reporter;
+tflite::ErrorReporter* error_reporter = &micro_error_reporter;
+
+tflite::AllOpsResolver resolver;
 
 namespace Control {
+	//----------
+	Agent::Agent()
+	{
+		this->heapArea = (uint8_t*) heap_caps_malloc(heapAreaSize + heapAlignment, MALLOC_CAP_8BIT);
+	}
+
+	//----------
+	Agent::~Agent()
+	{
+		heap_caps_free(this->heapArea);
+		this->heapArea = nullptr;
+	}
+
 	//----------
 	void
 	Agent::init()
@@ -78,12 +99,74 @@ namespace Control {
 	}
 
 	//----------
+	// Reference : https://github.com/elliotwoods/micropython/blob/elliot-modules/modules/tensorflow/Model.cpp
 	void
 	Agent::processIncoming(cJSON * response)
 	{
-		auto responseString = cJSON_Print(response);
-		printf("Response : %s\n", responseString);
-		free(responseString);
-		this->initialised = true;
+		// Print response
+		{
+			auto responseString = cJSON_Print(response);
+			printf("Response : %s\n", responseString);
+			free(responseString);
+		}
+		
+
+		// Check success
+		{
+			auto successJson = cJSON_GetObjectItemCaseSensitive(response, "success");
+			if(!successJson 
+				|| !cJSON_IsBool(successJson)
+				|| !successJson->valueint) {
+				printf("[Agent] : Server request failed\n");
+				return;
+			}
+		}
+
+		// Extract model
+		{
+			auto contentJson = cJSON_GetObjectItemCaseSensitive(response, "content");
+			if(contentJson && cJSON_IsObject(contentJson)) {
+				auto modelJson = cJSON_GetObjectItemCaseSensitive(contentJson, "model");
+				if(modelJson && cJSON_IsString(modelJson) && modelJson->valuestring) {
+					// Decode from BASE64 into local copy
+					{
+						size_t outputLength;
+						auto binaryString = base64_decode((const unsigned char *) modelJson->valuestring
+							, strlen(modelJson->valuestring)
+							, &outputLength);
+						this->modelString.assign(binaryString, binaryString + outputLength);
+						free(binaryString);
+					}
+
+					// Load the model
+					{
+						this->model = ::tflite::GetModel(this->modelString.data());
+						if(this->model->version() != TFLITE_SCHEMA_VERSION) {
+							TF_LITE_REPORT_ERROR(error_reporter,
+								"Model provided is schema version %d not equal "
+								"to supported version %d.\n",
+								this->model->version(), TFLITE_SCHEMA_VERSION);
+							
+							return;
+						}
+					}
+					
+					// Initialise the interpreter
+					{
+						// Align the memory (note this only works for 16bit)
+						auto heapAreaAligned = ((uintptr_t)this->heapArea + 15) & ~ (uintptr_t) 0x0F;
+						this->interpreter = new tflite::MicroInterpreter(model
+							, resolver
+							, (uint8_t*) heapAreaAligned
+							, heapAreaSize
+							, error_reporter);
+					}
+					
+					
+					this->initialised = true;
+				}
+			}
+		}
+		
 	}
 }
