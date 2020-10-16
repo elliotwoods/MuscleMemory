@@ -71,6 +71,6 @@ namespace Panels {
     RegisterList::dial(int8_t delta)
     {
         this->cursorPosition += delta;
-        // printf("dial by %d\n", delta);
+        //printf("dial by %d\n", delta);
     }
 }
