@@ -62,7 +62,28 @@ std::map<RegisterType, Register> registers {
 
 	{ RegisterType::FreeMemory, {
 		"FreeMemory"
-		, 0 // Value in kB
+		, 0 // kB
 		, Access::ReadOnly
-	}}
+	}},
+	{ RegisterType::Temperature, {
+		"Temperature"
+		, 0 // C
+		, Access::ReadOnly
+	}},
+
+	{ RegisterType::MotorControlFrequency, {
+		"MCF"
+		, 0 // Hz
+		, Access::ReadOnly
+	}},
+	{ RegisterType::AgentControlFrequency, {
+		"ACF"
+		, 0 // Hz
+		, Access::ReadOnly
+	}},
+	{ RegisterType::RegistryControlFrequency, {
+		"RCF"
+		, 0 // Hz
+		, Access::ReadOnly
+	}},
 };

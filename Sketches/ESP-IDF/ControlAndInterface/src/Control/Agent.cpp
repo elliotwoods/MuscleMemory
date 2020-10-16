@@ -12,6 +12,8 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
+#include "Registry.h"
+
 extern "C" {
 	#include "crypto/base64.h"
 }
@@ -21,12 +23,29 @@ tflite::ErrorReporter* error_reporter = &micro_error_reporter;
 
 tflite::AllOpsResolver resolver;
 
+int8_t min(int8_t a, int8_t b) {
+	if(a > b) {
+		return b;
+	}
+	else {
+		return a;
+	}
+}
+
+int8_t max(int8_t a, int8_t b) {
+	if(a > b) {
+		return a;
+	}
+	else {
+		return b;
+	}
+}
+
 namespace Control {
 	//----------
 	Agent::Agent()
 	{
 		this->heapArea = (uint8_t*) heap_caps_malloc(heapAreaSize + heapAlignment, MALLOC_CAP_8BIT);
-		this->trajectoryQueue = xQueueCreate(trajectoryQueueSize, sizeof(Trajectory));
 	}
 
 	//----------
@@ -34,8 +53,6 @@ namespace Control {
 	{
 		heap_caps_free(this->heapArea);
 		this->heapArea = nullptr;
-
-		vQueueDelete(this->trajectoryQueue);
 	}
 
 	//----------
@@ -74,50 +91,79 @@ namespace Control {
 				cJSON_Delete(response);
 			}
 		}
+
+		// Intialise the frame timer
+		this->frameTimer.init();
 	}
 
 	//----------
 	void
 	Agent::update()
 	{
-		// Receive trajectories from control loop
+		static auto & registry = Registry::X();
+		this->frameTimer.update();
+
+		// Read the state from registry
+		Registry::AgentReads agentReads;
 		{
-			if(this->historyWritePosition < localHistorySize) {
-				while(xQueueReceive(this->trajectoryQueue, &this->history[this->historyWritePosition++], 0)) {
-					if(this->historyWritePosition >= localHistorySize) {
-						printf("[Agent] : Local history is full");
-					}
-				}
-			}
-			else {
-				printf("[Agent] : Local history is full");
-			}
+			registry.agentRead(agentReads);
+		}
+
+		// Prepare the state
+		Agent::State state;
+		{
+			state.position = float(agentReads.multiTurnPosition) / float(1 << 14);
+			state.targetMinusPosition = float(agentReads.targetPosition - agentReads.multiTurnPosition) / float(1 << 14);
+			state.velocity = float(agentReads.velocity) / float(1 << 14);
+			state.agentFrequency = float(this->frameTimer.getFrequency()) / 1000.0f;
+			state.motorControlFrequency = float(agentReads.motorControlFrequency) / 1000.0f;
+			state.current = float(agentReads.current) / 1000.0f;
+		}
+
+		// Record trajectory if we have a prior state
+		if(this->hasPriorState) {
+			int32_t reward = abs(state.targetMinusPosition);
+			this->recordTrajectory({
+				this->priorState
+				, this->priorAction
+				, (float) reward
+				, state
+			});
+		}
+
+		// Get the action. Scale to bianry values and clamp
+		auto action = this->selectAction(state);
+		int8_t torque = (int8_t)(action * 64.0f);
+		torque = max(min(torque, agentReads.maximumTorque), -agentReads.maximumTorque);
+
+		// Send torque to main loop
+		{
+			registry.agentWrite({
+				torque
+				, this->frameTimer.getFrequency()
+			});
+		}
+		// Remember trajectory variables
+		{
+			std::swap(this->priorState, state);
+			this->priorAction = action;
+			this->hasPriorState = true;
 		}
 	}
 
 	//----------
 	float
-	Agent::selectAction(const State & state)
+	Agent::selectAction(const State &)
 	{
-		if(!this->initialised) {
-			printf("[Agent] : Cannot infer action (not initialised)\n");
-			return 0.0f;
-		}
-
-		return 1.0f / 16.0f;
+		return 0.5f;
 	}
 
 	//----------
 	void
-	Agent::recordTrajectory(const Trajectory & trajectory)
+	Agent::recordTrajectory(Trajectory && trajectory)
 	{
-		if(!this->initialised) {
-			printf("[Agent] : Cannot record trajectory (not initialised)\n");
-			return;
-		}
-
-		if(!xQueueSend(this->trajectoryQueue, &trajectory, 0)) {
-			printf("[Agent] : Trajectory queue is full");
+		if(this->historyWritePosition <  localHistorySize) {
+			this->history[this->historyWritePosition++] = trajectory;
 		}
 	}
 
@@ -184,7 +230,6 @@ namespace Control {
 							, heapAreaSize
 							, error_reporter);
 					}
-					
 					
 					this->initialised = true;
 				}
