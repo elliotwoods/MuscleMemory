@@ -62,7 +62,7 @@ GuiController::update()
 void
 GuiController::dialButtonPressed()
 {
-	printf("Dial button pressed \n");
+	// printf("Dial button pressed \n");
 	this->isDialButtonPressed = true;
 }
 
@@ -70,6 +70,6 @@ GuiController::dialButtonPressed()
 void
 GuiController::dialTurned(int8_t turns)
 {
-	printf("Dial turned: %d\n", turns);
+	// printf("Dial turned: %d\n", turns);
 	this->dialMovements += turns;
 }

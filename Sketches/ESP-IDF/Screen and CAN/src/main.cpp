@@ -72,14 +72,11 @@ void transmitting(uint8_t targetID
 	//Queue message for transmission
 	if (can_transmit(&message, pdMS_TO_TICKS(50)) == ESP_OK)
 	{
-		#if	DEVICEID != 0
-			printf("Message queued for transmission\n");
-		#endif
-		//draw(targetID, Operation::WriteRequest, registerID, value);
+		// printf("Message queued for transmission\n");
 	}
 	else
 	{
-		printf("Failed to queue message for transmission\n");
+		// printf("Failed to queue message for transmission\n");
 	}
 }
 
@@ -102,7 +99,7 @@ void receiving(void *pvParameter)
 		can_message_t message;
 		if (can_receive(&message, pdMS_TO_TICKS(50)) == ESP_OK)
 		{
-			printf("Message received\n");
+			// printf("Message received\n");
 			//Process received message
 			DeviceID senderID = message.identifier;
 			auto dataMover = message.data;
@@ -124,19 +121,19 @@ void receiving(void *pvParameter)
 			switch (operation)
 			{
 			case Registry::Operation::WriteRequest:
-				printf(" * WriteRequest from %d ,", senderID);
-				printf(" * regID %d value %d \n", registerID, value);
+				// printf(" * WriteRequest from %d ,", senderID);
+				// printf(" * regID %d value %d \n", registerID, value);
 				registry.registers[registerID].value = value;
 				break;
 			case Registry::Operation::ReadRequest:
-				printf(" * ReadRequest from %d ,", senderID);
-				printf(" * regID %d \n", registerID);
+				// printf(" * ReadRequest from %d ,", senderID);
+				// printf(" * regID %d \n", registerID);
 				value = registry.registers[registerID].value;
 				transmitting(senderID, Registry::Operation::ReadResponse, registerID, value);
 				break;
 			case Registry::Operation::ReadResponse:
-				printf(" * ReadResponse from %d,", senderID);
-				printf(" * regID %d value %d \n", registerID, value);
+				// printf(" * ReadResponse from %d,", senderID);
+				// printf(" * regID %d value %d \n", registerID, value);
  				break;
 			default:
 				break;
@@ -153,7 +150,7 @@ void receiving(void *pvParameter)
 
 void setup()
 {
-	Serial.begin(115200);
+	// Serial.begin(115200);
 
 	// set Rotary encoder
 	dial.init(gpio_num_t::GPIO_NUM_34, gpio_num_t::GPIO_NUM_35);
@@ -174,34 +171,14 @@ void setup()
 	can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
 	can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
 
-	//Install CAN driver
-	if (can_driver_install(&g_config, &t_config, &f_config) == ESP_OK)
-	{
-		printf("Driver installed\n");
-	}
-	else
-	{
-		printf("Failed to install driver\n");
-		return;
-	}
-
-	//Start CAN driver
-	if (can_start() == ESP_OK)
-	{
-		printf("Driver started\n");
-	}
-	else
-	{
-		printf("Failed to start driver\n");
-		return;
-	}
+	//Install & Start CAN driver
+	can_driver_install(&g_config, &t_config, &f_config);
+	can_start();
 
 	// start CAN receiving Task
 	xTaskCreate(&receiving, "RECEIVING", 2048, NULL, 10, NULL);	
 }
 
-uint32_t _msg = 100;
-bool trg = true;
 void loop()
 {
 	GuiController::X().update();
