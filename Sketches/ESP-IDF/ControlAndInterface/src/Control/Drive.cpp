@@ -47,7 +47,7 @@ namespace Control {
 		Agent::State state;
 		{
 			state.position = multiTurnPosition;
-			state.target = controlLoopReads.targetPosition;
+			state.targetMinusPosition = controlLoopReads.targetPosition - multiTurnPosition;
 
 			// Calculate frequency and velocity
 			{
@@ -63,8 +63,13 @@ namespace Control {
 
 		// Record trajectory
 		if(this->hasPriorState) {
-			int32_t reward = abs(multiTurnPosition - controlLoopReads.targetPosition);
-			this->agent.recordTrajectory(this->priorState, this->priorAction, reward, state);
+			int32_t reward = abs(state.targetMinusPosition);
+			this->agent.recordTrajectory({
+				this->priorState
+				, this->priorAction
+				, (float) reward
+				, state
+			});
 		}
 		
 		auto action = this->agent.selectAction(state);

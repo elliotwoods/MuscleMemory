@@ -26,6 +26,7 @@ namespace Control {
 	Agent::Agent()
 	{
 		this->heapArea = (uint8_t*) heap_caps_malloc(heapAreaSize + heapAlignment, MALLOC_CAP_8BIT);
+		this->trajectoryQueue = xQueueCreate(trajectoryQueueSize, sizeof(Trajectory));
 	}
 
 	//----------
@@ -33,6 +34,8 @@ namespace Control {
 	{
 		heap_caps_free(this->heapArea);
 		this->heapArea = nullptr;
+
+		vQueueDelete(this->trajectoryQueue);
 	}
 
 	//----------
@@ -74,6 +77,25 @@ namespace Control {
 	}
 
 	//----------
+	void
+	Agent::update()
+	{
+		// Receive trajectories from control loop
+		{
+			if(this->historyWritePosition < localHistorySize) {
+				while(xQueueReceive(this->trajectoryQueue, &this->history[this->historyWritePosition++], 0)) {
+					if(this->historyWritePosition >= localHistorySize) {
+						printf("[Agent] : Local history is full");
+					}
+				}
+			}
+			else {
+				printf("[Agent] : Local history is full");
+			}
+		}
+	}
+
+	//----------
 	float
 	Agent::selectAction(const State & state)
 	{
@@ -87,14 +109,15 @@ namespace Control {
 
 	//----------
 	void
-	Agent::recordTrajectory(const State & priorState
-		, float action
-		, int32_t reward
-		, const State & currentState)
+	Agent::recordTrajectory(const Trajectory & trajectory)
 	{
 		if(!this->initialised) {
 			printf("[Agent] : Cannot record trajectory (not initialised)\n");
 			return;
+		}
+
+		if(!xQueueSend(this->trajectoryQueue, &trajectory, 0)) {
+			printf("[Agent] : Trajectory queue is full");
 		}
 	}
 
