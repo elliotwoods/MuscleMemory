@@ -7,16 +7,6 @@ std::map<RegisterType, Register> registers {
 		, 1023
 	}},
 
-	{ RegisterType::EncoderReading, {
-		"EncoderReading"
-		, 0
-		, Access::ReadOnly
-	}},
-	{ RegisterType::EncoderErrors, {
-		"EncoderErrors"
-		, 0
-		, Access::ReadOnly
-	}},
 
 	{ RegisterType::MultiTurnPosition, {
 		"MultiTurnPosition"
@@ -33,21 +23,46 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadWrite
 	}},
+	{ RegisterType::Torque, {
+		"Torque"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::MaximumTorque, {
+		"MaximumTorque"
+		, 32
+		, Access::ReadWrite
+		, 0
+		, 128
+	}},
+
+
+	{ RegisterType::EncoderReading, {
+		"EncoderReading"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::EncoderErrors, {
+		"EncoderErrors"
+		, 0
+		, Access::ReadOnly
+	}},
+
+
 	{ RegisterType::Current, {
 		"Current"
 		, 0
 		, Access::ReadOnly
 	}},
-	{ RegisterType::MaximumCurrent, {
-		"MaximumCurrent"
-		, 2000 // value in mA
-		, Access::ReadWrite
-		, 0
-		, 4000
-	}},
 	{ RegisterType::BusVoltage, {
 		"BusVoltage"
 		, 0
+		, Access::ReadOnly
+	}},
+
+	{ RegisterType::FreeMemory, {
+		"FreeMemory"
+		, 0 // Value in kB
 		, Access::ReadOnly
 	}}
 };

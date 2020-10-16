@@ -1,6 +1,8 @@
 #pragma once
 
 #include "DataTypes.h"
+#include "cJSON.h"
+#include <string>
 
 namespace Control {
 	class Agent {
@@ -21,6 +23,9 @@ namespace Control {
 			, const State & currentState
 			);
 	private:
+		std::string clientID;
+		void processIncoming(cJSON *);
 		const void* model = nullptr;
+		bool initialised = false;
 	};
 }
