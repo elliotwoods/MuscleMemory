@@ -1,5 +1,8 @@
 #pragma once
-#include "cJSON.h"
+
+extern "C" {
+	#include "cJSON.h"
+}
 #include <string>
 
 namespace Devices {
