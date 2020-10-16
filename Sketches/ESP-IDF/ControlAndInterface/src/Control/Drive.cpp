@@ -1,6 +1,5 @@
 #include "Drive.h"
 #include "Registry.h"
-auto & registry = Registry::X();
 
 namespace Control {
 	//----------
@@ -31,6 +30,8 @@ namespace Control {
 	void
 	Drive::update()
 	{
+		static auto & registry = Registry::X();
+
 		auto encoderReading = this->as5047.getPosition();
 		this->multiTurn.update(encoderReading);
 		auto multiTurnPosition = this->multiTurn.getMultiTurnPosition();
@@ -69,10 +70,14 @@ namespace Control {
 		auto action = this->agent.selectAction(state);
 
 		// Perform action as torque
+		int8_t torque;
 		{
-			auto actionIn8BitRange = (action - 0.5f)* 255.0f - 128.0f;
-			auto actionClipped = fmax(fmin(actionIn8BitRange, 127), -128);
-			int8_t torque = (int8_t) actionClipped;
+			auto actionIn8BitRange = action * 128.0f;
+
+			// clip to max torque values
+			actionIn8BitRange = fmax(fmin(actionIn8BitRange, (float) controlLoopReads.maximumTorque - 1.0f), -(float) controlLoopReads.maximumTorque);
+
+			torque = (int8_t) actionIn8BitRange;
 			this->motorDriver.setTorque(torque, positionWithinStepCycle);
 		}
 
@@ -87,6 +92,8 @@ namespace Control {
 			encoderReading
 			, this->as5047.getErrors()
 			, multiTurnPosition
+			, torque
+			, state.velocity
 		});
 	}
 }

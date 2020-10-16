@@ -13,6 +13,8 @@
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
 
+#include "Interface/SystemInfo.h"
+
 #include "Registry.h"
 #include "WifiConfig.h"
 
@@ -24,9 +26,11 @@ Devices::INA219 ina219;
 Devices::FileSystem fileSystem;
 
 Control::EncoderCalibration encoderCalibration;
-Control::MultiTurn multiTurn(as5047, encoderCalibration);
+Control::MultiTurn multiTurn(encoderCalibration);
 Control::Agent agent;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn, agent);
+
+Interface::SystemInfo systemInfo(ina219);
 
 //----------
 void
@@ -74,7 +78,8 @@ initController()
 		printf("Motor calibration saved\n");
 	}
 
-	multiTurn.init();
+	multiTurn.init(as5047.getPosition());
+	agent.init();
 	drive.init();
 }
 
@@ -83,6 +88,7 @@ void
 updateInterface()
 {
 	Registry::X().update();
+	systemInfo.update();
 	GUI::Controller::X().update();
 	//Network::processMessages();
 }
@@ -102,6 +108,8 @@ void
 initInterface()
 {
 	GUI::Controller::X().init(std::make_shared<GUI::Panels::RegisterList>());
+	systemInfo.init();
+
 	xTaskCreatePinnedToCore(runInterface
 		, "Interface"
 		, 10000

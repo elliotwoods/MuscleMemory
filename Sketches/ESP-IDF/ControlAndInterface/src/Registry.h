@@ -15,13 +15,16 @@ public:
 		MultiTurnPosition = 10,
 		Velocity = 11,
 		TargetPosition = 12,
+		Torque = 13,
+		MaximumTorque = 14,
 
 		EncoderReading = 21,
 		EncoderErrors = 22,
 
 		Current = 30,
-		MaximumCurrent = 31,
-		BusVoltage = 32
+		BusVoltage = 32,
+
+		FreeMemory = 40
 	};
 
 	enum Operation : uint8_t {
@@ -72,10 +75,13 @@ public:
 		int32_t encoderReading;
 		int32_t encoderErrors;
 		int32_t multiTurnPosition;
+		int32_t torque;
+		int32_t velocity;
 	};
 
 	struct ControlLoopReads {
 		int32_t targetPosition;
+		int8_t maximumTorque;
 	};
 
 	#include "registers.h"

@@ -41,6 +41,8 @@ Registry::update()
 	// Handle data outgoing to control loop
 	if(xSemaphoreTake(this->controlLoopReadsMutex, portMAX_DELAY)) {
 		this->controlLoopReads.targetPosition = this->registers.at(RegisterType::TargetPosition).value;
+		this->controlLoopReads.maximumTorque = this->registers.at(RegisterType::MaximumTorque).value;
+		xSemaphoreGive(this->controlLoopReadsMutex);
 	}
 
 	// Handle data incoming from control loop
@@ -61,6 +63,8 @@ Registry::update()
 			this->registers.at(RegisterType::EncoderReading).value = this->controlLoopWritesBack.encoderReading;
 			this->registers.at(RegisterType::EncoderErrors).value = this->controlLoopWritesBack.encoderErrors;
 			this->registers.at(RegisterType::MultiTurnPosition).value = this->controlLoopWritesBack.multiTurnPosition;
+			this->registers.at(RegisterType::Torque).value = this->controlLoopWritesBack.torque;
+			this->registers.at(RegisterType::Velocity).value = this->controlLoopWritesBack.velocity;
 		}
 	}
 }

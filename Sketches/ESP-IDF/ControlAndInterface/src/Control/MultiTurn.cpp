@@ -3,30 +3,30 @@
 #define HALF_WAY (1 << 13)
 namespace Control {
 	//-----------
-	MultiTurn::MultiTurn(Devices::AS5047 & as5047, EncoderCalibration & encoderCalibration)
-	: as5047(as5047)
-	, encoderCalibration(encoderCalibration)
+	MultiTurn::MultiTurn(EncoderCalibration & encoderCalibration)
+	: encoderCalibration(encoderCalibration)
 	{
 		
 	}
 
 	//-----------
 	void
-	MultiTurn::init()
+	MultiTurn::init(SingleTurnPosition singleTurnPosition)
 	{
-		this->priorSingleTurnPosition = as5047.getPosition();
+		this->priorSingleTurnPosition = singleTurnPosition;
 		this->position = this->priorSingleTurnPosition;
+		this->turns = 0;
 	}
 
 	//-----------
 	void
-	MultiTurn::update(PositionWithinShaftCycle currentSingleTurnPosition)
+	MultiTurn::update(SingleTurnPosition currentSingleTurnPosition)
 	{
-		if(this->priorSingleTurnPosition > HALF_WAY && currentSingleTurnPosition < HALF_WAY)
+		if(this->priorSingleTurnPosition > HALF_WAY / 4 * 3 && currentSingleTurnPosition < HALF_WAY / 4)
 		{
 			this->turns++;
 		}
-		else if(this->priorSingleTurnPosition < HALF_WAY && currentSingleTurnPosition > HALF_WAY)
+		else if(this->priorSingleTurnPosition < HALF_WAY / 4 && currentSingleTurnPosition > HALF_WAY / 4 * 3)
 		{
 			this->turns--;
 		}
