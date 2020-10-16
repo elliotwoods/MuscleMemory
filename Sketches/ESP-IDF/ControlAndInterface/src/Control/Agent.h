@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DataTypes.h"
+#include "Utils/FrameTimer.h"
 
 extern "C" {
 	#include "cJSON.h"
@@ -12,10 +13,9 @@ extern "C" {
 #include <vector>
 
 const size_t localHistorySize = 256;
-const size_t trajectoryQueueSize = 128;
 
 const size_t heapAlignment = 16;
-const size_t heapAreaSize = 64 * 1024;
+const size_t heapAreaSize = 32 * 1024;
 
 namespace tflite {
 	class Model;
@@ -25,15 +25,17 @@ namespace tflite {
 namespace Control {
 	class Agent {
 	public:
-		// 128 bits
+		// 192 bits. All values are rescaled to be similar magnitude ~1
 		struct State {
-			MultiTurnPosition position;
-			MultiTurnPosition targetMinusPosition;
-			Frequency frequency;
-			Velocity velocity;
-			Current current;
+			float position;
+			float targetMinusPosition;
+			float velocity;
+			float agentFrequency;
+			float motorControlFrequency;
+			float current;
 		};
 
+		// 448 bits = 56 bytes
 		struct Trajectory {
 			State priorState;
 			float action;
@@ -46,13 +48,16 @@ namespace Control {
 
 		void init();
 		void update();
-		
 		float selectAction(const State &);
-		void recordTrajectory(const Trajectory &);
+		
+		void recordTrajectory(Trajectory &&);
 	private:
+		void processIncoming(cJSON *);
+
 		std::string clientID;
 		std::vector<uint8_t> modelString;
-		void processIncoming(cJSON *);
+
+		Utils::FrameTimer frameTimer;
 
 		const tflite::Model* model = nullptr;
 		tflite::MicroInterpreter * interpreter = nullptr;
@@ -60,8 +65,11 @@ namespace Control {
 
 		uint8_t * heapArea = nullptr;
 
-		QueueHandle_t trajectoryQueue;
 		Trajectory history[localHistorySize];
 		size_t historyWritePosition = 0;
+
+		State priorState;
+		bool hasPriorState = false;
+		float priorAction = 0.0f;
 	};
 }

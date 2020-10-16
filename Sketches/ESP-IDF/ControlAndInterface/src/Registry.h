@@ -6,9 +6,12 @@
 #include <string>
 #include <limits>
 
+#include "DataTypes.h"
+#include "Utils/FrameTimer.h"
+
 class Registry {
 public:
-	enum RegisterType : uint16_t {
+	enum class RegisterType : uint16_t {
 		DeviceID = 0,
 
 
@@ -24,7 +27,12 @@ public:
 		Current = 30,
 		BusVoltage = 32,
 
-		FreeMemory = 40
+		FreeMemory = 40,
+		Temperature = 41,
+
+		MotorControlFrequency = 50,
+		AgentControlFrequency = 51,
+		RegistryControlFrequency = 52
 	};
 
 	enum Operation : uint8_t {
@@ -54,7 +62,6 @@ public:
 			, Access
 			, int32_t min
 			, int32_t max);
-		
 		/*
 		// Not using this for now
 		const std::string & getName();
@@ -71,34 +78,60 @@ public:
 		const Range range;
 	};
 
-	struct ControlLoopWrites {
+	#include "registers.h"
+
+	struct MotorControlWrites {
 		int32_t encoderReading;
 		int32_t encoderErrors;
 		int32_t multiTurnPosition;
-		int32_t torque;
 		int32_t velocity;
+		int32_t motorControlFrequency;
 	};
 
-	struct ControlLoopReads {
-		int32_t targetPosition;
-		int8_t maximumTorque;
+	struct MotorControlReads {
+		Torque torque;
 	};
 
-	#include "registers.h"
+	struct AgentReads {
+		MultiTurnPosition multiTurnPosition;
+		Velocity velocity;
+		MultiTurnPosition targetPosition;
+		int32_t motorControlFrequency;
+		int32_t current;
+		Torque maximumTorque;
+	};
+
+	struct AgentWrites {
+		Torque torque;
+		int32_t agentFrequency;
+	};
 
 	static Registry & X();
 
 private:
 	Registry();
+	~Registry();
 public:
 	void update();
-	void controlLoopWrite(ControlLoopWrites &&);
-	void controlLoopRead(ControlLoopReads &);
-private:
-	ControlLoopWrites controlLoopWritesIncoming, controlLoopWritesBack;
-	SemaphoreHandle_t controlLoopWritesMutex;
-	bool controlLoopWritesNew = false;
+	void motorControlWrite(MotorControlWrites &&);
+	void motorControlRead(MotorControlReads &);
 
-	ControlLoopReads controlLoopReads;
-	SemaphoreHandle_t controlLoopReadsMutex;
+	void agentWrite(AgentWrites &&);
+	void agentRead(AgentReads &);
+private:
+	MotorControlReads motorControlReads;
+	SemaphoreHandle_t motorControlReadsMutex;
+
+	AgentReads agentReads;
+	SemaphoreHandle_t agentReadsMutex;
+
+	MotorControlWrites motorControlWritesIncoming, motorControlWritesBack;
+	SemaphoreHandle_t motorControlWritesMutex;
+	bool motorControlWritesNew = false;
+
+	AgentWrites agentWritesIncoming, agentWritesBack;
+	SemaphoreHandle_t agentWritesMutex;
+	bool agentWritesNew = false;
+
+	Utils::FrameTimer frameTimer;
 };
