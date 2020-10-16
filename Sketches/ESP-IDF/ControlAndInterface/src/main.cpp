@@ -90,6 +90,7 @@ updateInterface()
 	Registry::X().update();
 	systemInfo.update();
 	GUI::Controller::X().update();
+	agent.update();
 	//Network::processMessages();
 }
 
