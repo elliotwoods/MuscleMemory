@@ -35,7 +35,7 @@ def test_success():
 
 class StartSessionRequest(BaseModel):
 	client_id: str
-	options: dict
+	options: Optional[dict] = {}
 
 
 @app.post("/startSession")
