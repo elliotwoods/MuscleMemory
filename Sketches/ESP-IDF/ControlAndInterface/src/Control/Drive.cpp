@@ -23,7 +23,7 @@ namespace Control {
 	Drive::init()
 	{
 		this->priorPosition = multiTurn.getMultiTurnPosition();
-		this->priorTime = esp_timer_get_time();
+		this->frameTimer.init();
 	}
 
 	//----------
@@ -32,73 +32,33 @@ namespace Control {
 	{
 		static auto & registry = Registry::X();
 
+		this->frameTimer.update();
+
 		auto encoderReading = this->as5047.getPosition();
 		this->multiTurn.update(encoderReading);
 		auto multiTurnPosition = this->multiTurn.getMultiTurnPosition();
 		auto positionWithinStepCycle = this->encoderCalibration.getPositionWithinStepCycle(encoderReading);
 
+		// Calculate velocity
+		auto velocity = (multiTurnPosition - this->priorPosition) * 1000000 / this->frameTimer.getPeriod();
+		this->priorPosition = multiTurnPosition;
+
 		// read from registry
-		Registry::ControlLoopReads controlLoopReads;
+		Registry::MotorControlReads motorControlReads;
 		{
-			registry.controlLoopRead(controlLoopReads);
+			registry.motorControlRead(motorControlReads);
 		}
 
-		// Prepare the state
-		Agent::State state;
-		{
-			state.position = multiTurnPosition;
-			state.targetMinusPosition = controlLoopReads.targetPosition - multiTurnPosition;
+		// apply torque
+		this->motorDriver.setTorque(motorControlReads.torque, positionWithinStepCycle);
 
-			// Calculate frequency and velocity
-			{
-				auto currentTime = esp_timer_get_time();
-				auto period = currentTime - priorTime;
-				state.frequency = 1e6 / period;
-				this->priorTime = currentTime;
-
-				state.velocity = (multiTurnPosition - this->priorPosition) * 1e6 / period;
-				this->priorPosition = multiTurnPosition;
-			}
-		}
-
-		// Record trajectory
-		if(this->hasPriorState) {
-			int32_t reward = abs(state.targetMinusPosition);
-			this->agent.recordTrajectory({
-				this->priorState
-				, this->priorAction
-				, (float) reward
-				, state
-			});
-		}
-		
-		auto action = this->agent.selectAction(state);
-
-		// Perform action as torque
-		int8_t torque;
-		{
-			auto actionIn8BitRange = action * 128.0f;
-
-			// clip to max torque values
-			actionIn8BitRange = fmax(fmin(actionIn8BitRange, (float) controlLoopReads.maximumTorque - 1.0f), -(float) controlLoopReads.maximumTorque);
-
-			torque = (int8_t) actionIn8BitRange;
-			this->motorDriver.setTorque(torque, positionWithinStepCycle);
-		}
-
-		// Remember trajectory variables
-		{
-			std::swap(this->priorState, state);
-			this->priorAction = action;
-			this->hasPriorState = true;
-		}
-
-		registry.controlLoopWrite({
+		// write to registry
+		registry.motorControlWrite({
 			encoderReading
 			, this->as5047.getErrors()
 			, multiTurnPosition
-			, torque
-			, state.velocity
+			, velocity
+			, this->frameTimer.getFrequency()
 		});
 	}
 }

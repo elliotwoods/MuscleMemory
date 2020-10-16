@@ -15,10 +15,16 @@
 
 #include "Interface/SystemInfo.h"
 
+#include "Utils/Scheduler.h"
+
 #include "Registry.h"
 #include "WifiConfig.h"
 
 #include "cJSON.h"
+
+#include "FreeRTOS.h"
+
+#include "driver/can.h"
 
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047;
@@ -31,6 +37,16 @@ Control::Agent agent;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn, agent);
 
 Interface::SystemInfo systemInfo(ina219);
+
+TaskHandle_t agentTaskHandle;
+SemaphoreHandle_t agentTaskResumeMutex;
+
+// Core 0 tasks:
+#define PRIORITY_INTERFACE 1
+
+// Core 1 tasks:
+#define PRIORITY_MOTOR 2
+#define PRIORITY_AGENT 1
 
 //----------
 void
@@ -64,6 +80,49 @@ initDevices()
 
 //----------
 void
+motorTask(void*)
+{
+	while(true) {
+		drive.update();
+	}
+}
+
+//----------
+void
+wakeAgent()
+{
+	BaseType_t taskWoken;
+	if(xSemaphoreTakeFromISR(agentTaskResumeMutex, &taskWoken)) {
+		vTaskResume(agentTaskHandle);
+		xSemaphoreGiveFromISR(agentTaskResumeMutex, &taskWoken);
+	}
+}
+
+//----------
+void
+agentTask(void*)
+{
+	// Scheduler isn't working
+	//Utils::Scheduler::X().schedule(0.01f, wakeAgent);
+
+	// Use an Arduino ESP32 timer
+	auto timer = timerBegin(0, 16, true);
+	timerAttachInterrupt(timer, wakeAgent, true);
+	timerAlarmWrite(timer, 10000, true);
+	timerAlarmEnable(timer);
+
+	agentTaskResumeMutex = xSemaphoreCreateMutex();
+	while(true) {
+		if(xSemaphoreTake(agentTaskResumeMutex, portMAX_DELAY)) {
+			agent.update();
+			xSemaphoreGive(agentTaskResumeMutex);
+		}
+		vTaskSuspend(agentTaskHandle);
+	}
+}
+
+//----------
+void
 initController()
 {
 	if(encoderCalibration.load()) {
@@ -81,6 +140,22 @@ initController()
 	multiTurn.init(as5047.getPosition());
 	agent.init();
 	drive.init();
+
+	xTaskCreatePinnedToCore(motorTask
+		, "Motor"
+		, 1024 * 4
+		, NULL
+		, PRIORITY_MOTOR
+		, 0
+		, 1);
+	
+	xTaskCreatePinnedToCore(agentTask
+		, "Agent"
+		, 1024 * 8
+		, NULL
+		, PRIORITY_AGENT
+		, &agentTaskHandle
+		, 0);
 }
 
 //----------
@@ -90,13 +165,12 @@ updateInterface()
 	Registry::X().update();
 	systemInfo.update();
 	GUI::Controller::X().update();
-	agent.update();
 	//Network::processMessages();
 }
 
 //----------
 void
-runInterface(void*)
+interfaceTask(void*)
 {
 	while(true) {
 		vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -111,19 +185,13 @@ initInterface()
 	GUI::Controller::X().init(std::make_shared<GUI::Panels::RegisterList>());
 	systemInfo.init();
 
-	xTaskCreatePinnedToCore(runInterface
+	xTaskCreatePinnedToCore(interfaceTask
 		, "Interface"
-		, 10000
+		, 4096
 		, NULL
-		, 1
+		, PRIORITY_INTERFACE
 		, NULL
 		, 0);
-}
-
-//----------
-void controlLoop()
-{
-	drive.update();
 }
 
 #ifdef ARDUINO
@@ -141,7 +209,7 @@ setup()
 void
 loop()
 {
-	controlLoop();
+	vTaskDelay(500 / portTICK_PERIOD_MS);
 }
 
 #endif
