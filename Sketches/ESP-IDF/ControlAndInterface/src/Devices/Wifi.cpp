@@ -23,7 +23,8 @@ namespace Devices {
 		printf("Connecting to : %s\n", WIFI_SSID);
 		WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 		while(WiFi.status() != WL_CONNECTED) {
-			delay(500);
+			WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+			delay(1000);
 			printf("Attempting wifi connection\n");
 		}
 
@@ -36,11 +37,6 @@ namespace Devices {
 
 		{
 			this->baseURI = baseURI;
-
-			//add trailing slash if needed
-			if(this->baseURI.back() != '/') {
-				this->baseURI.push_back('/');
-			}
 		}
 	}
 
@@ -50,13 +46,23 @@ namespace Devices {
 	{
 		HTTPClient httpClient;
 
-		httpClient.begin((this->baseURI + path).c_str());
-		auto contentString = cJSON_Print(content);
-		httpClient.addHeader("Content-Type", "application/json");
-		httpClient.POST((uint8_t*) contentString, strlen(contentString));
-		
-		auto response = cJSON_Parse(httpClient.getString().c_str());
-		httpClient.end();
+		// Format the request
+		auto contentString = cJSON_PrintUnformatted(content);
+
+		// Perform the request
+		cJSON * response = nullptr;
+		if(httpClient.begin((this->baseURI + path).c_str())) {
+			httpClient.addHeader("Content-Type", "application/json");
+			auto result = httpClient.POST((uint8_t*) contentString, strlen(contentString));
+			if(result == 200) {
+				response = cJSON_Parse(httpClient.getString().c_str());
+				if(!response) {
+					printf("[Wifi] : Error parsing response : \n %s \n", httpClient.getString().c_str());
+				}
+			}
+			httpClient.end();
+		}
+
 		free(contentString);
 
 		return response;
