@@ -37,11 +37,6 @@ namespace Devices {
 
 		{
 			this->baseURI = baseURI;
-
-			//add trailing slash if needed
-			if(this->baseURI.back() != '/') {
-				this->baseURI.push_back('/');
-			}
 		}
 	}
 
@@ -52,7 +47,7 @@ namespace Devices {
 		HTTPClient httpClient;
 
 		// Format the request
-		auto contentString = cJSON_Print(content);
+		auto contentString = cJSON_PrintUnformatted(content);
 
 		// Perform the request
 		cJSON * response = nullptr;
