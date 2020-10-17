@@ -46,6 +46,8 @@ namespace Control {
 	Agent::Agent()
 	{
 		this->heapArea = (uint8_t*) heap_caps_malloc(heapAreaSize + heapAlignment, MALLOC_CAP_8BIT);
+		this->historyWrites = new History();
+		this->historyReads = new History();
 	}
 
 	//----------
@@ -53,6 +55,9 @@ namespace Control {
 	{
 		heap_caps_free(this->heapArea);
 		this->heapArea = nullptr;
+
+		delete this->historyWrites;
+		delete this->historyReads;
 	}
 
 	//----------
@@ -79,7 +84,7 @@ namespace Control {
 			{
 				auto request = cJSON_CreateObject();
 				cJSON_AddStringToObject(request, "client_id", this->clientID.c_str());
-				response = Devices::Wifi::X().post("startSession", request);
+				response = Devices::Wifi::X().post("/startSession", request);
 				cJSON_Delete(request);
 			}
 			
@@ -94,6 +99,10 @@ namespace Control {
 
 		// Intialise the frame timer
 		this->frameTimer.init();
+
+		// Setup threading objects for server communication
+		this->historyToServer = xQueueCreate(1, sizeof(History*));
+		this->historyMutex = xSemaphoreCreateMutex();
 	}
 
 	//----------
@@ -158,6 +167,52 @@ namespace Control {
 	void
 	Agent::serverCommunicateTask()
 	{
+		History * history;
+		while(true) {
+			if(xQueueReceive(this->historyToServer, &history, portMAX_DELAY)) {
+				printf("[Agent] Server send start\n");
+				// Receieve the data into base64 encoding
+				uint8_t * base64Text;
+				size_t base64TextLength;
+				if(xSemaphoreTake(this->historyMutex, portMAX_DELAY)) {
+					printf("[Agent] Base64 start encode\n");
+					printf("[Agent] History length to send %u\n", history->writePosition);
+					{
+						// Encode the text
+						base64Text = base64_encode((const uint8_t *) history->trajectories
+							, sizeof(Trajectory) * history->writePosition
+							, &base64TextLength);
+						printf("[Agent] Base64 encoded\n");
+
+						xSemaphoreGive(this->historyMutex);
+					}
+					
+					bool jsonSerialiseFail = false;
+					auto request = cJSON_CreateObject();
+					if(!cJSON_AddStringToObject(request, "client_id", this->clientID.c_str())) {
+						jsonSerialiseFail |= true;
+					}
+					if(!cJSON_AddStringToObject(request, "trajectories", (char *) base64Text)) {
+						jsonSerialiseFail |= true;
+					}
+					free(base64Text);
+					printf("[Agent] Json serialised\n");
+
+					if(jsonSerialiseFail) {
+						printf("[Agent] : Failed to serialise json\n");
+						cJSON_Delete(request);
+					}
+					else {
+						auto response = Devices::Wifi::X().post("/transmitTrajectories", request);
+						cJSON_Delete(request);
+						this->processIncoming(response);
+						cJSON_Delete(response);
+					}
+				}
+
+			}
+		}
+		
 	}
 
 	//----------
@@ -194,8 +249,23 @@ namespace Control {
 	void
 	Agent::recordTrajectory(Trajectory && trajectory)
 	{
-		if(this->historyWritePosition <  localHistorySize) {
-			this->history[this->historyWritePosition++] = trajectory;
+		this->historyWrites->trajectories[this->historyWrites->writePosition++] = trajectory;
+		if(this->historyWrites->writePosition == localHistorySize) {
+			// Lock the history
+			if(xSemaphoreTake(this->historyMutex, 5000 / portTICK_RATE_MS)) {
+				// swap the buffers
+				std::swap(this->historyReads, this->historyWrites);
+
+				// reset the buffer which has now been assigned for writing
+				this->historyWrites->writePosition = 0;
+
+				// send to the server
+				if(!xQueueSend(this->historyToServer, &this->historyReads, 5000 / portTICK_RATE_MS)) {
+					printf("[Agent] : Could not send history");
+				}
+
+				xSemaphoreGive(this->historyMutex);
+			}
 		}
 	}
 
