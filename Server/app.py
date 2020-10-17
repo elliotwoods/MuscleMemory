@@ -61,7 +61,8 @@ def new_session(request: StartSessionRequest):
 		return {
 			"client_id" : request.client_id,
 			"document_id" : document_id,
-			"model" : agent.get_model_string()
+			"model" : agent.get_model_string(),
+			"is_training" : True
 		}
 	result = simple_api(action)()
 	return result

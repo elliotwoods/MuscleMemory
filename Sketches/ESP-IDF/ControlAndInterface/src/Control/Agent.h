@@ -48,6 +48,8 @@ namespace Control {
 
 		void init();
 		void update();
+		void serverCommunicateTask();
+
 		float selectAction(const State &);
 		
 		void recordTrajectory(Trajectory &&);
@@ -56,10 +58,14 @@ namespace Control {
 		bool checkOutputSize();
 		void processIncoming(cJSON *);
 
+
 		std::string clientID;
 		std::vector<uint8_t> modelString;
 
 		Utils::FrameTimer frameTimer;
+
+		// The server tells you if this clientID is still training or not
+		bool isTraining = false;
 
 		const tflite::Model* model = nullptr;
 		tflite::MicroInterpreter * interpreter = nullptr;
