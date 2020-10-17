@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI
 import db
 from datetime import datetime
+import base64
 
 app = FastAPI()
 
@@ -93,7 +94,9 @@ class TransmitTrajectoriesRequest(BaseModel):
 @app.post("/transmitTrajectories")
 def transmitTrajectories(request: TransmitTrajectoriesRequest):
 	def action():
-		print(request)
+		agent = agents.get_agent(request.client_id)
+		agent.replay_memory.add_trajectories_base64(request.trajectories)
+		
 		return {
 
 		}
