@@ -52,6 +52,8 @@ namespace Control {
 		
 		void recordTrajectory(Trajectory &&);
 	private:
+		bool checkInputSize();
+		bool checkOutputSize();
 		void processIncoming(cJSON *);
 
 		std::string clientID;
