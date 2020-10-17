@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 import tensorboard
 
-from binascii import b2a_base64
+import base64
 import datetime
 
 from ReplayMemory import ReplayMemory
@@ -114,7 +114,7 @@ class DDPGAgent:
 
 	def get_model_string(self):
 		binary_string = self.get_model_byte_string()
-		string = b2a_base64(binary_string).decode('utf-8')
+		string = base64.b64encode(binary_string)
 		return string
 	
 
