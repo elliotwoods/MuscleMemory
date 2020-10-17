@@ -120,6 +120,7 @@ Registry::update()
 			this->registers.at(RegisterType::AgentControlFrequency).value = this->agentWritesBack.agentFrequency;
 			this->registers.at(RegisterType::AgentLocalHistorySize).value = this->agentWritesBack.localHistorySize;
 			this->registers.at(RegisterType::AgentTraining).value = this->agentWritesBack.isTraining;
+			this->registers.at(RegisterType::AgentNoiseAmplitude).value = this->agentWritesBack.noiseAmplitude;
 		}
 	}
 }
