@@ -132,7 +132,7 @@ namespace Control {
 		// Record trajectory if we have a prior state
 		if(this->runtimeParameters.isTraining) {
 			if (this->hasPriorState) {
-				int32_t reward = abs(state.targetMinusPosition);
+				int32_t reward = -abs(state.targetMinusPosition);
 				this->recordTrajectory({
 					this->priorState
 					, this->priorAction
