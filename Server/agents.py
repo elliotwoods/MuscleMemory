@@ -14,9 +14,14 @@ def get_agent(client_id):
 	client_agents_lock.release()
 	return client_agent
 
-def create_agent(client_id, options):
+def create_agent(client_id, options, recycle_agent):
 	client_agents_lock.acquire()
 	global client_agents
+	if recycle_agent:
+		if client_id in client_agents:
+			client_agent = client_agents[client_id]
+			client_agents_lock.release()
+			return client_agent
 	agent = DDPGAgent(client_id, options)
 	client_agents[client_id] = agent
 	client_agents_lock.release()
