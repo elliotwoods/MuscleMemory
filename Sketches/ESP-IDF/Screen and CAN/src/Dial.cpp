@@ -129,7 +129,7 @@ static void ROT_ENC_event(void *pvParameter) {
             //printf("pos %d, prev pos %d \n", position, previousPosition);
             previousPosition = position;
         }
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        //vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -138,4 +138,5 @@ void initDial() {
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);                                // install gpio isr service
     xTaskCreate(&ROT_ENC_event, "ROT_ENC_event", 2048, NULL, 10, NULL);             // start Rotary Encoder Task
     xTaskCreate(&ROT_ENC_PUSH_event, "ROT_ENC_PUSH_event", 2048, NULL, 10, NULL);   // start Rotary Encoder Push button Task
+	//disableCore0WDT();
 }
