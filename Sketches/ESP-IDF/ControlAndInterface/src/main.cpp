@@ -109,7 +109,7 @@ agentTask(void*)
 	// Use an Arduino ESP32 timer
 	auto timer = timerBegin(0, 16, true);
 	timerAttachInterrupt(timer, wakeAgent, true);
-	timerAlarmWrite(timer, 5000, true);
+	timerAlarmWrite(timer, 50000, true);
 	timerAlarmEnable(timer);
 
 	agentTaskResumeMutex = xSemaphoreCreateMutex();

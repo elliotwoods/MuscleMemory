@@ -86,6 +86,19 @@ def remoteUpdate(request: RemoteUpdateRequest):
 	result = simple_api(action)()
 	return result
 
+class TransmitTrajectoriesRequest(BaseModel):
+	client_id: str
+	trajectories: str
+
+@app.post("/transmitTrajectories")
+def transmitTrajectories(request: TransmitTrajectoriesRequest):
+	def action():
+		print(request)
+		return {
+
+		}
+	result = simple_api(action)()
+	return result
 
 @app.get("/saveMemory")
 @simple_api
