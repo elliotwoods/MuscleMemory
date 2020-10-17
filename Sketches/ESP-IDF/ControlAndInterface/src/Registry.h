@@ -36,6 +36,7 @@ public:
 		RegistryControlFrequency = 52,
 
 		AgentLocalHistorySize = 60,
+		AgentTraining = 61
 	};
 
 	enum Operation : uint8_t {
@@ -106,8 +107,9 @@ public:
 
 	struct AgentWrites {
 		Torque torque;
-		int32_t agentFrequency;
-		int32_t localHistorySize;
+		int16_t agentFrequency;
+		int16_t localHistorySize;
+		bool isTraining;
 	};
 
 	static Registry & X();

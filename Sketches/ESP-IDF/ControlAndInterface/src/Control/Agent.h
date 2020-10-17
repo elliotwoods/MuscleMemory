@@ -2,6 +2,7 @@
 
 #include "DataTypes.h"
 #include "Utils/FrameTimer.h"
+#include "OUActionNoise.h"
 
 extern "C" {
 	#include "cJSON.h"
@@ -48,6 +49,10 @@ namespace Control {
 
 		void init();
 		void update();
+
+		void loadModel(const char *, size_t size);
+		void unloadModel();
+
 		void serverCommunicateTask();
 
 		float selectAction(const State &);
@@ -86,5 +91,8 @@ namespace Control {
 		State priorState;
 		bool hasPriorState = false;
 		float priorAction = 0.0f;
+
+		OUActionNoise actionNoise;
+		float noiseAmplitude = 0.0f;
 	};
 }
