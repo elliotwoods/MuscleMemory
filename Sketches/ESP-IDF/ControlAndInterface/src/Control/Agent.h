@@ -14,10 +14,10 @@ extern "C" {
 #include <string>
 #include <vector>
 
-const size_t localHistorySize = 256;
+const size_t localHistorySize = 128;
 
 const size_t heapAlignment = 16;
-const size_t heapAreaSize = 32 * 1024;
+const size_t heapAreaSize = 8 * 1024;
 
 namespace tflite {
 	class Model;
