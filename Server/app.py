@@ -51,6 +51,7 @@ def test_success():
 class StartSessionRequest(BaseModel):
 	client_id: str
 	options: Optional[dict] = {}
+	recycle_agent: Optional[bool] = True
 
 
 @app.post("/startSession")
@@ -71,7 +72,7 @@ def new_session(request: StartSessionRequest):
 		})
 
 		# create the agent
-		agent = agents.create_agent(request.client_id, request.options)
+		agent = agents.create_agent(request.client_id, request.options, request.recycle_agent)
 
 		return {
 			"client_id" : request.client_id,
