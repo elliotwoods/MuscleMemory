@@ -102,4 +102,9 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
+	{ RegisterType::AgentNoiseAmplitude, {
+		"NoiseAmplitude"
+		, 0 // / 1000
+		, Access::ReadOnly
+	}},
 };
