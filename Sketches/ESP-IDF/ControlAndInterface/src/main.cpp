@@ -43,6 +43,7 @@ SemaphoreHandle_t agentTaskResumeMutex;
 
 // Core 0 tasks:
 #define PRIORITY_INTERFACE 1
+#define PRIORITY_AGENT_SERVER_COMMS 2
 
 // Core 1 tasks:
 #define PRIORITY_MOTOR 2
@@ -123,6 +124,13 @@ agentTask(void*)
 
 //----------
 void
+agentServerCommunicateTask(void*)
+{
+	agent.serverCommunicateTask();
+}
+
+//----------
+void
 initController()
 {
 	if(encoderCalibration.load()) {
@@ -146,7 +154,7 @@ initController()
 		, 1024 * 4
 		, NULL
 		, PRIORITY_MOTOR
-		, 0
+		, NULL
 		, 1);
 	
 	xTaskCreatePinnedToCore(agentTask
@@ -155,6 +163,14 @@ initController()
 		, NULL
 		, PRIORITY_AGENT
 		, &agentTaskHandle
+		, 1);
+	
+	xTaskCreatePinnedToCore(agentServerCommunicateTask
+		, "AgentServer"
+		, 1024 * 4
+		, NULL
+		, PRIORITY_AGENT_SERVER_COMMS
+		, NULL
 		, 0);
 }
 
