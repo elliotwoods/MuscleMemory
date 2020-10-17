@@ -19,14 +19,14 @@ default_options = {
 	"state_count" : 6,
 	"action_count" : 1,
 	"actor_hidden_layers" : [16, 16],
-	"critic_state_hidden_layers" : [16, 32],
-	"critic_action_hidden_layers" : [32],
-	"critic_final_hidden_layers" : [32, 32],
+	"critic_state_hidden_layers" : [64, 64],
+	"critic_action_hidden_layers" : [64, 64],
+	"critic_final_hidden_layers" : [64, 64],
 	"learning_rate" : 0.001,
 	"gamma" : 0.99, # discount factor,
 	"batch_size" : 64,
 	"buffer_size" : 100000,
-	"tau" : 1e-3 # target model update coefficient
+	"tau" : 1e-1 # target model update coefficient. We choose a large value because we don't train for each sample arriving
 }
 
 # This should be split out into a seperate class (so should many things here)
