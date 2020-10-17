@@ -91,4 +91,10 @@ std::map<RegisterType, Register> registers {
 		, 0 // Hz
 		, Access::ReadOnly
 	}},
+
+	{ RegisterType::AgentLocalHistorySize, {
+		"AgentLocalHistory"
+		, 0
+		, Access::ReadOnly
+	}},
 };

@@ -152,6 +152,7 @@ namespace Control {
 			registry.agentWrite({
 				torque
 				, this->frameTimer.getFrequency()
+				, (int32_t) this->historyWrites->writePosition
 			});
 		}
 
@@ -170,19 +171,15 @@ namespace Control {
 		History * history;
 		while(true) {
 			if(xQueueReceive(this->historyToServer, &history, portMAX_DELAY)) {
-				printf("[Agent] Server send start\n");
 				// Receieve the data into base64 encoding
 				uint8_t * base64Text;
 				size_t base64TextLength;
 				if(xSemaphoreTake(this->historyMutex, portMAX_DELAY)) {
-					printf("[Agent] Base64 start encode\n");
-					printf("[Agent] History length to send %u\n", history->writePosition);
 					{
 						// Encode the text
 						base64Text = base64_encode((const uint8_t *) history->trajectories
 							, sizeof(Trajectory) * history->writePosition
 							, &base64TextLength);
-						printf("[Agent] Base64 encoded\n");
 
 						xSemaphoreGive(this->historyMutex);
 					}
@@ -196,10 +193,9 @@ namespace Control {
 						jsonSerialiseFail |= true;
 					}
 					free(base64Text);
-					printf("[Agent] Json serialised\n");
 
 					if(jsonSerialiseFail) {
-						printf("[Agent] : Failed to serialise json\n");
+						printf("[Agent] : Failed to serialise json when submitting trajectories\n");
 						cJSON_Delete(request);
 					}
 					else {
