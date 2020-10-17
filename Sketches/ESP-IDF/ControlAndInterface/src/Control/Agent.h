@@ -73,8 +73,15 @@ namespace Control {
 
 		uint8_t * heapArea = nullptr;
 
-		Trajectory history[localHistorySize];
-		size_t historyWritePosition = 0;
+		struct History {
+			Trajectory trajectories[localHistorySize];
+			size_t writePosition = 0;
+		};
+		History * historyWrites;
+		History * historyReads;
+		SemaphoreHandle_t historyMutex;
+		QueueHandle_t historyToServer;
+		
 
 		State priorState;
 		bool hasPriorState = false;
