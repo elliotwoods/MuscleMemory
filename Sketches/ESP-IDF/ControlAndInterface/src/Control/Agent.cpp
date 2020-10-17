@@ -151,8 +151,9 @@ namespace Control {
 		{
 			registry.agentWrite({
 				torque
-				, this->frameTimer.getFrequency()
-				, (int32_t) this->historyWrites->writePosition
+				, (int16_t) this->frameTimer.getFrequency()
+				, (int16_t) this->historyWrites->writePosition
+				, this->isTraining
 			});
 		}
 
@@ -162,6 +163,62 @@ namespace Control {
 			this->priorAction = action;
 			this->hasPriorState = true;
 		}
+	}
+
+	//----------
+	void
+	Agent::loadModel(const char * data, size_t size)
+	{
+		this->unloadModel();
+		this->modelString.assign(data, data + size);
+
+		// Load the model
+		{
+			this->model = ::tflite::GetModel(this->modelString.data());
+			if(this->model->version() != TFLITE_SCHEMA_VERSION) {
+				printf("[Agent] - Model provided is schema version %d not equal "
+					"to supported version %d.\n",
+					this->model->version(), TFLITE_SCHEMA_VERSION);
+				
+				return;
+			}
+		}
+		
+		// Initialise the interpreter
+		{
+			// Align the memory (note this only works for 16bit)
+			auto heapAreaAligned = ((uintptr_t)this->heapArea + 15) & ~ (uintptr_t) 0x0F;
+			this->interpreter = new tflite::MicroInterpreter(model
+				, resolver
+				, (uint8_t*) heapAreaAligned
+				, heapAreaSize
+				, error_reporter);
+		}
+
+		// Allocate the tensors
+		if(this->interpreter->AllocateTensors() != kTfLiteOk) {
+			delete this->interpreter;
+			printf("[Agent] : Failed to allocate tensors\n");
+			this->initialised = false;
+		}
+	}
+
+	//----------
+	void
+	Agent::unloadModel()
+	{
+		if(this->interpreter) {
+			delete this->interpreter;
+			this->interpreter = nullptr;
+		}
+
+		if(this->model) {
+			this->model = nullptr;	
+		}
+
+		this->modelString.clear();
+
+		this->initialised = false;
 	}
 
 	//----------
@@ -236,8 +293,16 @@ namespace Control {
 
 		// Get output
 		{
-			auto & result = this->interpreter->output(0)->data.f[0];
-			return result;
+			auto & action = this->interpreter->output(0)->data.f[0];
+
+			// Apply noise if we're training
+			if(this->isTraining) {
+				auto noise = this->actionNoise.get() * this->noiseAmplitude;
+				return action + noise;
+			}
+			else {
+				return action;
+			}
 		}
 	}
 
@@ -330,53 +395,31 @@ namespace Control {
 		{
 			auto contentJson = cJSON_GetObjectItemCaseSensitive(response, "content");
 			if(contentJson && cJSON_IsObject(contentJson)) {
-				auto modelJson = cJSON_GetObjectItemCaseSensitive(contentJson, "model");
-				if(modelJson && cJSON_IsString(modelJson) && modelJson->valuestring) {
-					// Decode from BASE64 into local copy
-					{
+				// "model"
+				{
+					auto modelJson = cJSON_GetObjectItemCaseSensitive(contentJson, "model");
+					if(modelJson && cJSON_IsString(modelJson) && modelJson->valuestring) {
+						// Decode from BASE64 into local copy
 						size_t outputLength;
 						auto binaryString = base64_decode((const unsigned char *) modelJson->valuestring
 							, strlen(modelJson->valuestring)
 							, &outputLength);
-						this->modelString.assign(binaryString, binaryString + outputLength);
+						
+						this->loadModel((const char *) binaryString, outputLength);
 						free(binaryString);
 					}
-
-					// Load the model
-					{
-						this->model = ::tflite::GetModel(this->modelString.data());
-						if(this->model->version() != TFLITE_SCHEMA_VERSION) {
-							TF_LITE_REPORT_ERROR(error_reporter,
-								"Model provided is schema version %d not equal "
-								"to supported version %d.\n",
-								this->model->version(), TFLITE_SCHEMA_VERSION);
-							
-							return;
-						}
-					}
-					
-					// Initialise the interpreter
-					{
-						// Align the memory (note this only works for 16bit)
-						auto heapAreaAligned = ((uintptr_t)this->heapArea + 15) & ~ (uintptr_t) 0x0F;
-						this->interpreter = new tflite::MicroInterpreter(model
-							, resolver
-							, (uint8_t*) heapAreaAligned
-							, heapAreaSize
-							, error_reporter);
-					}
-
-					// Allocate the tensors
-					if(this->interpreter->AllocateTensors() != kTfLiteOk) {
-						delete this->interpreter;
-						printf("[Agent] : Failed to allocate tensors\n");
-						this->initialised = false;
-					}
 				}
-
+				
+				// "is_training"
 				auto isTrainingJson = cJSON_GetObjectItemCaseSensitive(contentJson, "is_training");
 				if(isTrainingJson && cJSON_IsBool(isTrainingJson)) {
 					this->isTraining = (bool) isTrainingJson->valueint;
+				}
+
+				// "noise"
+				auto noiseJson = cJSON_GetObjectItemCaseSensitive(contentJson, "noise");
+				if(noiseJson && cJSON_IsNumber(noiseJson)) {
+					this->noiseAmplitude = (float) noiseJson->valuedouble;
 				}
 			}
 		}
