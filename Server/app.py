@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI
 import db
 from datetime import datetime
+import base64
 
 app = FastAPI()
 
@@ -61,7 +62,8 @@ def new_session(request: StartSessionRequest):
 		return {
 			"client_id" : request.client_id,
 			"document_id" : document_id,
-			"model" : agent.get_model_string()
+			"model" : agent.get_model_string(),
+			"runtime_parameters" : agent.runtime_parameters.__dict__
 		}
 	result = simple_api(action)()
 	return result
@@ -85,6 +87,21 @@ def remoteUpdate(request: RemoteUpdateRequest):
 	result = simple_api(action)()
 	return result
 
+class TransmitTrajectoriesRequest(BaseModel):
+	client_id: str
+	trajectories: str
+
+@app.post("/transmitTrajectories")
+def transmitTrajectories(request: TransmitTrajectoriesRequest):
+	def action():
+		agent = agents.get_agent(request.client_id)
+		agent.replay_memory.add_trajectories_base64(request.trajectories)
+		
+		return {
+
+		}
+	result = simple_api(action)()
+	return result
 
 @app.get("/saveMemory")
 @simple_api
