@@ -36,7 +36,8 @@ public:
 		RegistryControlFrequency = 52,
 
 		AgentLocalHistorySize = 60,
-		AgentTraining = 61
+		AgentTraining = 61,
+		AgentNoiseAmplitude = 62
 	};
 
 	enum Operation : uint8_t {
@@ -110,6 +111,7 @@ public:
 		int16_t agentFrequency;
 		int16_t localHistorySize;
 		bool isTraining;
+		int16_t noiseAmplitude;
 	};
 
 	static Registry & X();
