@@ -65,9 +65,14 @@ std::map<RegisterType, Register> registers {
 		, 0 // kB
 		, Access::ReadOnly
 	}},
-	{ RegisterType::Temperature, {
-		"Temperature"
+	{ RegisterType::CPUTemperature, {
+		"CPUTemperature"
 		, 0 // C
+		, Access::ReadOnly
+	}},
+	{ RegisterType::UpTime, {
+		"UpTime"
+		, 0 // ms
 		, Access::ReadOnly
 	}},
 
