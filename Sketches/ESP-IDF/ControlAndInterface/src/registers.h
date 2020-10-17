@@ -93,7 +93,12 @@ std::map<RegisterType, Register> registers {
 	}},
 
 	{ RegisterType::AgentLocalHistorySize, {
-		"AgentLocalHistory"
+		"LocalHistorySize"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::AgentTraining, {
+		"Training"
 		, 0
 		, Access::ReadOnly
 	}},
