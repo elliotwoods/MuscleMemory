@@ -131,9 +131,9 @@ namespace Control {
 			});
 		}
 
-		// Get the action. Scale to bianry values and clamp
+		// Get the action. Scale to binary values and clamp
 		auto action = this->selectAction(state);
-		int8_t torque = (int8_t)(action * 64.0f);
+		int8_t torque = (int8_t)(action * 127.0f);
 		torque = max(min(torque, agentReads.maximumTorque), -agentReads.maximumTorque);
 
 		// Send torque to main loop
@@ -153,9 +153,33 @@ namespace Control {
 
 	//----------
 	float
-	Agent::selectAction(const State &)
+	Agent::selectAction(const State & state)
 	{
-		return 0.5f;
+		if(!this->initialised) {
+			printf("[Agent] : Cannot selectAction. Not initialised\n");
+			return 0.0f;
+		}
+
+		// Set input
+		{
+			memcpy(this->interpreter->input(0)->data.f, &state, sizeof(State));
+		}
+
+		// Invoke network
+		{
+			auto status = this->interpreter->Invoke();
+			if(status != kTfLiteOk) {
+				printf("[Agent] : Failed to invoke network\n");
+				return 0.0f;
+			}
+		}
+
+		// Get output
+		{
+			auto & result = this->interpreter->output(0)->data.f[0];
+			printf("[Agent] : Invoke gives %f\n", result);
+			return result;
+		}
 	}
 
 	//----------
@@ -165,6 +189,43 @@ namespace Control {
 		if(this->historyWritePosition <  localHistorySize) {
 			this->history[this->historyWritePosition++] = trajectory;
 		}
+	}
+
+	//----------
+	bool
+	Agent::checkInputSize()
+	{
+		const auto input = this->interpreter->input(0);
+		auto dims = input->dims->size;
+		if(dims != 2) {
+			printf("[Agent] : Input Dimensions (%d) not equal to 2\n", dims);
+			return false;
+		}
+		auto inputSize = input->dims->data[0] * input->dims->data[1];
+		auto stateSize = sizeof(State) / sizeof(float);
+		if(inputSize != stateSize) {
+			printf("[Agent] : Size mismatch between State (%d) and network input (%d) \n", stateSize, inputSize);
+			return false;
+		}
+		return true;
+	}
+
+	//----------
+	bool
+	Agent::checkOutputSize()
+	{
+		const auto output = this->interpreter->output(0);
+		auto dims = output->dims->size;
+		if(dims != 2) {
+			printf("[Agent] : Output Dimensions (%d) not equal to 2\n", dims);
+			return false;
+		}
+		auto outputSize = output->dims->data[0] * output->dims->data[1];
+		if(outputSize != 1) {
+			printf("[Agent] : Output size (%d) is not equal to 1 \n", outputSize);
+			return false;
+		}
+		return true;
 	}
 
 	//----------
@@ -230,11 +291,21 @@ namespace Control {
 							, heapAreaSize
 							, error_reporter);
 					}
-					
-					this->initialised = true;
+
+					// Allocate the tensors
+					if(this->interpreter->AllocateTensors() != kTfLiteOk) {
+						delete this->interpreter;
+						printf("[Agent] : Failed to allocate tensors\n");
+						this->initialised = false;
+					}
 				}
 			}
 		}
-		
+
+		// Check input and output size
+		{
+			printf("[Agent] : Succesfully initialised\n");
+			this->initialised = this->checkInputSize() && this->checkOutputSize();
+		}
 	}
 }

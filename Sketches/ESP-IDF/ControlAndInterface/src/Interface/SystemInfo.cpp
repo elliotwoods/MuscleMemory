@@ -40,6 +40,7 @@ namespace Interface {
 		registry.registers.at(Registry::RegisterType::FreeMemory).value = xPortGetFreeHeapSize() / 1024;
 		registry.registers.at(Registry::RegisterType::Current).value = ina219.getCurrent() * 1000.0f;
 		registry.registers.at(Registry::RegisterType::BusVoltage).value = ina219.getBusVoltage() * 1000.0f;
-		registry.registers.at(Registry::RegisterType::Temperature).value = float(temperature_sens_read() - 32) / 1.8f;
+		registry.registers.at(Registry::RegisterType::CPUTemperature).value = float(temperature_sens_read() - 32) / 1.8f;
+		registry.registers.at(Registry::RegisterType::UpTime).value = esp_timer_get_time() / 1000;
 	}
 }
