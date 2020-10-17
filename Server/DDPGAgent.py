@@ -8,6 +8,7 @@ import base64
 import datetime
 
 from ReplayMemory import ReplayMemory
+from multiprocessing import Lock
 
 tf.compat.v1.enable_v2_behavior()
 
@@ -51,6 +52,7 @@ class DDPGAgent:
 		self.replay_memory = ReplayMemory(options['action_count']
 			, options['state_count']
 			, options['buffer_size'])
+		self.replay_memory_lock = Lock()
 
 		# create the optimisers
 		self.actor_optimizer = tf.keras.optimizers.Adam(learning_rate=options['learning_rate'])
@@ -65,6 +67,13 @@ class DDPGAgent:
 
 		# create the runtime parameters
 		self.runtime_parameters = RuntimeParameters()
+
+		# this parameter is populated when a new network is available
+		#  and cleared to None whenever the client has the most recent copy
+		self.fresh_model = self.get_model_base64()
+
+		# Used for tensorboard
+		self.training_index = 0
 
 	def init_actor(self, options):
 		# create the actor
@@ -122,44 +131,63 @@ class DDPGAgent:
 		return quantized_model
 
 
-	def get_model_string(self):
+	def get_model_base64(self):
 		binary_string = self.get_model_byte_string()
 		string = base64.b64encode(binary_string)
 		return string
+
+	def get_fresh_model(self):
+		fresh_model = self.fresh_model
+		self.fresh_model = None
+		return fresh_model
+
+	def update_runtime_parameters(self):
+		if self.replay_memory.buffer_counter < 10000:
+			self.runtime_parameters.is_training = True
+			self.runtime_parameters.noise_amplitude = 1 / 2
+		elif self.replay_memory.buffer_counter < 20000:
+			self.runtime_parameters.is_training = True
+			self.runtime_parameters.noise_amplitude = 1 / 4
+		elif self.replay_memory.buffer_counter < 30000:
+			self.runtime_parameters.is_training = True
+			self.runtime_parameters.noise_amplitude = 1 / 8
+		elif self.replay_memory.buffer_counter < 40000:
+			self.runtime_parameters.is_training = True
+			self.runtime_parameters.noise_amplitude = 1 / 16
+		else:
+			self.runtime_parameters.is_training = True
+			self.runtime_parameters.noise_amplitude = 0
 	
 
-	def update(self, states, actions, rewards):
-		# trim to lowest count
-		# This is because generally we have 1 less reward than state or actions
-		# Also we will takes states[i + 1] when training
-		count = min(len(states) - 1, len(actions), len(rewards))
+	# def update(self, states, actions, rewards):
+	# 	# trim to lowest count
+	# 	# This is because generally we have 1 less reward than state or actions
+	# 	# Also we will takes states[i + 1] when training
+	# 	count = min(len(states) - 1, len(actions), len(rewards))
 
-		for i in range(count):
-			self.replay_memory.record(states[i], actions[i], rewards[i], states[i + 1])
-			critic_loss, actor_loss = self.train()
+	# 	for i in range(count):
+	# 		self.replay_memory.record(states[i], actions[i], rewards[i], states[i + 1])
+	# 		critic_loss, actor_loss = self.train()
 		
-			with self.tensorboard.as_default():
-				record_index = self.time_step
-				tf.summary.scalar('critic_loss', critic_loss, step=record_index)
-				tf.summary.scalar('actor_loss', actor_loss, step=record_index)
-				tf.summary.scalar('mean_reward', np.mean(np.array(rewards)), step=record_index)
-				tf.summary.scalar('state', states[i][0], step=record_index)
-				tf.summary.scalar('action', actions[i], step=record_index)
-				tf.summary.scalar('reward', rewards[i], step=record_index)
+	# 		with self.tensorboard.as_default():
+	# 			record_index = self.time_step
+	# 			tf.summary.scalar('critic_loss', critic_loss, step=record_index)
+	# 			tf.summary.scalar('actor_loss', actor_loss, step=record_index)
+	# 			tf.summary.scalar('mean_reward', np.mean(np.array(rewards)), step=record_index)
+	# 			tf.summary.scalar('state', states[i][0], step=record_index)
+	# 			tf.summary.scalar('action', actions[i], step=record_index)
+	# 			tf.summary.scalar('reward', rewards[i], step=record_index)
 			
-			print("Agent [{}] time step {}".format(self.client_id, self.time_step))
+	# 		print("Agent [{}] time step {}".format(self.client_id, self.time_step))
 
-			self.time_step += 1
-		self.episode += 1
+	# 		self.time_step += 1
+	# 	self.episode += 1
 
-
-	def train(self):
-		state_batch, action_batch, reward_batch, next_state_batch = self.replay_memory.get_batch(self.options['batch_size'])
-
+	def train_with_batch(self, batch):
 		with tf.GradientTape() as tape:
-			next_actions = self.actor_model_target(next_state_batch)
-			y = reward_batch + self.options['gamma'] * self.critic_model_target([next_state_batch, next_actions])
-			critic_value = self.critic_model([state_batch, action_batch])
+			next_actions = self.actor_model_target(batch.next_states)
+			y = batch.rewards + self.options['gamma'] * self.critic_model_target([batch.next_states, next_actions])
+			critic_value = self.critic_model([batch.states, batch.actions])
 			critic_loss = self.loss_function(y, critic_value)
 		
 		critic_grad = tape.gradient(critic_loss, self.critic_model.trainable_variables)
@@ -168,8 +196,8 @@ class DDPGAgent:
 		)
 
 		with tf.GradientTape() as tape:
-			actions = self.actor_model(state_batch)
-			critic_value = self.critic_model([state_batch, actions])
+			actions = self.actor_model(batch.states)
+			critic_value = self.critic_model([batch.states, actions])
 			# Used `-value` as we want to maximize the value given
 			# by the critic for our actions
 			actor_loss = -tf.math.reduce_mean(critic_value)
@@ -181,8 +209,22 @@ class DDPGAgent:
 
 		self.update_target_critic()
 
-		return tf.reduce_mean(critic_loss), tf.reduce_mean(actor_loss)
+		critic_loss_mean = tf.reduce_mean(critic_loss)
+		actor_loss_mean = tf.reduce_mean(actor_loss)
 
+		with self.tensorboard.as_default():
+			record_index = self.training_index
+			tf.summary.scalar('critic_loss', critic_loss_mean, step=record_index)
+			tf.summary.scalar('actor_loss', actor_loss_mean, step=record_index)
+
+		self.training_index += 1
+
+		return critic_loss_mean, actor_loss_mean
+
+	def train(self):
+		batch = self.replay_memory.get_batch(self.options['batch_size'])
+		actor_loss, critic_loss = self.train_with_batch(batch)
+		return actor_loss, critic_loss
 
 	# This update target parameters slowly
 	# Based on rate `tau`, which is much less than one.
