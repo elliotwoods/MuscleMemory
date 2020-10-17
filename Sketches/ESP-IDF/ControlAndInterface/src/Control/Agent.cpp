@@ -121,14 +121,16 @@ namespace Control {
 		}
 
 		// Record trajectory if we have a prior state
-		if(this->hasPriorState) {
-			int32_t reward = abs(state.targetMinusPosition);
-			this->recordTrajectory({
-				this->priorState
-				, this->priorAction
-				, (float) reward
-				, state
-			});
+		if(this->isTraining) {
+			if (this->hasPriorState) {
+				int32_t reward = abs(state.targetMinusPosition);
+				this->recordTrajectory({
+					this->priorState
+					, this->priorAction
+					, (float) reward
+					, state
+				});
+			}
 		}
 
 		// Get the action. Scale to binary values and clamp
@@ -143,12 +145,19 @@ namespace Control {
 				, this->frameTimer.getFrequency()
 			});
 		}
+
 		// Remember trajectory variables
-		{
+		if(this->isTraining) {
 			std::swap(this->priorState, state);
 			this->priorAction = action;
 			this->hasPriorState = true;
 		}
+	}
+
+	//----------
+	void
+	Agent::serverCommunicateTask()
+	{
 	}
 
 	//----------
@@ -177,7 +186,6 @@ namespace Control {
 		// Get output
 		{
 			auto & result = this->interpreter->output(0)->data.f[0];
-			printf("[Agent] : Invoke gives %f\n", result);
 			return result;
 		}
 	}
@@ -298,6 +306,11 @@ namespace Control {
 						printf("[Agent] : Failed to allocate tensors\n");
 						this->initialised = false;
 					}
+				}
+
+				auto isTrainingJson = cJSON_GetObjectItemCaseSensitive(contentJson, "is_training");
+				if(isTrainingJson && cJSON_IsBool(isTrainingJson)) {
+					this->isTraining = (bool) isTrainingJson->valueint;
 				}
 			}
 		}
