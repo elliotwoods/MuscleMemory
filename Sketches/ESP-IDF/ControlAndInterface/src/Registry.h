@@ -28,7 +28,8 @@ public:
 		BusVoltage = 32,
 
 		FreeMemory = 40,
-		Temperature = 41,
+		CPUTemperature = 41,
+		UpTime = 42,
 
 		MotorControlFrequency = 50,
 		AgentControlFrequency = 51,

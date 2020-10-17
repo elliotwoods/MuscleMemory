@@ -15,7 +15,7 @@ tf.compat.v1.enable_v2_behavior()
 #tf.debugging.experimental.enable_dump_debug_info("logs_debug")
 
 default_options = {
-	"state_count" : 2,
+	"state_count" : 6,
 	"action_count" : 1,
 	"actor_hidden_layers" : [16, 16],
 	"critic_state_hidden_layers" : [16, 32],
