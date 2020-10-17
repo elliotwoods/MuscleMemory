@@ -28,6 +28,13 @@ default_options = {
 	"tau" : 1e-3 # target model update coefficient
 }
 
+# This should be split out into a seperate class (so should many things here)
+class RuntimeParameters:
+	def __init__(self):
+		self.is_training = True
+		self.noise_amplitude = 1.0
+
+
 class DDPGAgent:
 	def __init__(self, client_id, options = {}):
 		super(DDPGAgent, self).__init__()
@@ -55,6 +62,9 @@ class DDPGAgent:
 		self.tensorboard = tf.summary.create_file_writer(self.log_dir)
 		self.episode = 0
 		self.time_step = 0
+
+		# create the runtime parameters
+		self.runtime_parameters = RuntimeParameters()
 
 	def init_actor(self, options):
 		# create the actor

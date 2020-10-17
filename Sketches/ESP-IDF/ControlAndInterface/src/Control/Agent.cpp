@@ -130,7 +130,7 @@ namespace Control {
 		}
 
 		// Record trajectory if we have a prior state
-		if(this->isTraining) {
+		if(this->runtimeParameters.isTraining) {
 			if (this->hasPriorState) {
 				int32_t reward = abs(state.targetMinusPosition);
 				this->recordTrajectory({
@@ -153,12 +153,13 @@ namespace Control {
 				torque
 				, (int16_t) this->frameTimer.getFrequency()
 				, (int16_t) this->historyWrites->writePosition
-				, this->isTraining
+				, this->runtimeParameters.isTraining
+				, (int16_t) (this->runtimeParameters.noiseAmplitude * 1000.0f)
 			});
 		}
 
 		// Remember trajectory variables
-		if(this->isTraining) {
+		if(this->runtimeParameters.isTraining) {
 			std::swap(this->priorState, state);
 			this->priorAction = action;
 			this->hasPriorState = true;
@@ -296,8 +297,8 @@ namespace Control {
 			auto & action = this->interpreter->output(0)->data.f[0];
 
 			// Apply noise if we're training
-			if(this->isTraining) {
-				auto noise = this->actionNoise.get() * this->noiseAmplitude;
+			if(this->runtimeParameters.isTraining) {
+				auto noise = this->actionNoise.get() * this->runtimeParameters.noiseAmplitude;
 				return action + noise;
 			}
 			else {
@@ -410,16 +411,12 @@ namespace Control {
 					}
 				}
 				
-				// "is_training"
-				auto isTrainingJson = cJSON_GetObjectItemCaseSensitive(contentJson, "is_training");
-				if(isTrainingJson && cJSON_IsBool(isTrainingJson)) {
-					this->isTraining = (bool) isTrainingJson->valueint;
-				}
-
-				// "noise"
-				auto noiseJson = cJSON_GetObjectItemCaseSensitive(contentJson, "noise");
-				if(noiseJson && cJSON_IsNumber(noiseJson)) {
-					this->noiseAmplitude = (float) noiseJson->valuedouble;
+				// "runtime_parameters"
+				{
+					auto runtimeParametersJson = cJSON_GetObjectItemCaseSensitive(contentJson, "runtime_parameters");
+					if(runtimeParametersJson && cJSON_IsObject(runtimeParametersJson)) {
+						this->runtimeParameters.deserialize(runtimeParametersJson);
+					}
 				}
 			}
 		}

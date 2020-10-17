@@ -3,6 +3,7 @@
 #include "DataTypes.h"
 #include "Utils/FrameTimer.h"
 #include "OUActionNoise.h"
+#include "RuntimeParameters.h"
 
 extern "C" {
 	#include "cJSON.h"
@@ -69,9 +70,6 @@ namespace Control {
 
 		Utils::FrameTimer frameTimer;
 
-		// The server tells you if this clientID is still training or not
-		bool isTraining = false;
-
 		const tflite::Model* model = nullptr;
 		tflite::MicroInterpreter * interpreter = nullptr;
 		bool initialised = false;
@@ -93,6 +91,7 @@ namespace Control {
 		float priorAction = 0.0f;
 
 		OUActionNoise actionNoise;
-		float noiseAmplitude = 0.0f;
+
+		RuntimeParameters runtimeParameters;
 	};
 }

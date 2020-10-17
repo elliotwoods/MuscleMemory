@@ -30,7 +30,7 @@ namespace Control {
 		auto random = float(rand()) / float(RAND_MAX) - 0.5f;
 		float value = this->previousValue
 			+ this->theta * (this->mean - this->previousValue) * this->dt
-			+ this->standardDeviation * sqrt(this->dt) * random * 2.0f;
+			+ this->standardDeviation * sqrt(this->dt) * random;
 		this->previousValue = value;
 		return value;
 	}
