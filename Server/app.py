@@ -77,7 +77,7 @@ def new_session(request: StartSessionRequest):
 		return {
 			"client_id" : request.client_id,
 			"document_id" : document_id,
-			"model" : agent.get_fresh_model(),
+			"model" : agent.get_model_base64(),
 			"runtime_parameters" : agent.runtime_parameters.__dict__
 		}
 	result = simple_api(action)()
