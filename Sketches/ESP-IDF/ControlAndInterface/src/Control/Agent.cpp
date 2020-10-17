@@ -84,6 +84,7 @@ namespace Control {
 			{
 				auto request = cJSON_CreateObject();
 				cJSON_AddStringToObject(request, "client_id", this->clientID.c_str());
+				cJSON_AddBoolToObject(request, "recycle_session", true);
 				response = Devices::Wifi::X().post("/startSession", request);
 				cJSON_Delete(request);
 			}
@@ -275,6 +276,10 @@ namespace Control {
 	{
 		if(!this->initialised) {
 			printf("[Agent] : Cannot selectAction. Not initialised\n");
+			static int count = 0;
+			if(count++ > 100) {
+				abort();
+			}
 			return 0.0f;
 		}
 
