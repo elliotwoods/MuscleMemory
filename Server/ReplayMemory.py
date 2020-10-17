@@ -1,7 +1,9 @@
 
 import numpy as np
 import tensorflow as tf
-
+import base64
+import struct
+import array
 
 def filter_trajectory(s, a, r, s_):
 	max_velocity = 2000
@@ -17,6 +19,8 @@ class ReplayMemory:
 
 		# Its tells us num of times record() was called.
 		self.buffer_counter = 0
+		self.state_count = state_count
+		self.action_count = action_count
 
 		# Instead of list of tuples as the exp.replay concept go
 		# We use different np.arrays for each tuple element
@@ -39,6 +43,23 @@ class ReplayMemory:
 		self.next_state_buffer[index] = next_state
 
 		self.buffer_counter += 1
+
+	# Add a set of trajectories directly from the microcontroller as base64
+	def add_trajectories_base64(self, trajectories_base64):
+		# base64 to binary
+		binary = base64.b64decode(trajectories_base64)
+
+		# binary to python objects
+		struct_format = '< {0}f {1}f f {0}f'.format(self.state_count, self.action_count)
+		trajectory_added_count = 0
+		for trajectory_flat in struct.iter_unpack(struct_format, binary):
+			state = np.array(trajectory_flat[0:self.state_count])
+			action = np.array(trajectory_flat[self.state_count])
+			reward = np.array(trajectory_flat[self.state_count + 1])
+			next_state = np.array(trajectory_flat[self.state_count + 2:])
+			self.record(state, action, reward, next_state)
+			trajectory_added_count += 1
+		print("Added {0} trajectories".format(trajectory_added_count))
 
 	# We compute the loss and update parameters
 	def get_batch(self, batch_size):
