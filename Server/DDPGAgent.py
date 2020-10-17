@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 import tensorboard
 
-from binascii import b2a_base64
+import base64
 import datetime
 
 from ReplayMemory import ReplayMemory
@@ -15,7 +15,7 @@ tf.compat.v1.enable_v2_behavior()
 #tf.debugging.experimental.enable_dump_debug_info("logs_debug")
 
 default_options = {
-	"state_count" : 2,
+	"state_count" : 6,
 	"action_count" : 1,
 	"actor_hidden_layers" : [16, 16],
 	"critic_state_hidden_layers" : [16, 32],
@@ -27,6 +27,13 @@ default_options = {
 	"buffer_size" : 100000,
 	"tau" : 1e-3 # target model update coefficient
 }
+
+# This should be split out into a seperate class (so should many things here)
+class RuntimeParameters:
+	def __init__(self):
+		self.is_training = True
+		self.noise_amplitude = 1.0
+
 
 class DDPGAgent:
 	def __init__(self, client_id, options = {}):
@@ -55,6 +62,9 @@ class DDPGAgent:
 		self.tensorboard = tf.summary.create_file_writer(self.log_dir)
 		self.episode = 0
 		self.time_step = 0
+
+		# create the runtime parameters
+		self.runtime_parameters = RuntimeParameters()
 
 	def init_actor(self, options):
 		# create the actor
@@ -114,7 +124,7 @@ class DDPGAgent:
 
 	def get_model_string(self):
 		binary_string = self.get_model_byte_string()
-		string = b2a_base64(binary_string).decode('utf-8')
+		string = base64.b64encode(binary_string)
 		return string
 	
 
