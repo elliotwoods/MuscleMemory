@@ -156,6 +156,8 @@ namespace Control {
 				, (int16_t) this->historyWrites->writePosition
 				, this->runtimeParameters.isTraining
 				, (int16_t) (this->runtimeParameters.noiseAmplitude * 1000.0f)
+				, (int16_t) (this->runtimeParameters.addProportional * 1000.0f)
+				, (int16_t) (this->runtimeParameters.addConstant * 1000.0f)
 			});
 		}
 
@@ -276,6 +278,8 @@ namespace Control {
 	{
 		if(!this->initialised) {
 			printf("[Agent] : Cannot selectAction. Not initialised\n");
+
+			// Sometimes this happens sporadically - needs investigating. For the time being let it happen a few times
 			static int count = 0;
 			if(count++ > 100) {
 				abort();
@@ -301,10 +305,12 @@ namespace Control {
 		{
 			auto & action = this->interpreter->output(0)->data.f[0];
 
-			// Apply noise if we're training
+			// Apply noise and if we're training
 			if(this->runtimeParameters.isTraining) {
-				auto noise = this->actionNoise.get() * this->runtimeParameters.noiseAmplitude;
-				return action + noise;
+				return action 
+					+ this->runtimeParameters.noiseAmplitude * this->actionNoise.get()
+					+ this->runtimeParameters.addProportional * state.targetMinusPosition
+					+ this->runtimeParameters.addConstant;
 			}
 			else {
 				return action;
@@ -379,7 +385,7 @@ namespace Control {
 	Agent::processIncoming(cJSON * response)
 	{
 		// Print response
-		{
+		if(false) {
 			auto responseString = cJSON_Print(response);
 			printf("Response : %s\n", responseString);
 			free(responseString);
