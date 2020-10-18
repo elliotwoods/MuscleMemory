@@ -17,19 +17,19 @@ namespace Utils
 	{
 		auto currentTime = esp_timer_get_time();
 		this->period = currentTime - this->priorTime;
-		this->frequency = 1000000L / this->period;
+		this->frequency = 1000000 / this->period;
 		this->priorTime = currentTime;
 	}
 
 	//----------
-	int32_t
+	Period
 	FrameTimer::getPeriod() const
 	{
 		return this->period;
 	}
 
 	//----------
-	int32_t
+	Frequency
 	FrameTimer::getFrequency() const
 	{
 		return this->frequency;
