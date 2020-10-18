@@ -37,7 +37,9 @@ public:
 
 		AgentLocalHistorySize = 60,
 		AgentTraining = 61,
-		AgentNoiseAmplitude = 62
+		AgentNoiseAmplitude = 62,
+		AgentAddProportional = 63,
+		AgentAddConstant = 64,
 	};
 
 	enum Operation : uint8_t {
@@ -112,6 +114,8 @@ public:
 		int16_t localHistorySize;
 		bool isTraining;
 		int16_t noiseAmplitude;
+		int16_t addProportional;
+		int16_t addConstant;
 	};
 
 	static Registry & X();
