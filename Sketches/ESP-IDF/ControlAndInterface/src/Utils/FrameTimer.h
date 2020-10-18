@@ -1,17 +1,18 @@
 #pragma once
 
 #include "stdint.h"
+#include "DataTypes.h"
 
 namespace Utils {
 	class FrameTimer {
 	public:
 		void init();
 		void update();
-		int32_t getPeriod() const; // us
-		int32_t getFrequency() const; // Hz
+		Period getPeriod() const; // us
+		Frequency getFrequency() const; // Hz
 	private:
 		int64_t priorTime;
-		int32_t period;
-		int32_t frequency;
+		Period period;
+		Frequency frequency;
 	};
 }

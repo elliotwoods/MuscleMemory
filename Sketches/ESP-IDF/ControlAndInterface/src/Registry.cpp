@@ -169,6 +169,19 @@ Registry::agentRead(AgentReads & agentReads)
 	
 	if(xSemaphoreTake(this->agentReadsMutex, waitTime)) {
 		agentReads = this->agentReads;
+
+		// Also take the freshest data from agent writes
+		if(xSemaphoreTake(this->motorControlWritesMutex, 1 / portTICK_PERIOD_MS)) {
+			if(this->motorControlWritesNew) {
+				// The data in motorControlWritesIncoming is fresher than the registry, so use it♦
+				agentReads.multiTurnPosition = this->motorControlWritesIncoming.multiTurnPosition;
+				agentReads.velocity = this->motorControlWritesIncoming.velocity;
+				agentReads.motorControlFrequency = this->motorControlWritesIncoming.motorControlFrequency;
+			}
+			xSemaphoreGive(this->motorControlWritesMutex);
+		}
+
+
 		xSemaphoreGive(this->agentReadsMutex);
 	}
 }
