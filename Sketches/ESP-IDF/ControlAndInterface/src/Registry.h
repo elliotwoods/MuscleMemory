@@ -88,11 +88,11 @@ public:
 	#include "registers.h"
 
 	struct MotorControlWrites {
-		int32_t encoderReading;
-		int32_t encoderErrors;
-		int32_t multiTurnPosition;
-		int32_t velocity;
-		int32_t motorControlFrequency;
+		SingleTurnPosition encoderReading;
+		uint8_t encoderErrors;
+		MultiTurnPosition multiTurnPosition;
+		Velocity velocity;
+		Frequency motorControlFrequency;
 	};
 
 	struct MotorControlReads {
