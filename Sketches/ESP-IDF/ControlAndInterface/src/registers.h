@@ -107,4 +107,14 @@ std::map<RegisterType, Register> registers {
 		, 0 // / 1000
 		, Access::ReadOnly
 	}},
+	{ RegisterType::AgentAddProportional, {
+		"AddProportional"
+		, 0 // / 1000
+		, Access::ReadOnly
+	}},
+	{ RegisterType::AgentAddConstant, {
+		"AddConstant"
+		, 0 // / 1000
+		, Access::ReadOnly
+	}},
 };
