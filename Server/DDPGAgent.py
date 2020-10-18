@@ -146,19 +146,24 @@ class DDPGAgent:
 	def update_runtime_parameters(self):
 		if self.replay_memory.buffer_counter < 10000:
 			self.runtime_parameters.is_training = True
-			self.runtime_parameters.noise_amplitude = 1 / 2
+			self.runtime_parameters.noise_amplitude = 1 / 4
+			self.runtime_parameters.add_proportional = -0.1
 		elif self.replay_memory.buffer_counter < 20000:
 			self.runtime_parameters.is_training = True
-			self.runtime_parameters.noise_amplitude = 1 / 4
+			self.runtime_parameters.noise_amplitude = 1 / 8
+			self.runtime_parameters.add_proportional = -0.05
 		elif self.replay_memory.buffer_counter < 30000:
 			self.runtime_parameters.is_training = True
-			self.runtime_parameters.noise_amplitude = 1 / 8
+			self.runtime_parameters.add_proportional = -0.025
+			self.runtime_parameters.noise_amplitude = 1 / 16
 		elif self.replay_memory.buffer_counter < 40000:
 			self.runtime_parameters.is_training = True
-			self.runtime_parameters.noise_amplitude = 1 / 16
+			self.runtime_parameters.noise_amplitude = 1 / 32
+			self.runtime_parameters.add_proportional = -0.0125
 		else:
 			self.runtime_parameters.is_training = True
 			self.runtime_parameters.noise_amplitude = 0
+			self.runtime_parameters.add_proportional = 0
 	
 
 	# def update(self, states, actions, rewards):
