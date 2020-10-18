@@ -9,7 +9,7 @@ std::map<RegisterType, Register> registers {
 
 
 	{ RegisterType::MultiTurnPosition, {
-		"MultiTurnPosition"
+		"MultiTurnPos"
 		, 0
 		, Access::ReadOnly
 	}},
