@@ -7,7 +7,9 @@ namespace Control {
 	public:
 		void deserialize(cJSON *);
 
-		bool isTraining;
-		float noiseAmplitude;
+		bool isTraining = false;
+		float noiseAmplitude = 0.0f;
+		float addProportional = 0.0f;
+		float addConstant = 0.0f;
 	};
 }

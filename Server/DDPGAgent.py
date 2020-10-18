@@ -34,6 +34,8 @@ class RuntimeParameters:
 	def __init__(self):
 		self.is_training = True
 		self.noise_amplitude = 1.0
+		self.add_proportional = -0.1
+		self.add_constant = 0
 
 
 class DDPGAgent:

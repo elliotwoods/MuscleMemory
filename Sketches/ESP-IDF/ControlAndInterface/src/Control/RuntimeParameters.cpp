@@ -18,5 +18,19 @@ namespace Control {
 				this->noiseAmplitude = (float) jsonObject->valuedouble;
 			}
 		}
+
+		if(cJSON_HasObjectItem(json, "add_proportional")) {
+			auto jsonObject = cJSON_GetObjectItem(json, "add_proportional");
+			if(cJSON_IsNumber(jsonObject)) {
+				this->addProportional = (float) jsonObject->valuedouble;
+			}
+		}
+
+		if(cJSON_HasObjectItem(json, "add_constant")) {
+			auto jsonObject = cJSON_GetObjectItem(json, "add_constant");
+			if(cJSON_IsNumber(jsonObject)) {
+				this->addConstant = (float) jsonObject->valuedouble;
+			}
+		}
 	}
 }
