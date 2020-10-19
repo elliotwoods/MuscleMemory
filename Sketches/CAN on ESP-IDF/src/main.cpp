@@ -48,21 +48,21 @@ void setup()
 
 void loop() {
 
-    
+    /*
     //Queue message for transmission
     if (can_transmit(&Smessage, pdMS_TO_TICKS(1000)) == ESP_OK) {
         printf("Message queued for transmission\n");
     } else {
         printf("Failed to queue message for transmission\n");
     }
-    
-   /*
+    */
+   
     //Wait for message to be received
     can_message_t message;
     if (can_receive(&message, pdMS_TO_TICKS(3000)) == ESP_OK) {
         printf("Message received\n");
     } else {
-        printf("Failed to receive message\n");
+        //printf("Failed to receive message\n");
         return;
     }
 
@@ -78,7 +78,7 @@ void loop() {
             printf("Data byte %d = %d\n", i, message.data[i]);
         }
     }
-    */
+    
 
     delay(1000);
 }
