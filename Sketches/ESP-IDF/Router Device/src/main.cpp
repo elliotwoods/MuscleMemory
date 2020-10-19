@@ -14,7 +14,7 @@
 #include "Panels/RegisterList.h"
 #include "Dial.h"
 
-#define DEVICEID	0
+#define DEVICEID	1
 
 // Set device ID ---------------------------
 typedef uint8_t DeviceID;
