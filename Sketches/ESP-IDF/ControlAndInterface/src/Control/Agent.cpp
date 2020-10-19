@@ -148,7 +148,7 @@ namespace Control {
 		int8_t torque = (int8_t)(action * 127.0f);
 		torque = max(min(torque, agentReads.maximumTorque), -agentReads.maximumTorque);
 
-		// Send torque to main loop
+		// Send information to main loop
 		{
 			registry.agentWrite({
 				torque
@@ -166,6 +166,9 @@ namespace Control {
 			std::swap(this->priorState, state);
 			this->priorAction = action;
 			this->hasPriorState = true;
+		}
+		else {
+			this->hasPriorState = false;
 		}
 	}
 

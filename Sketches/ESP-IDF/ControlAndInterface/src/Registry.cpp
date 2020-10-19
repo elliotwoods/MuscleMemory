@@ -3,6 +3,25 @@
 const auto waitTime = portMAX_DELAY;
 
 //----------
+const std::set<Registry::RegisterType>
+Registry::defaultRegisterReads {
+		Registry::RegisterType::MultiTurnPosition
+		, Registry::RegisterType::Torque
+		, Registry::RegisterType::EncoderReading
+		, Registry::RegisterType::EncoderErrors
+		, Registry::RegisterType::Current
+		, Registry::RegisterType::BusVoltage
+		, Registry::RegisterType::FreeMemory
+		, Registry::RegisterType::CPUTemperature
+		, Registry::RegisterType::UpTime
+		, Registry::RegisterType::MotorControlFrequency
+		, Registry::RegisterType::AgentControlFrequency
+		, Registry::RegisterType::RegistryControlFrequency
+		, Registry::RegisterType::AgentLocalHistorySize
+		, Registry::RegisterType::AgentTraining
+	};
+
+//----------
 Registry::Register::Register(const std::string & name, int32_t value, Access access)
 : name(name)
 , value(value)
