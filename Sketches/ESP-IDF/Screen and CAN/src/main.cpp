@@ -177,6 +177,13 @@ void setup()
 
 	// start CAN receiving Task
 	xTaskCreate(&receiving, "RECEIVING", 2048, NULL, 10, NULL);	
+
+	// showing the Logo
+    u8g2.firstPage();
+    do {     
+        u8g2.drawXBM((128-KimchipsLogo100_width)/2, (64-KimchipsLogo100_height)/2, KimchipsLogo100_width,KimchipsLogo100_height,KimchipsLogo100_bits);   
+    } while( u8g2.nextPage() ); 
+	delay(5000);
 }
 
 void loop()
