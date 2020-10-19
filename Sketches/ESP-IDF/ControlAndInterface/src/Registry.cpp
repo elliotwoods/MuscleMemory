@@ -1,5 +1,7 @@
 #include "Registry.h"
 
+const auto waitTime = portMAX_DELAY;
+
 //----------
 Registry::Register::Register(const std::string & name, int32_t value, Access access)
 : name(name)
@@ -30,60 +32,156 @@ Registry::X() {
 //----------
 Registry::Registry()
 {
-	this->controlLoopWritesMutex = xSemaphoreCreateMutex();
-	this->controlLoopReadsMutex = xSemaphoreCreateMutex();
+	this->motorControlWritesMutex = xSemaphoreCreateMutex();
+	this->motorControlReadsMutex = xSemaphoreCreateMutex();
+	this->agentReadsMutex = xSemaphoreCreateMutex();
+	this->agentWritesMutex = xSemaphoreCreateMutex();
+
+	this->frameTimer.init();
+}
+
+//----------
+Registry::~Registry()
+{
+	vSemaphoreDelete(this->motorControlWritesMutex);
+	vSemaphoreDelete(this->motorControlReadsMutex);
+	vSemaphoreDelete(this->agentReadsMutex);
+	vSemaphoreDelete(this->agentWritesMutex);
 }
 
 //----------
 void
 Registry::update()
 {
-	// Handle data outgoing to control loop
-	if(xSemaphoreTake(this->controlLoopReadsMutex, portMAX_DELAY)) {
-		this->controlLoopReads.targetPosition = this->registers.at(RegisterType::TargetPosition).value;
+	// Update our own frame timer
+	{
+		this->frameTimer.update();
+		this->registers.at(RegisterType::RegistryControlFrequency).value = this->frameTimer.getFrequency();
 	}
 
-	// Handle data incoming from control loop
+	// Handle data outgoing to motor control loop
+	if(xSemaphoreTake(this->motorControlReadsMutex, waitTime)) {
+		this->motorControlReads.torque = this->registers.at(RegisterType::Torque).value;
+		xSemaphoreGive(this->motorControlReadsMutex);
+	}
+
+	// Handle data outgoing to agent control loop
+	{
+		if(xSemaphoreTake(this->agentReadsMutex, waitTime)) {
+			this->agentReads.multiTurnPosition = this->registers.at(RegisterType::MultiTurnPosition).value;
+			this->agentReads.velocity = this->registers.at(RegisterType::Velocity).value;
+			this->agentReads.targetPosition = this->registers.at(RegisterType::TargetPosition).value;
+			this->agentReads.motorControlFrequency = this->registers.at(RegisterType::MotorControlFrequency).value;
+			this->agentReads.current = this->registers.at(RegisterType::Current).value;
+			this->agentReads.maximumTorque = this->registers.at(RegisterType::MaximumTorque).value;
+			xSemaphoreGive(this->agentReadsMutex);
+		}
+	}
+
+	// Handle data incoming from motor control loop
 	{
 		bool newData = false;
 
 		// Write all data incoming from control loop into registers
-		if(xSemaphoreTake(this->controlLoopWritesMutex, portMAX_DELAY)) {
-			if(this->controlLoopWritesNew) {
-				std::swap(this->controlLoopWritesIncoming, this->controlLoopWritesBack);
-				this->controlLoopWritesNew = false;
+		if(xSemaphoreTake(this->motorControlWritesMutex, waitTime)) {
+			if(this->motorControlWritesNew) {
+				std::swap(this->motorControlWritesIncoming, this->motorControlWritesBack);
+				this->motorControlWritesNew = false;
 				newData = true;
-				xSemaphoreGive(this->controlLoopWritesMutex);
 			}
+			xSemaphoreGive(this->motorControlWritesMutex);
 		}
 
 		if(newData) {
-			this->registers.at(RegisterType::EncoderReading).value = this->controlLoopWritesBack.encoderReading;
-			this->registers.at(RegisterType::EncoderErrors).value = this->controlLoopWritesBack.encoderErrors;
-			this->registers.at(RegisterType::MultiTurnPosition).value = this->controlLoopWritesBack.multiTurnPosition;
+			this->registers.at(RegisterType::EncoderReading).value = this->motorControlWritesBack.encoderReading;
+			this->registers.at(RegisterType::EncoderErrors).value = this->motorControlWritesBack.encoderErrors;
+			this->registers.at(RegisterType::MultiTurnPosition).value = this->motorControlWritesBack.multiTurnPosition;
+			this->registers.at(RegisterType::Velocity).value = this->motorControlWritesBack.velocity;
+			this->registers.at(RegisterType::MotorControlFrequency).value = this->motorControlWritesBack.motorControlFrequency;
+		}
+	}
+
+	// Handle data incoming from agent control loop
+	{
+		bool newData = false;
+
+		// Write all data incoming from control loop into registers
+		if(xSemaphoreTake(this->agentWritesMutex, waitTime)) {
+			if(this->agentWritesNew) {
+				std::swap(this->agentWritesIncoming, this->agentWritesBack);
+				this->agentWritesNew = false;
+				newData = true;
+			}
+			xSemaphoreGive(this->agentWritesMutex);
+		}
+
+		if(newData) {
+			this->registers.at(RegisterType::Torque).value = this->agentWritesBack.torque;
+			this->registers.at(RegisterType::AgentControlFrequency).value = this->agentWritesBack.agentFrequency;
+			this->registers.at(RegisterType::AgentLocalHistorySize).value = this->agentWritesBack.localHistorySize;
+			this->registers.at(RegisterType::AgentTraining).value = this->agentWritesBack.isTraining;
+			this->registers.at(RegisterType::AgentNoiseAmplitude).value = this->agentWritesBack.noiseAmplitude;
+			this->registers.at(RegisterType::AgentAddProportional).value = this->agentWritesBack.addProportional;
+			this->registers.at(RegisterType::AgentAddConstant).value = this->agentWritesBack.addConstant;
 		}
 	}
 }
 
 //----------
 void
-Registry::controlLoopWrite(ControlLoopWrites && controlLoopWrites)
+Registry::motorControlWrite(MotorControlWrites && motorControlWrites)
 {
 	// Write incoming control loop writes into the incoming buffer (previous data is overwritten)
-	if(xSemaphoreTake(this->controlLoopWritesMutex, portMAX_DELAY)) {
-		std::swap(controlLoopWrites, this->controlLoopWritesIncoming);
-		this->controlLoopWritesNew = true;
-		xSemaphoreGive(this->controlLoopWritesMutex);
+	if(xSemaphoreTake(this->motorControlWritesMutex, waitTime)) {
+		this->motorControlWritesIncoming = motorControlWrites;
+		this->motorControlWritesNew = true;
+		xSemaphoreGive(this->motorControlWritesMutex);
 	}
 }
 
 //----------
 void
-Registry::controlLoopRead(ControlLoopReads & controlLoopReads)
+Registry::motorControlRead(MotorControlReads & motorControlReads)
 {
 	
-	if(xSemaphoreTake(this->controlLoopReadsMutex, portMAX_DELAY)) {
-		controlLoopReads = this->controlLoopReads;
-		xSemaphoreGive(this->controlLoopReadsMutex);
+	if(xSemaphoreTake(this->motorControlReadsMutex, waitTime)) {
+		motorControlReads = this->motorControlReads;
+		xSemaphoreGive(this->motorControlReadsMutex);
+	}
+}
+
+//----------
+void
+Registry::agentWrite(AgentWrites && agentWrites)
+{
+	// Write incoming control loop writes into the incoming buffer (previous data is overwritten)
+	if(xSemaphoreTake(this->agentWritesMutex, waitTime)) {
+		this->agentWritesIncoming = agentWrites;
+		this->agentWritesNew = true;
+		xSemaphoreGive(this->agentWritesMutex);
+	}
+}
+
+//----------
+void
+Registry::agentRead(AgentReads & agentReads)
+{
+	
+	if(xSemaphoreTake(this->agentReadsMutex, waitTime)) {
+		agentReads = this->agentReads;
+
+		// Also take the freshest data from agent writes
+		if(xSemaphoreTake(this->motorControlWritesMutex, 1 / portTICK_PERIOD_MS)) {
+			if(this->motorControlWritesNew) {
+				// The data in motorControlWritesIncoming is fresher than the registry, so use it♦
+				agentReads.multiTurnPosition = this->motorControlWritesIncoming.multiTurnPosition;
+				agentReads.velocity = this->motorControlWritesIncoming.velocity;
+				agentReads.motorControlFrequency = this->motorControlWritesIncoming.motorControlFrequency;
+			}
+			xSemaphoreGive(this->motorControlWritesMutex);
+		}
+
+
+		xSemaphoreGive(this->agentReadsMutex);
 	}
 }
