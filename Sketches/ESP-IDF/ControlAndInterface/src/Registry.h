@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 
 #include <map>
+#include <set>
 #include <string>
 #include <limits>
 
@@ -43,10 +44,12 @@ public:
 	};
 
 	enum Operation : uint8_t {
-		WriteRequest = 0,
-		ReadRequest = 1,
+		ReadRequest = 0,
+		WriteRequest = 1,
 		ReadResponse = 2
 	};
+
+	static const std::set<RegisterType> defaultRegisterReads;
 
 	struct Range {
 		bool limited;
