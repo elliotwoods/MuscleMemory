@@ -14,6 +14,7 @@
 #include "GUI/Panels/RegisterList.h"
 
 #include "Interface/SystemInfo.h"
+#include "Interface/CANResponder.h"
 
 #include "Utils/Scheduler.h"
 
@@ -27,8 +28,8 @@
 #include "driver/can.h"
 
 Devices::MotorDriver motorDriver;
-Devices::AS5047 as5047;
-Devices::INA219 ina219;
+Devices::AS5047 as5047; // The magnetic encoder
+Devices::INA219 ina219; // The current sensor
 Devices::FileSystem fileSystem;
 
 Control::EncoderCalibration encoderCalibration;
@@ -37,6 +38,7 @@ Control::Agent agent;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn, agent);
 
 Interface::SystemInfo systemInfo(ina219);
+Interface::CANResponder canResponder;
 
 TaskHandle_t agentTaskHandle;
 SemaphoreHandle_t agentTaskResumeMutex;
@@ -148,7 +150,7 @@ initController()
 	multiTurn.init(as5047.getPosition());
 	agent.init();
 	drive.init();
-
+	
 	xTaskCreatePinnedToCore(motorTask
 		, "Motor"
 		, 1024 * 4
@@ -157,13 +159,14 @@ initController()
 		, NULL
 		, 1);
 	
-	xTaskCreatePinnedToCore(agentTask
-		, "Agent"
-		, 1024 * 8
-		, NULL
-		, PRIORITY_AGENT
-		, &agentTaskHandle
-		, 1);
+	// HACK - disable the agent
+	// xTaskCreatePinnedToCore(agentTask
+	// 	, "Agent"
+	// 	, 1024 * 8
+	// 	, NULL
+	// 	, PRIORITY_AGENT
+	// 	, &agentTaskHandle
+	// 	, 1);
 	
 	xTaskCreatePinnedToCore(agentServerCommunicateTask
 		, "AgentServer"
@@ -180,8 +183,8 @@ updateInterface()
 {
 	Registry::X().update();
 	systemInfo.update();
+	canResponder.update();
 	GUI::Controller::X().update();
-	//Network::processMessages();
 }
 
 //----------
@@ -200,6 +203,7 @@ initInterface()
 {
 	GUI::Controller::X().init(std::make_shared<GUI::Panels::RegisterList>());
 	systemInfo.init();
+	canResponder.init();
 
 	xTaskCreatePinnedToCore(interfaceTask
 		, "Interface"
