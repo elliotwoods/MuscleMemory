@@ -2,10 +2,11 @@
 
 #include "MultiTurn.h"
 #include "Agent.h"
-#include "../Devices/MotorDriver.h"
-#include "../Devices/AS5047.h"
+#include "Devices/MotorDriver.h"
+#include "Devices/AS5047.h"
 #include "EncoderCalibration.h"
 #include "DataTypes.h"
+#include "Utils/FrameTimer.h"
 
 namespace Control {
 	class Drive {
@@ -26,7 +27,7 @@ namespace Control {
 		Agent & agent;
 
 		MultiTurnPosition priorPosition;
-		int64_t priorTime;
+		Utils::FrameTimer frameTimer;
 
 		bool hasPriorState = false;
 		Agent::State priorState;
