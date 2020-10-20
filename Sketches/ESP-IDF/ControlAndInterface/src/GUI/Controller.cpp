@@ -46,7 +46,7 @@ namespace GUI {
 		// DIAL BUTTON
 		{
 			auto buttonPressed = gpio_get_level(GPIO_DIAL_BUTTON) == 0;
-			if(buttonPressed) {
+			if(buttonPressed && !this->priorDialButtonPressed) {
 				if(this->currentPanel->buttonPressed()) {
 					// The panel quit
 
@@ -66,6 +66,7 @@ namespace GUI {
 					}
 				}
 			}
+			this->priorDialButtonPressed = buttonPressed;
 		}
 		
 		// DIAL MOVEMENT
