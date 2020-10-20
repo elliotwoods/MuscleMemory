@@ -16,6 +16,8 @@ namespace GUI {
 		void init(std::shared_ptr<Panel> rootPanel);
 		void update();
 
+		void setRootPanel(std::shared_ptr<Panel> rootPanel);
+
 		void dialButtonPressed();
 		void dialTurned(int8_t);
 	private:
@@ -28,6 +30,8 @@ namespace GUI {
 		U8G2 u8g2;
 		Devices::Dial dial;
 
+		bool priorDialButtonPressed = false;
 		int16_t priorDialPosition = 0;
 	};
 }
+
