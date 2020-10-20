@@ -30,6 +30,7 @@ namespace GUI {
 		U8G2 u8g2;
 		Devices::Dial dial;
 
+		bool priorDialButtonPressed = false;
 		int16_t priorDialPosition = 0;
 	};
 }
