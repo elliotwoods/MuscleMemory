@@ -60,6 +60,8 @@ namespace Devices
 	{
 		int16_t value;
 		pcnt_get_counter_value(this->pcntUnit, &value);
-		return value;
+
+		// Invert the dial
+		return -value;
 	}
 }
