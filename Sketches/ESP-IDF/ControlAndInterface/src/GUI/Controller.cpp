@@ -94,6 +94,6 @@ namespace GUI {
 	void
 	Controller::setRootPanel(std::shared_ptr<Panel> rootPanel)
 	{
-		this->rootPanel = rootPanel;
+		this->currentPanel = rootPanel;
 	}
 }
