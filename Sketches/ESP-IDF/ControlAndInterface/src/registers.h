@@ -6,6 +6,13 @@ std::map<RegisterType, Register> registers {
 		, 1
 		, 1023
 	}},
+	{ RegisterType::ControlMode, {
+		"ControlMode"
+		, 1 // 0=Standby, 1=PID, 2=Agent
+		, Access::ReadWrite
+		, 0
+		, 3
+	}},
 
 
 	{ RegisterType::MultiTurnPosition, {
@@ -116,5 +123,26 @@ std::map<RegisterType, Register> registers {
 		"AddConstant"
 		, 0 // / 1000
 		, Access::ReadOnly
+	}},
+
+	{ RegisterType::PIDProportional, {
+		"PIDProportional"
+		, 10
+		, Access::ReadWrite
+	}},
+	{ RegisterType::PIDIntegral, {
+		"PIDIntegral"
+		, 320
+		, Access::ReadWrite
+	}},
+	{ RegisterType::PIDDifferential, {
+		"PIDDifferential"
+		, 1 << 20
+		, Access::ReadWrite
+	}},
+	{ RegisterType::PIDIntegralMax, {
+		"PIDIntegralMax"
+		, 1 << 24
+		, Access::ReadWrite
 	}},
 };

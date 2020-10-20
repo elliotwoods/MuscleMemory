@@ -1,0 +1,165 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta33.7.dtd" >
+   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\MotorFeedback (MuscleMemory Request).v4p" systemname="MotorFeedback (MuscleMemory Request)" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\MotorFeedback (MuscleMemory Request).v4p" scrollx="0" scrolly="0">
+   <BOUNDS type="Window" left="26004" top="11664" width="10908" height="6264">
+   </BOUNDS>
+   <PACK Name="addonpack" Version="33.7.0">
+   </PACK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="6">
+   <BOUNDS type="Node" left="816" top="1716" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="816" top="1716" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="13">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="5">
+   <BOUNDS type="Node" left="1968" top="1716" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1968" top="1716" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="10">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="4">
+   <BOUNDS type="Node" left="3120" top="1716" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="3120" top="1716" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="11">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="3">
+   <BOUNDS type="Node" left="4272" top="1716" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="4272" top="1716" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="32">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="2">
+   <BOUNDS type="Node" left="5424" top="1716" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="5424" top="1716" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="50">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="0">
+   <BOUNDS type="Node" left="6600" top="1716" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="6600" top="1716" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="51">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="CanMessage (Robotell Join)" filename="..\plugins\JoinRobotellCanMessage\JoinRobotellCanMessage.csproj" nodename="CanMessage (Robotell Join)" componentmode="Hidden" id="8">
+   <BOUNDS type="Node" left="180" top="3144" width="5484" height="276">
+   </BOUNDS>
+   <PIN pinname="Operation" visible="1" slicecount="1" values="Read">
+   </PIN>
+   <PIN pinname="Register ID" visible="1" slicecount="1" values="11">
+   </PIN>
+   <PIN pinname="Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   <PIN pinname="ID" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="7">
+   <BOUNDS type="Node" left="180" top="756" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="180" top="756" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="ID">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="7" srcpinname="Y Output Value" dstnodeid="8" dstpinname="ID">
+   </LINK>
+   <NODE nodename="IOBox (Node)" componentmode="InABox" id="9" systemname="IOBox (Node)">
+   <BOUNDS type="Box" left="180" top="4068" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="180" top="4068" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Output">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="8" srcpinname="Output" dstnodeid="9" dstpinname="Input Node">
+   </LINK>
+   <NODE id="1" systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" hiddenwhenlocked="0" managers="">
+   <PIN pinname="Output" visible="1" pintype="Output">
+   </PIN>
+   <BOUNDS type="Node" left="816" top="2064" width="5832" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" pintype="Configuration" values="6">
+   </PIN>
+   <PIN pinname="Input 1" visible="1" pintype="Input">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" pintype="Input">
+   </PIN>
+   <PIN pinname="Input 3" visible="1" pintype="Input">
+   </PIN>
+   <PIN pinname="Input 4" visible="1" pintype="Input">
+   </PIN>
+   <PIN pinname="Input 5" visible="1" pintype="Input">
+   </PIN>
+   <PIN pinname="Input 6" visible="1" pintype="Input">
+   </PIN>
+   <BOUNDS type="Box" left="0" top="0" width="2400" height="1800">
+   </BOUNDS>
+   <BOUNDS type="Window" left="0" top="0" width="6000" height="4500">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" pintype="Configuration" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Allow Empty Spreads" pintype="Input" visible="-1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Window Handle" pintype="Output">
+   </PIN>
+   <PIN pinname="ID" pintype="Output" visible="-1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="0" srcpinname="Y Output Value" dstnodeid="1" dstpinname="Input 6">
+   </LINK>
+   <LINK srcnodeid="2" srcpinname="Y Output Value" dstnodeid="1" dstpinname="Input 5">
+   </LINK>
+   <LINK srcnodeid="3" srcpinname="Y Output Value" dstnodeid="1" dstpinname="Input 4">
+   </LINK>
+   <LINK srcnodeid="4" srcpinname="Y Output Value" dstnodeid="1" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="5" srcpinname="Y Output Value" dstnodeid="1" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="1" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Output" dstnodeid="8" dstpinname="Register ID">
+   </LINK>
+   </PATCH>
