@@ -3,3 +3,5 @@ logs
 logs_debug
 /sessions.json
 /samples.json
+bin/
+*~.xml

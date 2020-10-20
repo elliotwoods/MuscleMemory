@@ -14,7 +14,7 @@ class Registry {
 public:
 	enum class RegisterType : uint16_t {
 		DeviceID = 0,
-
+		ControlMode = 1,
 
 		MultiTurnPosition = 10,
 		Velocity = 11,
@@ -41,6 +41,11 @@ public:
 		AgentNoiseAmplitude = 62,
 		AgentAddProportional = 63,
 		AgentAddConstant = 64,
+
+		PIDProportional = 70,
+		PIDIntegral = 71,
+		PIDDifferential = 72,
+		PIDIntegralMax = 75,
 	};
 
 	enum Operation : uint8_t {

@@ -6,13 +6,11 @@ namespace Control {
 	Drive::Drive(Devices::MotorDriver & motorDriver
 		, Devices::AS5047 & as5047
 		, EncoderCalibration & encoderCalibration
-		, MultiTurn & multiTurn
-		, Agent & agent)
+		, MultiTurn & multiTurn)
 	: motorDriver(motorDriver)
 	, as5047(as5047)
 	, encoderCalibration(encoderCalibration) 
 	, multiTurn(multiTurn)
-	, agent(agent)
 	{
 		
 	}

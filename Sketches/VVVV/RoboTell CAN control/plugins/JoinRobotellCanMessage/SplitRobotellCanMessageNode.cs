@@ -157,6 +157,7 @@ namespace VVVV.Nodes.RoboTell
 						if(this.FMessageBuffer.Count == 21)
 						{
 							FCompleteMessages.Add(this.FMessageBuffer);
+							this.FMessageBuffer = new List<byte>();
 							this.FReadStatus = 0;
 						}
 						else {

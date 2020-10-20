@@ -561,7 +561,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="16032" top="13812" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Input Enum" slicecount="1" visible="1" values="Read">
+   <PIN pinname="Input Enum" slicecount="1" visible="1" values="Write">
    </PIN>
    <PIN pinname="Descriptive Name" slicecount="1" values="Operation">
    </PIN>
@@ -591,7 +591,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="19068" top="13476" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="11">
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="0">
    </PIN>
    <PIN pinname="Units" slicecount="1" values="||">
    </PIN>
