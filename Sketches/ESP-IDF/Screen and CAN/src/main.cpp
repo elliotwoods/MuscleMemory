@@ -14,15 +14,11 @@
 #include "Panels/RegisterList.h"
 #include "Dial.h"
 
-#define DEVICEID	2
-#define TICK_TIME 	0
+#define DEVICEID	1
 
 // Set device ID ---------------------------
 typedef uint8_t DeviceID;
 DeviceID device = DEVICEID;
-
-#include "GUI/U8G2HAL.h"
-#include "Devices/I2C.h"
 
 extern "C"
 {
@@ -33,8 +29,7 @@ extern "C"
 Dial dial;
 
 // OLED Part -----------------------------------------------------
-U8G2 u8g2;
-//U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, 15, 4, 16);
+U8G2_SSD1306_128X64_NONAME_1_SW_I2C u8g2(U8G2_R0, 15, 4, 16);
 
 uint8_t registerySize = Registry::X().registers.size();
 uint8_t maxRows = 4;
@@ -75,9 +70,9 @@ void transmitting(uint8_t targetID
 	writeAndMove(dataMover, value);
 
 	//Queue message for transmission
-	if (can_transmit(&message, pdMS_TO_TICKS(TICK_TIME)) == ESP_OK)
+	if (can_transmit(&message, pdMS_TO_TICKS(50)) == ESP_OK)
 	{
-		 printf("Message queued for transmission\n");
+		// printf("Message queued for transmission\n");
 	}
 	else
 	{
@@ -98,54 +93,55 @@ T &readAndMove(uint8_t *&data)
 void receiving(void *pvParameter)
 {
 	auto & registry = Registry::X();
-	while(1)
+	for (;;)
 	{
 		//Wait for message to be received
 		can_message_t message;
-		if (can_receive(&message, pdMS_TO_TICKS(TICK_TIME)) == ESP_OK)
+		if (can_receive(&message, pdMS_TO_TICKS(50)) == ESP_OK)
 		{
-			//printf("Message received\n");
+			// printf("Message received\n");
 			//Process received message
 			DeviceID senderID = message.identifier;
 			auto dataMover = message.data;
-			// printf("Message received %d\n",senderID);
+			//printf("Message received %d\n",senderID);
 			//Read the data out
 			auto &targetID = readAndMove<int8_t>(dataMover);
 			//--------------------------------------------------------------- add filter step later?
 			
-			if(targetID == device){
-			//if(targetID){
-				auto &operation = readAndMove<Registry::Operation>(dataMover);
-				auto &registerID = readAndMove<Registry::RegisterType>(dataMover);
-				auto &value = readAndMove<int32_t>(dataMover);
-				//printf(" op: %d \n", operation);
-				//Identify the operation
-				printf("Message received %d %d %d %d . %d %d %d\n",senderID,targetID,device,(targetID==device),operation,registerID,value);
-				switch (operation)
-				{
-				case Registry::Operation::WriteRequest:
-					// printf(" * WriteRequest from %d ,", senderID);
-					// printf(" * regID %d value %d \n", registerID, value);
-					registry.registers[registerID].value = value;
-					break;
-				case Registry::Operation::ReadRequest:
-					// printf(" * ReadRequest from %d ,", senderID);
-					// printf(" * regID %d \n", registerID);
-					value = registry.registers[registerID].value;
-					transmitting(senderID, Registry::Operation::ReadResponse, registerID, value);
-					break;
-				case Registry::Operation::ReadResponse:
-					// printf(" * ReadResponse from %d,", senderID);
-					// printf(" * regID %d value %d \n", registerID, value);
-					break;
-				default:
-					break;
-				}
+			if(targetID != device){
+				break;
+			}	
+			
+			auto &operation = readAndMove<Registry::Operation>(dataMover);
+			auto &registerID = readAndMove<Registry::RegisterType>(dataMover);
+			auto &value = readAndMove<int32_t>(dataMover);
+			//printf(" op: %d \n", operation);
+			//Identify the operation
+
+			switch (operation)
+			{
+			case Registry::Operation::WriteRequest:
+				// printf(" * WriteRequest from %d ,", senderID);
+				// printf(" * regID %d value %d \n", registerID, value);
+				registry.registers[registerID].value = value;
+				break;
+			case Registry::Operation::ReadRequest:
+				// printf(" * ReadRequest from %d ,", senderID);
+				// printf(" * regID %d \n", registerID);
+				value = registry.registers[registerID].value;
+				transmitting(senderID, Registry::Operation::ReadResponse, registerID, value);
+				break;
+			case Registry::Operation::ReadResponse:
+				// printf(" * ReadResponse from %d,", senderID);
+				// printf(" * regID %d value %d \n", registerID, value);
+ 				break;
+			default:
+				break;
 			}
 
 			//draw(senderID, operation, registerID, value);
 		}
-		vTaskDelay(1 / portTICK_RATE_MS);
+		vTaskDelay(10 / portTICK_RATE_MS);
 	}
 }
 // CAN communication part END-----------------------------------------------------
@@ -154,11 +150,7 @@ void receiving(void *pvParameter)
 
 void setup()
 {
-	
-	Serial.begin(115200);
-	//ets_update_cpu_frequency(CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ);
-	//printf("%d\n",ets_get_cpu_frequency());
-	
+	// Serial.begin(115200);
 
 	// set Rotary encoder
 	dial.init(gpio_num_t::GPIO_NUM_34, gpio_num_t::GPIO_NUM_35);
@@ -169,15 +161,6 @@ void setup()
 	registry.registers[Registry::RegisterType::deviceID].value = device;
 	
 	// set OLED ---------------------------------------------------------
-	auto & i2c = Devices::I2C::X();
-	i2c.init();
-
-	u8g2_Setup_ssd1306_i2c_128x64_noname_1(u8g2.getU8g2()
-		, U8G2_R0
-		, u8g2_byte_hw_i2c_esp32
-		, u8g2_gpio_and_delay_esp32);
-	u8x8_SetPin(u8g2.getU8x8(), U8X8_PIN_RESET, GPIO_NUM_16);
-	u8x8_SetI2CAddress(u8g2.getU8x8(), 0x3c);
 	u8g2.begin();
 	GuiController::X().init(u8g2, std::make_shared<Panels::RegisterList>());
 
@@ -193,13 +176,18 @@ void setup()
 	can_start();
 
 	// start CAN receiving Task
-	xTaskCreate(&receiving, "RECEIVING", 2048, NULL, 1, NULL);	
-	disableCore0WDT();
+	xTaskCreate(&receiving, "RECEIVING", 2048, NULL, 10, NULL);	
+
+	// showing the Logo
+    u8g2.firstPage();
+    do {     
+        u8g2.drawXBM((128-KimchipsLogo100_width)/2, (64-KimchipsLogo100_height)/2, KimchipsLogo100_width,KimchipsLogo100_height,KimchipsLogo100_bits);   
+    } while( u8g2.nextPage() ); 
+	delay(5000);
 }
 
 void loop()
 {
 	GuiController::X().update();
-	//vTaskDelay(10 / portTICK_RATE_MS);
-
+	delay(10);	
 }
