@@ -1,6 +1,9 @@
 #include "Dashboard.h"
 #include "Registry.h"
 
+#include "GUI/Controller.h"
+#include "RegisterList.h"
+
 #define OUTER_CIRCLE
 #define HAC_DRAW_TICKS
 #define MULTI_TURN
@@ -48,6 +51,7 @@ namespace GUI {
 			#endif
 			#ifdef MULTI_TURN
 			float MultiTurnFloat;
+			char message[200];
 			// MultiTurnPosition - actual
 			{
 				auto value = MultiTurnPosition.value / (1 << 14);
@@ -56,6 +60,10 @@ namespace GUI {
 				u8g2_uint_t y = centerCircle[1] - markerRadiusMajor * cosf(phase);
 				u8g2.drawDisc(x, y, 3, U8G2_DRAW_ALL);
 				MultiTurnFloat = phase;
+
+				u8g2.setFont(u8g2_font_crox4hb_tf);
+				sprintf(message, "%d", value);			
+				u8g2.drawStr(75, 45, message);				
 			}
 			// Target multi-turn position
 			{
@@ -64,6 +72,10 @@ namespace GUI {
 				u8g2_uint_t x = centerCircle[0] + markerRadiusMajor * sinf(phase);
 				u8g2_uint_t y = centerCircle[1] - markerRadiusMajor * cosf(phase);
 				u8g2.drawCircle(x, y, 4, U8G2_DRAW_ALL);
+
+				u8g2.setFont(u8g2_font_crox4h_tf);
+				sprintf(message, "%d", value);
+				u8g2.drawStr(75, 63, message);
 			}
 			#endif
 			#ifdef SINGLE_TURN
@@ -75,7 +87,7 @@ namespace GUI {
 			#endif
 			{
 				u8g2.setFont(u8g2_font_nerhoe_tr);
-				char message[200];
+				
 				auto BusVoltage = Registry::X().registers.at(Registry::RegisterType::BusVoltage);
 				auto Current = Registry::X().registers.at(Registry::RegisterType::Current);
 
@@ -89,10 +101,11 @@ namespace GUI {
 				sprintf(message, "A.");			
 				u8g2.drawStr(105, 27, message);
 				
-				sprintf(message, "MultiTurn");
-				u8g2.drawStr(75, 45, message);
-				sprintf(message, "%.3f", MultiTurnFloat);			
-				u8g2.drawStr(75, 57, message);
+				// show Current Position , Target Position
+
+
+
+				
 			}
 
 			//printf("%d,%f - %d,%f \n",MultiTurn,MultiPhase,SingleTurn,SinglePhase);
@@ -111,15 +124,17 @@ namespace GUI {
 		bool
 		Dashboard::buttonPressed()
 		{
+			Controller::X().setRootPanel(std::make_shared<RegisterList>());
 			return false;
 		}
 
 		
 		//----------
 		void
-		Dashboard::dial(int8_t)
+		Dashboard::dial(int8_t movement)
 		{
-			
+			auto & targetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition).value;
+			targetPosition += 100 * (int32_t) movement;
 		}
 	}
 }

@@ -1,7 +1,10 @@
 #include "RegisterList.h"
+#include "GUI/Controller.h"
+#include "Dashboard.h"
 
 namespace GUI {
 	namespace Panels {
+		//---------
 		RegisterList::RegisterList()
 		{
 			auto & registry = Registry::X();
@@ -10,6 +13,7 @@ namespace GUI {
 			}
 		}
 
+		//---------
 		void
 		RegisterList::update()
 		{
@@ -34,6 +38,7 @@ namespace GUI {
 			//printf("Cursor position : %d\n", cursorPosition);
 		}
 
+		//---------
 		void
 		RegisterList::draw(U8G2 & screen)
 		{
@@ -75,12 +80,15 @@ namespace GUI {
 
 		}
 
+		//---------
 		bool
 		RegisterList::buttonPressed()
 		{
+			Controller::X().setRootPanel(std::make_shared<Dashboard>());
 			return false;
 		}
 
+		//---------
 		void
 		RegisterList::dial(int8_t delta)
 		{
