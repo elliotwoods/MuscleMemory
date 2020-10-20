@@ -14,8 +14,7 @@ namespace Control {
 		Drive(Devices::MotorDriver &
 			, Devices::AS5047 &
 			, EncoderCalibration &
-			, MultiTurn &
-			, Agent &);
+			, MultiTurn &);
 
 		void init();
 		void update();
@@ -24,7 +23,6 @@ namespace Control {
 		Devices::AS5047 & as5047;
 		EncoderCalibration & encoderCalibration;
 		MultiTurn & multiTurn;
-		Agent & agent;
 
 		MultiTurnPosition priorPosition;
 		Utils::FrameTimer frameTimer;
