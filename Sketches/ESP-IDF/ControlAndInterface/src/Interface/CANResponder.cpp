@@ -128,6 +128,8 @@ namespace Interface {
 					valueAndMove<Registry::Operation>(data) = Registry::Operation::ReadResponse;
 					valueAndMove<Registry::RegisterType>(data) = registerID;
 					valueAndMove<int32_t>(data) = findRegister->second.value;
+
+					can_transmit(&message, 1 / portTICK_PERIOD_MS);
 				}
 			}
 		}

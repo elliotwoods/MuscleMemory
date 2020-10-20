@@ -9,6 +9,7 @@
 #include "Control/MultiTurn.h"
 #include "Control/Agent.h"
 #include "Control/Drive.h"
+#include "Control/PID.h"
 
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
@@ -35,7 +36,8 @@ Devices::FileSystem fileSystem;
 Control::EncoderCalibration encoderCalibration;
 Control::MultiTurn multiTurn(encoderCalibration);
 Control::Agent agent;
-Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn, agent);
+Control::PID pid;
+Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
 Interface::SystemInfo systemInfo(ina219);
 Interface::CANResponder canResponder;
@@ -108,16 +110,28 @@ agentTask(void*)
 	// Scheduler isn't working
 	//Utils::Scheduler::X().schedule(0.01f, wakeAgent);
 
+	agentTaskResumeMutex = xSemaphoreCreateMutex();
+
 	// Use an Arduino ESP32 timer
 	auto timer = timerBegin(0, 16, true);
 	timerAttachInterrupt(timer, wakeAgent, true);
-	timerAlarmWrite(timer, 50000, true);
+	timerAlarmWrite(timer, 5000, true);
 	timerAlarmEnable(timer);
 
-	agentTaskResumeMutex = xSemaphoreCreateMutex();
+	const auto & controlMode = Registry::X().registers.at(Registry::RegisterType::ControlMode).value;
+
 	while(true) {
 		if(xSemaphoreTake(agentTaskResumeMutex, portMAX_DELAY)) {
-			agent.update();
+			switch(controlMode) {
+				case 1:
+					pid.update();
+					break;
+				case 2:
+					agent.update();
+					break;
+				default:
+					break;
+			}
 			xSemaphoreGive(agentTaskResumeMutex);
 		}
 		vTaskSuspend(agentTaskHandle);
@@ -150,6 +164,7 @@ initController()
 	multiTurn.init(as5047.getPosition());
 	agent.init();
 	drive.init();
+	pid.init();
 	
 	xTaskCreatePinnedToCore(motorTask
 		, "Motor"
@@ -159,14 +174,13 @@ initController()
 		, NULL
 		, 1);
 	
-	// HACK - disable the agent
-	// xTaskCreatePinnedToCore(agentTask
-	// 	, "Agent"
-	// 	, 1024 * 8
-	// 	, NULL
-	// 	, PRIORITY_AGENT
-	// 	, &agentTaskHandle
-	// 	, 1);
+	xTaskCreatePinnedToCore(agentTask
+		, "Agent"
+		, 1024 * 8
+		, NULL
+		, PRIORITY_AGENT
+		, &agentTaskHandle
+		, 1);
 	
 	xTaskCreatePinnedToCore(agentServerCommunicateTask
 		, "AgentServer"
