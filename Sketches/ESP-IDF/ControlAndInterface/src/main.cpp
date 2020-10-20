@@ -13,6 +13,9 @@
 
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
+#include "GUI/Panels/SplashScreen.h"
+#include "GUI/Panels/ShowID.h"
+#include "GUI/Panels/Dashboard.h"
 
 #include "Interface/SystemInfo.h"
 #include "Interface/CANResponder.h"
@@ -45,6 +48,8 @@ Interface::CANResponder canResponder;
 TaskHandle_t agentTaskHandle;
 SemaphoreHandle_t agentTaskResumeMutex;
 
+auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
+
 // Core 0 tasks:
 #define PRIORITY_INTERFACE 1
 #define PRIORITY_AGENT_SERVER_COMMS 2
@@ -52,6 +57,13 @@ SemaphoreHandle_t agentTaskResumeMutex;
 // Core 1 tasks:
 #define PRIORITY_MOTOR 2
 #define PRIORITY_AGENT 1
+
+//----------
+void showSplashMessage(const std::string & message)
+{
+	splashScreen->setMessage(message);
+	GUI::Controller::X().update();
+}
 
 //----------
 void
@@ -75,12 +87,40 @@ initDevices()
 		printf("\n");
 	}
 
+	// Initilaise the GUI here!
+	GUI::Controller::X().init(splashScreen);
+
+
 	// Initialise devices
+	uint16_t _minDisplayTime = 300;
+	showSplashMessage("Initialise AS5047...");
 	as5047.init();
+	vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
+	showSplashMessage(" done.");
+	
+
+	showSplashMessage("Initialise A4954ELP...");
 	motorDriver.init();
-	ina219.init();
+	vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
+	showSplashMessage(" done.");
+
+	showSplashMessage("Initialise INA219...");
+	ina219.init();	
+	vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
+	showSplashMessage(" done.");
+
+	showSplashMessage("Mount File System...");	
 	fileSystem.mount("appdata", "/appdata", true, 2);
-	Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
+	vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
+	showSplashMessage(" done.");
+
+	showSplashMessage("Connect to Server...");
+	//Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
+	vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
+	showSplashMessage(" done.");
+
+
+
 }
 
 //----------
@@ -162,7 +202,7 @@ initController()
 	}
 
 	multiTurn.init(as5047.getPosition());
-	agent.init();
+	//agent.init();
 	drive.init();
 	pid.init();
 	
@@ -173,22 +213,22 @@ initController()
 		, PRIORITY_MOTOR
 		, NULL
 		, 1);
-	
-	xTaskCreatePinnedToCore(agentTask
-		, "Agent"
-		, 1024 * 8
-		, NULL
-		, PRIORITY_AGENT
-		, &agentTaskHandle
-		, 1);
-	
-	xTaskCreatePinnedToCore(agentServerCommunicateTask
-		, "AgentServer"
-		, 1024 * 4
-		, NULL
-		, PRIORITY_AGENT_SERVER_COMMS
-		, NULL
-		, 0);
+
+	// xTaskCreatePinnedToCore(agentTask
+	// 	, "Agent"
+	// 	, 1024 * 8
+	// 	, NULL
+	// 	, PRIORITY_AGENT
+	// 	, &agentTaskHandle
+	// 	, 1);
+
+	// xTaskCreatePinnedToCore(agentServerCommunicateTask
+	// 	, "AgentServer"
+	// 	, 1024 * 4
+	// 	, NULL
+	// 	, PRIORITY_AGENT_SERVER_COMMS
+	// 	, NULL 
+	// 	, 0);
 }
 
 //----------
@@ -215,7 +255,6 @@ interfaceTask(void*)
 void
 initInterface()
 {
-	GUI::Controller::X().init(std::make_shared<GUI::Panels::RegisterList>());
 	systemInfo.init();
 	canResponder.init();
 
@@ -236,7 +275,17 @@ setup()
 {
 	initDevices();
 	initController();
+	
+	GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::ShowID>());
+	GUI::Controller::X().update();
+	
+	vTaskDelay(2500 / portTICK_PERIOD_MS);
+	
+	GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::RegisterList>());
+	//GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::Dashboard>());
 	initInterface();
+	//Registry::X().registers.at(Registry::RegisterType::Torque).value = 16;
+
 }
 
 //----------

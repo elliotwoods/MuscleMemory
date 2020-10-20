@@ -1,7 +1,10 @@
 #include "RegisterList.h"
+#include "GUI/Controller.h"
+#include "Dashboard.h"
 
 namespace GUI {
 	namespace Panels {
+		//---------
 		RegisterList::RegisterList()
 		{
 			auto & registry = Registry::X();
@@ -10,6 +13,7 @@ namespace GUI {
 			}
 		}
 
+		//---------
 		void
 		RegisterList::update()
 		{
@@ -34,12 +38,21 @@ namespace GUI {
 			//printf("Cursor position : %d\n", cursorPosition);
 		}
 
+		//---------
 		void
 		RegisterList::draw(U8G2 & screen)
 		{
-			const uint16_t rowHeight = 13;
+			const uint16_t rowHeight = 12;
 
 			screen.setFont(u8g2_font_nerhoe_tr);
+			screen.setFontMode(1);
+
+			// draw the cursor
+			screen.setDrawColor(1);
+			screen.drawFrame(0,rowHeight * (this->cursorPosition - this->viewOffset)+2,128,rowHeight);
+
+			//screen.drawStr(0, rowHeight * (this->cursorPosition - this->viewOffset) + rowHeight, ">");
+
 
 			// draw the list items
 			for(size_t i=0; i<this->viewableItems; i++) {
@@ -50,24 +63,32 @@ namespace GUI {
 				}
 
 				auto & registerItem = * this->registers.at(listIndex);
-				
-				
+
+				if(registerItem.range.limited && registerItem.range.min != registerItem.range.max) {
+					// Draw bar representing value
+					screen.setDrawColor(1);
+					uint16_t relativeValue = 1+127*registerItem.value/(registerItem.range.max-registerItem.range.min);
+					screen.drawBox(0,rowHeight * (this->cursorPosition - this->viewOffset)+2,relativeValue, rowHeight);
+				}
+
+
+				screen.setDrawColor(2);
 				char message[100];
 				sprintf(message, "%s : %d", registerItem.name.c_str(), registerItem.value);
-				screen.drawStr(20, i * rowHeight + rowHeight, message);
-				//screen.drawText(registerItem.name, 20, i * 20);
+				screen.drawStr(3, i * rowHeight + rowHeight, message);
 			}
 
-			// draw the cursor
-			screen.drawStr(0, rowHeight * (this->cursorPosition - this->viewOffset) + rowHeight, ">");
 		}
 
+		//---------
 		bool
 		RegisterList::buttonPressed()
 		{
+			Controller::X().setRootPanel(std::make_shared<Dashboard>());
 			return false;
 		}
 
+		//---------
 		void
 		RegisterList::dial(int8_t delta)
 		{
