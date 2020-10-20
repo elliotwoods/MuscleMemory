@@ -32,18 +32,21 @@ namespace GUI {
 			this->priorDialPosition = this->dial.getPosition();
 		}
 
-		this->rootPanel = rootPanel;
-		this->currentPanel = rootPanel;
+		this->setRootPanel(rootPanel);
 	}
 
 	//----------
 	void
 	Controller::update()
 	{
+		if(!this->currentPanel) {
+			this->currentPanel = this->rootPanel;
+		}
+		
 		// DIAL BUTTON
 		{
 			auto buttonPressed = gpio_get_level(GPIO_DIAL_BUTTON) == 0;
-			if(buttonPressed) {
+			if(buttonPressed && !this->priorDialButtonPressed) {
 				if(this->currentPanel->buttonPressed()) {
 					// The panel quit
 
@@ -63,6 +66,7 @@ namespace GUI {
 					}
 				}
 			}
+			this->priorDialButtonPressed = buttonPressed;
 		}
 		
 		// DIAL MOVEMENT
@@ -85,5 +89,12 @@ namespace GUI {
 			this->currentPanel->draw(this->u8g2);
 		}
 		while(this->u8g2.nextPage());
+	}
+	
+	//----------
+	void
+	Controller::setRootPanel(std::shared_ptr<Panel> rootPanel)
+	{
+		this->currentPanel = rootPanel;
 	}
 }
