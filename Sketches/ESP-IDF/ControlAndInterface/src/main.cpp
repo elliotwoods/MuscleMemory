@@ -210,7 +210,7 @@ initController()
 	// 	, 1024 * 4
 	// 	, NULL
 	// 	, PRIORITY_AGENT_SERVER_COMMS
-	// 	, NULL
+	// 	, NULL 
 	// 	, 0);
 }
 
@@ -263,10 +263,10 @@ setup()
 	
 	vTaskDelay(2500 / portTICK_PERIOD_MS);
 	
-	//GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::RegisterList>());
-	GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::Dashboard>());
+	GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::RegisterList>());
+	//GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::Dashboard>());
 	initInterface();
-	Registry::X().registers.at(Registry::RegisterType::Torque).value = 16;
+	//Registry::X().registers.at(Registry::RegisterType::Torque).value = 16;
 
 }
 
