@@ -45,14 +45,7 @@ namespace GUI {
 			const uint16_t rowHeight = 12;
 
 			screen.setFont(u8g2_font_nerhoe_tr);
-			screen.setFontMode(1);
-
-			// draw the cursor
-			screen.setDrawColor(1);
-			screen.drawFrame(0,rowHeight * (this->cursorPosition - this->viewOffset)+2,128,rowHeight);
-
-			//screen.drawStr(0, rowHeight * (this->cursorPosition - this->viewOffset) + rowHeight, ">");
-
+			screen.setFontMode(0);
 
 			// draw the list items
 			for(size_t i=0; i<this->viewableItems; i++) {
@@ -64,20 +57,24 @@ namespace GUI {
 
 				auto & registerItem = * this->registers.at(listIndex);
 
+				{
+					screen.setDrawColor(1);
+					char message[100];
+					sprintf(message, "%s : %d", registerItem.name.c_str(), registerItem.value);
+					screen.drawStr(3, i * rowHeight + rowHeight, message);
+				}
+
 				if(registerItem.range.limited && registerItem.range.min != registerItem.range.max) {
 					// Draw bar representing value
-					screen.setDrawColor(1);
+					screen.setDrawColor(2);
 					uint16_t relativeValue = 1+127*registerItem.value/(registerItem.range.max-registerItem.range.min);
 					screen.drawBox(0,rowHeight * (this->cursorPosition - this->viewOffset)+2,relativeValue, rowHeight);
 				}
-
-
-				screen.setDrawColor(2);
-				char message[100];
-				sprintf(message, "%s : %d", registerItem.name.c_str(), registerItem.value);
-				screen.drawStr(3, i * rowHeight + rowHeight, message);
 			}
 
+			// draw the cursor
+			screen.setDrawColor(1);
+			screen.drawFrame(0,rowHeight * (this->cursorPosition - this->viewOffset)+2,128,rowHeight);
 		}
 
 		//---------
