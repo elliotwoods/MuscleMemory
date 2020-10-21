@@ -33,38 +33,54 @@ namespace GUI {
 		void
 		Dashboard::draw(U8G2& u8g2)
 		{
+			auto DeviceID = Registry::X().registers.at(Registry::RegisterType::DeviceID); 
 			auto MultiTurnPosition = Registry::X().registers.at(Registry::RegisterType::MultiTurnPosition); 
 			auto TargetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition); 
-			#ifdef OUTER_CIRCLE
-				u8g2.drawCircle(centerCircle[0], centerCircle[1], notchRadiusOuter, U8G2_DRAW_ALL);
-			#endif
-			#ifdef HAC_DRAW_TICKS
-				//draw clock notches
-				{
-					const uint8_t innerNotches[24] PROGMEM = { 32, 6, 46, 7, 57, 17, 58, 32, 57, 46, 47, 57, 32, 58, 18, 57, 7, 47, 6, 32, 7, 18, 17, 7 };
-					const uint8_t outerNotches[24] PROGMEM = { 32, 1, 48, 5, 59, 16, 63, 32, 59, 47, 48, 59, 32, 63, 17, 59, 5, 48, 1, 32, 5, 17, 16, 5 };
 
-					for(int i=0; i<12; i++) {
-						u8g2.drawLine(innerNotches[i * 2 + 0], innerNotches[i * 2 + 1], outerNotches[i * 2 + 0], outerNotches[i * 2 + 1]);
-					}
+			// Outer circle
+			u8g2.drawCircle(centerCircle[0], centerCircle[1], notchRadiusOuter, U8G2_DRAW_ALL);
+			
+			// Clock notches
+			{
+				const uint8_t innerNotches[24] PROGMEM = { 32, 6, 46, 7, 57, 17, 58, 32, 57, 46, 47, 57, 32, 58, 18, 57, 7, 47, 6, 32, 7, 18, 17, 7 };
+				const uint8_t outerNotches[24] PROGMEM = { 32, 1, 48, 5, 59, 16, 63, 32, 59, 47, 48, 59, 32, 63, 17, 59, 5, 48, 1, 32, 5, 17, 16, 5 };
+
+				for(int i=0; i<12; i++) {
+					u8g2.drawLine(innerNotches[i * 2 + 0], innerNotches[i * 2 + 1], outerNotches[i * 2 + 0], outerNotches[i * 2 + 1]);
 				}
-			#endif
-			#ifdef MULTI_TURN
-			float MultiTurnFloat;
+			}
+
+
+			// Inner solid circle
+			{
+				u8g2.drawDisc(centerCircle[0], centerCircle[1], 12);
+			}
+
 			char message[200];
+
+			// Device ID
+			{
+				u8g2.setFont(u8g2_font_t0_18_mn);
+				u8g2.setDrawColor(0);
+				sprintf(message, "%d", DeviceID.value);
+				u8g2.drawStr(centerCircle[0] - strlen(message) * 4, centerCircle[1] + 7, message);
+				u8g2.setDrawColor(1);
+			}
+
 			// MultiTurnPosition - actual
 			{
+				
 				auto value = MultiTurnPosition.value / (1 << 14);
 				float phase = float(value) / 1024.0f * TWO_PI;
 				u8g2_uint_t x = centerCircle[0] + markerRadiusMajor * sinf(phase);
 				u8g2_uint_t y = centerCircle[1] - markerRadiusMajor * cosf(phase);
 				u8g2.drawDisc(x, y, 3, U8G2_DRAW_ALL);
-				MultiTurnFloat = phase;
 
-				u8g2.setFont(u8g2_font_crox4hb_tf);
-				sprintf(message, "%d", value);			
-				u8g2.drawStr(75, 45, message);				
+				u8g2.setFont(u8g2_font_profont22_mn);
+				sprintf(message, "%.2f", float(MultiTurnPosition.value) / float(1 << 14));			
+				u8g2.drawStr(128 - strlen(message) * 12, 45, message);
 			}
+
 			// Target multi-turn position
 			{
 				auto value = TargetPosition.value / (1 << 14);
@@ -73,18 +89,20 @@ namespace GUI {
 				u8g2_uint_t y = centerCircle[1] - markerRadiusMajor * cosf(phase);
 				u8g2.drawCircle(x, y, 4, U8G2_DRAW_ALL);
 
-				u8g2.setFont(u8g2_font_crox4h_tf);
-				sprintf(message, "%d", value);
-				u8g2.drawStr(75, 63, message);
+				u8g2.setFont(u8g2_font_t0_18_mn);
+				sprintf(message, "%.2f", float(TargetPosition.value) / float(1 << 14));			
+				u8g2.drawStr(128 - strlen(message) * 8 - 4, 63, message);
 			}
-			#endif
-			#ifdef SINGLE_TURN
+			
+			// Single turn
+			{
 				int16_t SingleTurn = MultiTurnPosition.value % (1<<14);
 				float SinglePhase = float(SingleTurn) * TWO_PI / float(1<<14);
 				u8g2_uint_t single_x = centerCircle[0] + markerRadiusMinor * sinf(SinglePhase);
 				u8g2_uint_t single_y = centerCircle[1] - markerRadiusMinor * cosf(SinglePhase);
 				u8g2.drawPixel(single_x, single_y);
-			#endif
+			}
+
 			{
 				u8g2.setFont(u8g2_font_nerhoe_tr);
 				
@@ -101,22 +119,8 @@ namespace GUI {
 				sprintf(message, "A.");			
 				u8g2.drawStr(105, 27, message);
 				
-				// show Current Position , Target Position
-
-
-
-				
+				// show Current Position , Target Position	
 			}
-
-			//printf("%d,%f - %d,%f \n",MultiTurn,MultiPhase,SingleTurn,SinglePhase);
-			/*
-			auto deviceID = Registry::X().registers.at(Registry::RegisterType::DeviceID);
-
-			u8g2.setFont(u8g2_font_nerhoe_tr);
-			char message[200];
-			sprintf(message, "%d", deviceID.value);			
-			u8g2.drawStr(70, 37, message);
-			*/
 		}
 
 		
@@ -134,7 +138,7 @@ namespace GUI {
 		Dashboard::dial(int8_t movement)
 		{
 			auto & targetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition).value;
-			targetPosition += 100 * (int32_t) movement;
+			targetPosition += 256 * (int32_t) movement;
 		}
 	}
 }
