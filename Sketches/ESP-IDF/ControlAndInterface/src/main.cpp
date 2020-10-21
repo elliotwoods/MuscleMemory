@@ -112,7 +112,7 @@ initDevices()
 	showSplashMessage("Initialise INA219...");
 	ina219.init();	
 
-	showSplashMessage("Connect to Server...");
+	//showSplashMessage("Connect to WiFi ...");
 	//Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
 }
 
@@ -203,8 +203,8 @@ initController()
 	// Initialise target to initial reading
 	Registry::X().registers.at(Registry::RegisterType::TargetPosition).value = multiTurn.getMultiTurnPosition();
 
-	showSplashMessage("Initialise Agent");
-	agent.init();
+	// showSplashMessage("Initialise Agent");
+	// agent.init();
 
 	showSplashMessage("Initialise Drive");
 	drive.init();
@@ -230,13 +230,13 @@ initController()
 		, &agentTaskHandle
 		, 1);
 
-	xTaskCreatePinnedToCore(agentServerCommunicateTask
-		, "AgentServer"
-		, 1024 * 4
-		, NULL
-		, PRIORITY_AGENT_SERVER_COMMS
-		, NULL 
-		, 0);
+	// xTaskCreatePinnedToCore(agentServerCommunicateTask
+	// 	, "AgentServer"
+	// 	, 1024 * 4
+	// 	, NULL
+	// 	, PRIORITY_AGENT_SERVER_COMMS
+	// 	, NULL 
+	// 	, 0);
 }
 
 //----------
