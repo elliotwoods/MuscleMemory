@@ -45,7 +45,7 @@ namespace Control {
 		Registry::MotorControlReads motorControlReads;
 		{
 			registry.motorControlRead(motorControlReads);
-		}
+		}		
 
 		// apply torque
 		this->motorDriver.setTorque(motorControlReads.torque, positionWithinStepCycle);

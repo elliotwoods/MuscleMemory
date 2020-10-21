@@ -95,6 +95,22 @@ Registry::update()
 			this->agentReads.motorControlFrequency = this->registers.at(RegisterType::MotorControlFrequency).value;
 			this->agentReads.current = this->registers.at(RegisterType::Current).value;
 			this->agentReads.maximumTorque = this->registers.at(RegisterType::MaximumTorque).value;
+
+			// Soft limits
+			{
+				const auto & min = this->registers.at(RegisterType::SoftLimitMin).value;
+				const auto & max = this->registers.at(RegisterType::SoftLimitMax).value;
+				this->agentReads.softLimitMin = min;
+				this->agentReads.softLimitMax = max;
+
+				if(this->agentReads.targetPosition > max) {
+					this->agentReads.targetPosition = max;
+				}
+				else if(this->agentReads.targetPosition < min) {
+					this->agentReads.targetPosition = min;
+				}
+			}
+			
 			xSemaphoreGive(this->agentReadsMutex);
 		}
 	}

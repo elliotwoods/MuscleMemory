@@ -42,6 +42,16 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, 128
 	}},
+	{ RegisterType::SoftLimitMin, {
+		"SoftLimitMin"
+		, - 64 * (1 << 14)
+		, Access::ReadWrite
+	}},
+	{ RegisterType::SoftLimitMax, {
+		"SoftLimitMax"
+		, 64 * (1 << 14)
+		, Access::ReadWrite
+	}},
 
 
 	{ RegisterType::EncoderReading, {
