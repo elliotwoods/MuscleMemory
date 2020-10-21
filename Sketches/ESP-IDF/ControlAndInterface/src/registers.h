@@ -137,7 +137,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::PIDDifferential, {
 		"PIDDifferential"
-		, 1 << 20
+		, 0 //1 << 20
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDIntegralMax, {

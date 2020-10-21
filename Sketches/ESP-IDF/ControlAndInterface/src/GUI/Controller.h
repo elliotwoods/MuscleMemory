@@ -18,8 +18,7 @@ namespace GUI {
 
 		void setRootPanel(std::shared_ptr<Panel> rootPanel);
 
-		void dialButtonPressed();
-		void dialTurned(int8_t);
+		bool isDialButtonPressed() const;
 	private:
 		Controller() {}
 		std::shared_ptr<Panel> currentPanel = nullptr;
