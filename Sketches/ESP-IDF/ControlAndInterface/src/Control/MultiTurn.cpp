@@ -3,7 +3,7 @@
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 #define HALF_WAY (1 << 13)
 
-#define DEBUG_MULTITURN false
+#define DEBUG_MULTITURN true
 
 namespace Control {
 	//-----------
@@ -99,7 +99,7 @@ namespace Control {
 	void
 	MultiTurn::saveSession()
 	{
-		this->saveData.fileIndex ^= 1;
+		this->saveData.fileIndex++;
 		this->saveData.multiTurnPosition = position;
 		this->saveData.saveSequenceIndex++;
 
@@ -134,42 +134,31 @@ namespace Control {
 	{
 		// We keep 2 files in case one becomes corrupted
 
-		SaveData A, B;
-		char filenameA[100];
-		char filenameB[100];
-		MultiTurn::renderFileName(filenameA, 0);
-		MultiTurn::renderFileName(filenameB, 1);
-		auto Aloaded = this->loadSessionFile(filenameA, A);
-		auto Bloaded = this->loadSessionFile(filenameB, B);
+		SaveData freshestData;
+		bool anyLoaded = false;
+		for(uint8_t fileIndex=0; fileIndex<255; fileIndex++) {
+			char filename[100];
+			MultiTurn::renderFileName(filename, fileIndex);
+			
+			SaveData saveData;
+			if(MultiTurn::loadSessionFile(filename, saveData)) {
+				if(saveData.saveSequenceIndex > freshestData.saveSequenceIndex || !anyLoaded)
+				{
+					anyLoaded = true;
+					freshestData = saveData;
+				}
+			}
+		}
 
-		SaveData * saveData = nullptr;
-		if(Aloaded && Bloaded) {
-			saveData = A.saveSequenceIndex > B.saveSequenceIndex
-				? &A
-				: &B;
-		}
-		else if(Aloaded) {
-			saveData = &A;
-		}
-		else if(Bloaded) {
-			saveData = &B;
-		}
-		else {
+		if(!anyLoaded) {
 			return false;
 		}
 		
-		this->turns = this->implyTurns(saveData->multiTurnPosition, currentSingleTurn);
-		this->saveData = * saveData;
+		this->saveData = freshestData;
+		this->turns = this->implyTurns(freshestData.multiTurnPosition, currentSingleTurn);
 
 		printf("[MultiTurn] Loaded multiturn data (%d)\n", turns);
 		return true;
-	}
-
-	//-----------
-	void
-	MultiTurn::renderFileName(char * filename, uint8_t index)
-	{
-		sprintf(filename, "/appdata/MultiTurn%d.dat", index);
 	}
 
 	//-----------
@@ -190,6 +179,13 @@ namespace Control {
 			turns++;
 		}
 		return turns;
+	}
+
+	//-----------
+	void
+	MultiTurn::renderFileName(char * filename, uint8_t index)
+	{
+		sprintf(filename, "/appdata/MultiTurn%d.dat", index);
 	}
 
 	//-----------
@@ -228,11 +224,10 @@ namespace Control {
 					, loadedSaveData.storedCRC
 					, crc
 					, filename);
-				printf("[MultiTurn] Saved position (%d), Current position (%d)\n"
-					, loadedSaveData.multiTurnPosition
-					, this->getMultiTurnPosition());
+				printf("[MultiTurn] Position in save (%d)\n"
+					, loadedSaveData.multiTurnPosition);
 				return false;
-			}	
+			}
 		}
 
 		return true;
