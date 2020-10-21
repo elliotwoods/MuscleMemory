@@ -1,59 +1,35 @@
 #include "MultiTurn.h"
 
-void saveTaskMethod(void* multiTurnUntyped)
-{
-	auto & multiTurn = * (Control::MultiTurn*) multiTurnUntyped;
-	auto & saveData = multiTurn.lastSave;
-
-	while(true) {
-		vTaskSuspend(NULL);
-		auto position = multiTurn.getMultiTurnPosition();
-		if(abs(position) - saveData.multiTurnPosition > 1 << 12) {
-			saveData.fileIndex ^= 1;
-			saveData.multiTurnPosition = position;
-			saveData.saveSequenceIndex++;
-
-			// Create the checksum
-			{
-				uint16_t crc = 0;
-				for(size_t i=0; i<sizeof(Control::MultiTurn::SaveData) - sizeof(uint16_t); i++) {
-					crc += ((uint8_t*) &saveData)[i];
-				}
-				saveData.checkSum = crc;
-			}
-
-			// Open the file for saving
-			char filename[100];
-			sprintf(filename, "MultiTurn%d.dat", saveData.fileIndex);
-			auto file = fopen(filename, "wb");
-
-			fwrite(&saveData, sizeof(Control::MultiTurn::SaveData), 1, file);
-			fclose(file);
-
-			printf("Saving %s\n", filename);
-		}
-	}
-}
-
+#define MOD(a,b) ((((a)%(b))+(b))%(b))
 #define HALF_WAY (1 << 13)
+
+#define DEBUG_MULTITURN false
+
 namespace Control {
+	//-----------
+	uint8_t
+	MultiTurn::SaveData::getCRC() const
+	{
+		uint16_t crc = 0;
+		auto data = (uint8_t*) this;
+
+		// Calculate the CRC of this struct excluding the CRC itself
+		while(data != &this->storedCRC)
+		{
+			crc += *data++;
+		}
+		return crc & 0xFF;
+	}
+
 	//-----------
 	MultiTurn::MultiTurn(EncoderCalibration & encoderCalibration)
 	: encoderCalibration(encoderCalibration)
 	{
-		xTaskCreatePinnedToCore(saveTaskMethod
-			, "MultiTurn save"
-			, 1024
-			, this
-			, 5
-			, &this->saveTaskHandle
-			, 0);
 	}
 
 	//-----------
 	MultiTurn::~MultiTurn()
 	{
-		vTaskDelete(this->saveTaskHandle);
 	}
 
 	//-----------
@@ -66,11 +42,13 @@ namespace Control {
 
 		// Load the multiturn session
 		this->loadSession(singleTurnPosition);
+
+		this->driveLoopUpdate(singleTurnPosition);
 	}
 
 	//-----------
 	void
-	MultiTurn::update(SingleTurnPosition currentSingleTurnPosition)
+	MultiTurn::driveLoopUpdate(SingleTurnPosition currentSingleTurnPosition)
 	{
 		if(this->priorSingleTurnPosition > HALF_WAY / 4 * 3 && currentSingleTurnPosition < HALF_WAY / 4)
 		{
@@ -82,7 +60,32 @@ namespace Control {
 		}
 		this->position = (((int32_t) this->turns) << 14) + (int32_t) currentSingleTurnPosition;
 		this->priorSingleTurnPosition = currentSingleTurnPosition;
-		vTaskResume(this->saveTaskHandle);
+	}
+	
+	//-----------
+	void
+	MultiTurn::mainLoopUpdate()
+	{
+		// If our saveData implies a different number of turns than our actual number of turns
+		// (when loaded with our current encoder reading being active)
+		{
+			auto mtPosition = this->getMultiTurnPosition();
+			auto stPosition = MOD(mtPosition, 1 << 14);
+			auto closestTurn = this->implyTurns(this->saveData.multiTurnPosition, stPosition);
+			if(closestTurn != this->turns) {
+				if(DEBUG_MULTITURN) {
+					printf("[MultiTurn] Saving! SaveData implied turn (%d) from saved pos (%d) and current single turn pos (%d), Actual turns (%d)\n"
+						, closestTurn
+						, this->saveData.multiTurnPosition
+						, stPosition
+						, this->turns);
+				}
+				
+
+				// Then save the session
+				this->saveSession();
+			}
+		}
 	}
 
 	//-----------
@@ -93,14 +96,51 @@ namespace Control {
 	}
 
 	//-----------
+	void
+	MultiTurn::saveSession()
+	{
+		this->saveData.fileIndex ^= 1;
+		this->saveData.multiTurnPosition = position;
+		this->saveData.saveSequenceIndex++;
+
+		if(DEBUG_MULTITURN) {
+			printf("[MultiTurn] Saving multiturn (%d)\n", this->saveData.multiTurnPosition);
+		}
+
+		// Create the checksum
+		this->saveData.storedCRC = saveData.getCRC();
+
+		// Open the file for saving
+		char filename[100];
+		MultiTurn::renderFileName(filename, saveData.fileIndex);
+		if(DEBUG_MULTITURN) {
+			printf("[MultiTurn] Opening file for save (%s)\n", filename);
+		}
+		auto file = fopen(filename, "wb");
+
+		if(file) {
+			printf("Saving %s\n", filename);
+			fwrite(&this->saveData, sizeof(SaveData), 1, file);
+			fclose(file);
+		}
+		else {
+			printf("[MultiTurn] Couldn't open file for saving %s\n", filename);
+		}
+	}
+
+	//-----------
 	bool
 	MultiTurn::loadSession(SingleTurnPosition currentSingleTurn)
 	{
 		// We keep 2 files in case one becomes corrupted
 
 		SaveData A, B;
-		auto Aloaded = this->loadSessionFile("MultiTurn0.dat", A);
-		auto Bloaded = this->loadSessionFile("MultiTurn1.dat", B);
+		char filenameA[100];
+		char filenameB[100];
+		MultiTurn::renderFileName(filenameA, 0);
+		MultiTurn::renderFileName(filenameB, 1);
+		auto Aloaded = this->loadSessionFile(filenameA, A);
+		auto Bloaded = this->loadSessionFile(filenameB, B);
 
 		SaveData * saveData = nullptr;
 		if(Aloaded && Bloaded) {
@@ -117,26 +157,44 @@ namespace Control {
 		else {
 			return false;
 		}
+		
+		this->turns = this->implyTurns(saveData->multiTurnPosition, currentSingleTurn);
+		this->saveData = * saveData;
 
-		auto turns = saveData->multiTurnPosition >> 14;
-		auto savedSingleTurn = saveData->multiTurnPosition % (1 << 14);
-		if(savedSingleTurn - currentSingleTurn > 1 << 13) {
-			// meanwhile we've skipped a cycle negative
-			turns--;
-		}
-		else if(currentSingleTurn - savedSingleTurn > 1 << 13) {
-			// meanwhile we've skipped a cycle positive
-			turns++;
-		}
-		this->turns = turns;
-		this->lastSave = * saveData;
-
+		printf("[MultiTurn] Loaded multiturn data (%d)\n", turns);
 		return true;
 	}
 
 	//-----------
+	void
+	MultiTurn::renderFileName(char * filename, uint8_t index)
+	{
+		sprintf(filename, "/appdata/MultiTurn%d.dat", index);
+	}
+
+	//-----------
+	Turns
+	MultiTurn::implyTurns(MultiTurnPosition priorMultiTurnPosition, SingleTurnPosition currentSingleTurnPosition) const
+	{
+		auto turns = priorMultiTurnPosition >> 14;
+		auto priorSingleTurn = MOD(priorMultiTurnPosition, 1 << 14);
+		
+		const auto halfWay = 1 << 13;
+		const auto delta = (int)currentSingleTurnPosition - priorSingleTurn;
+		if(delta > halfWay) {
+			// meanwhile we've skipped forward a cycle
+			turns--;
+		}
+		else if(-delta > halfWay) {
+			// meanwhile we've skipped backwards a cycle
+			turns++;
+		}
+		return turns;
+	}
+
+	//-----------
 	bool
-	MultiTurn::loadSessionFile(const char * filename, SaveData & saveData)
+	MultiTurn::loadSessionFile(const char * filename, SaveData & loadedSaveData)
 	{
 		// Load the file
 		auto file = fopen(filename, "rb");
@@ -152,17 +210,27 @@ namespace Control {
 			return false;
 		}
 
-		fread(&saveData, sizeof(SaveData), 1, file);
+		fread(&loadedSaveData, sizeof(SaveData), 1, file);
 		fclose(file);
+
+		printf("[MultiTurn] File (%s), fileIndex (%d), saveSequenceIndex (%lld), multiTurnPosition (%d), crc (%d)\n"
+			, filename
+			, (int) loadedSaveData.fileIndex
+			, loadedSaveData.saveSequenceIndex
+			, loadedSaveData.multiTurnPosition
+			, (int) loadedSaveData.storedCRC);
 
 		// Check checksum
 		{
-			uint16_t crc = 0;
-			for(size_t i=0; i<sizeof(SaveData) - sizeof(uint16_t); i++) {
-				crc += ((uint8_t*) &saveData)[i];
-			}
-			if(crc != saveData.checkSum) {
-				printf("[MultiTurn] Checksum failed loading %s\n", filename);
+			auto crc = loadedSaveData.getCRC();
+			if(loadedSaveData.storedCRC != crc) {
+				printf("[MultiTurn] Saved checksum (%d) doesn't match calculated checksum (%d). Failed loading %s\n"
+					, loadedSaveData.storedCRC
+					, crc
+					, filename);
+				printf("[MultiTurn] Saved position (%d), Current position (%d)\n"
+					, loadedSaveData.multiTurnPosition
+					, this->getMultiTurnPosition());
 				return false;
 			}	
 		}

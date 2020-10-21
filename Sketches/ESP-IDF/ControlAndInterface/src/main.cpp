@@ -61,6 +61,9 @@ auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
 //----------
 void showSplashMessage(const std::string & message)
 {
+	printf(message.c_str());
+	printf("\n");
+
 	uint16_t _minDisplayTime = 300;
 	splashScreen->setMessage(message);
 	vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
@@ -143,7 +146,7 @@ agentTask(void*)
 	auto timer = timerBegin(0, 16, true);
 	timerAttachInterrupt(timer, wakeAgent, true);
 	timerAlarmWrite(timer, 5000, true);
-	timerAlarmEnable(timer);
+	//timerAlarmEnable(timer);
 
 	const auto & controlMode = Registry::X().registers.at(Registry::RegisterType::ControlMode).value;
 
@@ -161,7 +164,8 @@ agentTask(void*)
 			}
 			xSemaphoreGive(agentTaskResumeMutex);
 		}
-		vTaskSuspend(agentTaskHandle);
+		vTaskDelay(10);
+		//vTaskSuspend(agentTaskHandle);
 	}
 }
 
@@ -176,11 +180,13 @@ agentServerCommunicateTask(void*)
 void
 initController()
 {
+	// Force a calibration if the button is pressed when we get to this stage
 	if(encoderCalibration.load()) {
-		printf("Motor calibration loaded\n");
+		showSplashMessage("Encoder calibration loaded");
 	}
 	else {
 		// Perform encoder calibration
+		showSplashMessage("Calibrating encoder");
 		encoderCalibration.calibrate(as5047, motorDriver);
 		if(!encoderCalibration.save()) {
 			abort();
@@ -188,11 +194,23 @@ initController()
 		printf("Motor calibration saved\n");
 	}
 
+	showSplashMessage("Initialise MultiTurn");
 	multiTurn.init(as5047.getPosition());
+
+	// Initialise target to initial reading
+	Registry::X().registers.at(Registry::RegisterType::TargetPosition).value = multiTurn.getMultiTurnPosition();
+
+	showSplashMessage("Initialise Agent");
 	agent.init();
+
+	showSplashMessage("Initialise Drive");
 	drive.init();
+
+	showSplashMessage("Initialise PID");
 	pid.init();
 	
+	showSplashMessage("Starting system tasks");
+
 	xTaskCreatePinnedToCore(motorTask
 		, "Motor"
 		, 1024 * 4
@@ -223,6 +241,7 @@ void
 updateInterface()
 {
 	Registry::X().update();
+	multiTurn.mainLoopUpdate();
 	systemInfo.update();
 	canResponder.update();
 	GUI::Controller::X().update();
