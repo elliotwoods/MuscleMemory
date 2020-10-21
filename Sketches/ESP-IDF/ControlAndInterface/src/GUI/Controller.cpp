@@ -45,7 +45,7 @@ namespace GUI {
 		
 		// DIAL BUTTON
 		{
-			auto buttonPressed = gpio_get_level(GPIO_DIAL_BUTTON) == 0;
+			auto buttonPressed = this->isDialButtonPressed();
 			if(buttonPressed && !this->priorDialButtonPressed) {
 				if(this->currentPanel->buttonPressed()) {
 					// The panel quit
@@ -96,5 +96,12 @@ namespace GUI {
 	Controller::setRootPanel(std::shared_ptr<Panel> rootPanel)
 	{
 		this->currentPanel = rootPanel;
+	}
+
+	//----------
+	bool
+	Controller::isDialButtonPressed() const
+	{
+		return gpio_get_level(GPIO_DIAL_BUTTON) == 0;
 	}
 }
