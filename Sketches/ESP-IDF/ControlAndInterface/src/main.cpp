@@ -97,6 +97,12 @@ initDevices()
 
 
 	// Initialise devices
+	showSplashMessage("Mount File System...");	
+	fileSystem.mount("appdata", "/appdata", true, 2);
+
+	showSplashMessage("Load registry defaults...");	
+	Registry::X().loadDefaults();
+
 	showSplashMessage("Initialise AS5047...");
 	as5047.init();
 	
@@ -105,9 +111,6 @@ initDevices()
 
 	showSplashMessage("Initialise INA219...");
 	ina219.init();	
-
-	showSplashMessage("Mount File System...");	
-	fileSystem.mount("appdata", "/appdata", true, 2);
 
 	showSplashMessage("Connect to Server...");
 	//Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
@@ -284,9 +287,12 @@ setup()
 	
 	// Display ID
 	{
-		GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::ShowID>());
-		GUI::Controller::X().update();
-		vTaskDelay(1500 / portTICK_PERIOD_MS);
+		auto showID = std::make_shared<GUI::Panels::ShowID>();
+		GUI::Controller::X().setRootPanel(showID);
+		while(!showID->shouldExit) {
+			GUI::Controller::X().update();
+			vTaskDelay(10 / portTICK_PERIOD_MS);
+		}
 	}
 	
 	GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::Dashboard>());
