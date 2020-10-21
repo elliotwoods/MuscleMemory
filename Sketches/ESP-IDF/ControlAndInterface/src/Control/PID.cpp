@@ -66,6 +66,14 @@ namespace Control {
 			torque = output;
 		}
 
+		// Apply soft limits
+		if(agentReads.multiTurnPosition > agentReads.softLimitMax) {
+			torque = -agentReads.maximumTorque;
+		}
+		else if(agentReads.multiTurnPosition < agentReads.softLimitMin) {
+			torque = agentReads.maximumTorque;
+		}
+
 		// Store priors
 		{
 			this->priorError = errorOnPosition;
