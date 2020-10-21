@@ -33,7 +33,7 @@ namespace Control {
 		this->frameTimer.update();
 
 		auto encoderReading = this->as5047.getPosition();
-		this->multiTurn.update(encoderReading);
+		this->multiTurn.driveLoopUpdate(encoderReading);
 		auto multiTurnPosition = this->multiTurn.getMultiTurnPosition();
 		auto positionWithinStepCycle = this->encoderCalibration.getPositionWithinStepCycle(encoderReading);
 
