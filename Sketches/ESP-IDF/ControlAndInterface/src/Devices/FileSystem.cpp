@@ -1,4 +1,5 @@
 #include "FileSystem.h"
+#include "GUI/Controller.h"
 
 //----------
 void partloop(esp_partition_type_t part_type) {
@@ -40,9 +41,16 @@ namespace Devices {
 			return true;
 		}
 
-		if(!esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, partitionLabel)) {
+		auto partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, partitionLabel);
+
+		if(!partition) {
 			printf("No FAT patition found\n");
 			return false;
+		}
+
+		if(GUI::Controller::X().isDialButtonPressed()) {
+			printf("Erasing FAT partition\n");
+			esp_partition_erase_range(partition, 0, partition->size);
 		}
 
 		esp_vfs_fat_mount_config_t config = {
@@ -66,6 +74,7 @@ namespace Devices {
 			this->partitionLabel = std::string(partitionLabel);
 			this->mountPoint = std::string(mountPoint);
 		}
+
 		return true;
 	}
 
