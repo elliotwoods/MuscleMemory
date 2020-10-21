@@ -13,6 +13,7 @@ const u8g2_uint_t centerCircle[2] = {32, 32};
 const float markerRadiusMajor = 23;
 const float markerRadiusMinor = 18;
 const float notchRadiusOuter = 32.0f;
+const float rotationRange = 100 * 72 / 14;
 
 namespace GUI {
 	namespace Panels {
@@ -33,9 +34,9 @@ namespace GUI {
 		void
 		Dashboard::draw(U8G2& u8g2)
 		{
-			auto DeviceID = Registry::X().registers.at(Registry::RegisterType::DeviceID); 
-			auto MultiTurnPosition = Registry::X().registers.at(Registry::RegisterType::MultiTurnPosition); 
-			auto TargetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition); 
+			const auto & DeviceID = Registry::X().registers.at(Registry::RegisterType::DeviceID); 
+			const auto & MultiTurnPosition = Registry::X().registers.at(Registry::RegisterType::MultiTurnPosition); 
+			const auto & TargetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition); 
 
 			// Outer circle
 			u8g2.drawCircle(centerCircle[0], centerCircle[1], notchRadiusOuter, U8G2_DRAW_ALL);
@@ -50,6 +51,25 @@ namespace GUI {
 				}
 			}
 
+			// Draw soft limits
+			{
+				{
+					auto registerValue = Registry::X().registers.at(Registry::RegisterType::SoftLimitMin).value;
+					float phase = float(registerValue / (1 << 14)) / rotationRange * TWO_PI;
+
+					u8g2.drawLine(centerCircle[0], centerCircle[1]
+						, centerCircle[0] + markerRadiusMajor * sinf(phase)
+						, centerCircle[0] - markerRadiusMajor * cosf(phase));
+				}
+
+				{
+					auto registerValue = Registry::X().registers.at(Registry::RegisterType::SoftLimitMax).value;
+					float phase = float(registerValue / (1 << 14)) / rotationRange * TWO_PI;
+					u8g2.drawLine(centerCircle[0], centerCircle[1]
+						, centerCircle[0] + markerRadiusMajor * sinf(phase)
+						, centerCircle[0] - markerRadiusMajor * cosf(phase));
+				}
+			}
 
 			// Inner solid circle
 			{
@@ -71,7 +91,7 @@ namespace GUI {
 			{
 				
 				auto value = MultiTurnPosition.value / (1 << 14);
-				float phase = float(value) / 1024.0f * TWO_PI;
+				float phase = float(value) / rotationRange * TWO_PI;
 				u8g2_uint_t x = centerCircle[0] + markerRadiusMajor * sinf(phase);
 				u8g2_uint_t y = centerCircle[1] - markerRadiusMajor * cosf(phase);
 				u8g2.drawDisc(x, y, 3, U8G2_DRAW_ALL);
@@ -84,7 +104,7 @@ namespace GUI {
 			// Target multi-turn position
 			{
 				auto value = TargetPosition.value / (1 << 14);
-				float phase = float(value) / 1024.0f * TWO_PI;
+				float phase = float(value) / rotationRange * TWO_PI;
 				u8g2_uint_t x = centerCircle[0] + markerRadiusMajor * sinf(phase);
 				u8g2_uint_t y = centerCircle[1] - markerRadiusMajor * cosf(phase);
 				u8g2.drawCircle(x, y, 4, U8G2_DRAW_ALL);
@@ -138,7 +158,7 @@ namespace GUI {
 		Dashboard::dial(int8_t movement)
 		{
 			auto & targetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition).value;
-			targetPosition += 256 * (int32_t) movement;
+			targetPosition += 512 * (int32_t) movement;
 		}
 	}
 }
