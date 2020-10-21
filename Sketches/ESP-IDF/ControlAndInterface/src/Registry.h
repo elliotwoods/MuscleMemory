@@ -146,6 +146,9 @@ public:
 
 	void agentWrite(AgentWrites &&);
 	void agentRead(AgentReads &);
+
+	void loadDefaults();
+	void saveDefault(const RegisterType & );
 private:
 	MotorControlReads motorControlReads;
 	SemaphoreHandle_t motorControlReadsMutex;
@@ -162,4 +165,6 @@ private:
 	bool agentWritesNew = false;
 
 	Utils::FrameTimer frameTimer;
+
+	std::set<RegisterType> defaultsToSave;
 };

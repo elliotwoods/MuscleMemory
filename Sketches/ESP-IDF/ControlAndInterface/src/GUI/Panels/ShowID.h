@@ -13,6 +13,10 @@ namespace GUI {
 			void draw(U8G2 &) override;
 			bool buttonPressed() override;
 			void dial(int8_t) override;
+			bool shouldExit = false;
+		private:
+			bool editing = false;
+			uint64_t startTime;
 		};
 	}
 }
