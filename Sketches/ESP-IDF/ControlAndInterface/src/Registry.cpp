@@ -2,6 +2,8 @@
 
 const auto waitTime = portMAX_DELAY;
 
+const char registerDefaultsFilename[] = "/appdata/registerDefault.dat";
+
 //----------
 const std::set<Registry::RegisterType>
 Registry::defaultRegisterReads {
@@ -203,4 +205,49 @@ Registry::agentRead(AgentReads & agentReads)
 
 		xSemaphoreGive(this->agentReadsMutex);
 	}
+}
+
+//----------
+void
+Registry::loadDefaults()
+{
+	auto file = fopen(registerDefaultsFilename, "rb");
+	if(!file) {
+		printf("[Registry] Cannot open file for reading (%s)", registerDefaultsFilename);
+		return;
+	}
+
+	// Get file size and check
+	fseek(file, 0L, SEEK_END);
+	auto fileSize = ftell(file);
+	rewind(file);
+
+	auto count = fileSize / (sizeof(RegisterType) + sizeof(int32_t));
+	RegisterType registerType;
+	for(int i=0; i<count; i++) {
+		fread(&registerType, sizeof(RegisterType), 1, file);
+		fread(&registers.at(registerType).value, sizeof(int32_t), 1, file);
+	}
+
+	fclose(file);
+}
+
+//----------
+void
+Registry::saveDefault(const RegisterType & registerType)
+{
+	this->defaultsToSave.insert(registerType);
+
+	auto file = fopen(registerDefaultsFilename, "wb");
+	if(!file) {
+		printf("[Registry] Cannot open file for saving (%s)", registerDefaultsFilename);
+		return;
+	}
+
+	for(const auto & regsiterTypeToSave : this->defaultsToSave) {
+		fwrite(&regsiterTypeToSave, sizeof(RegisterType), 1, file);
+		fwrite(&registers.at(regsiterTypeToSave).value, sizeof(int32_t), 1, file);
+	}
+
+	fclose(file);
 }
