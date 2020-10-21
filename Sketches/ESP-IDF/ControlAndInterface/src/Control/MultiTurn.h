@@ -26,10 +26,10 @@ namespace Control {
 
 		void saveSession();
 		bool loadSession(SingleTurnPosition currentSingleTurn);
-		static void renderFileName(char * filename, uint8_t index);
 	private:
 		Turns implyTurns(MultiTurnPosition priorMultiTurnPosition, SingleTurnPosition currentSingleTurnPosition) const;
-		bool loadSessionFile(const char * filename, SaveData &);
+		static void renderFileName(char * filename, uint8_t index);
+		static bool loadSessionFile(const char * filename, SaveData &);
 
 		EncoderCalibration & encoderCalibration;
 		SingleTurnPosition priorSingleTurnPosition = 0;
