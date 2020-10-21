@@ -13,35 +13,43 @@
 class Registry {
 public:
 	enum class RegisterType : uint16_t {
+		// Device
 		DeviceID = 0,
 		ControlMode = 1,
 
+		// Position, Velocity, Target, Torque
 		MultiTurnPosition = 10,
 		Velocity = 11,
 		TargetPosition = 12,
 		Torque = 13,
 		MaximumTorque = 14,
 
+		// Encoder
 		EncoderReading = 21,
 		EncoderErrors = 22,
 
+		// Power
 		Current = 30,
 		BusVoltage = 32,
 
+		// System
 		FreeMemory = 40,
 		CPUTemperature = 41,
 		UpTime = 42,
 
+		// Update frequencies
 		MotorControlFrequency = 50,
 		AgentControlFrequency = 51,
 		RegistryControlFrequency = 52,
 
+		// Agent
 		AgentLocalHistorySize = 60,
 		AgentTraining = 61,
 		AgentNoiseAmplitude = 62,
 		AgentAddProportional = 63,
 		AgentAddConstant = 64,
 
+		// PID controller
 		PIDProportional = 70,
 		PIDIntegral = 71,
 		PIDDifferential = 72,
