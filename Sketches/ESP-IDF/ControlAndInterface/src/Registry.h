@@ -23,6 +23,8 @@ public:
 		TargetPosition = 12,
 		Torque = 13,
 		MaximumTorque = 14,
+		SoftLimitMin = 15,
+		SoftLimitMax = 16,
 
 		// Encoder
 		EncoderReading = 21,
@@ -122,6 +124,8 @@ public:
 		int32_t motorControlFrequency;
 		int32_t current;
 		Torque maximumTorque;
+		MultiTurnPosition softLimitMin;
+		MultiTurnPosition softLimitMax;
 	};
 
 	struct AgentWrites {
