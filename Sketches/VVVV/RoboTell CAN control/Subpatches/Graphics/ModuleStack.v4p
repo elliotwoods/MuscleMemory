@@ -1,0 +1,425 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta34.1.dtd" >
+   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Subpatches\Graphics\ModuleStack.v4p" systemname="ModuleStack" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Subpatches\Graphics\ModuleStack.v4p">
+   <BOUNDS type="Window" left="25248" top="10776" width="11988" height="9108">
+   </BOUNDS>
+   <PACK Name="addonpack" Version="34.1.0">
+   </PACK>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="0">
+   <BOUNDS type="Node" left="1500" top="1500" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1500" top="1500" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Radius">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="0.18">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="1">
+   <BOUNDS type="Node" left="2928" top="1524" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="2928" top="1524" width="792" height="240">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Height">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   <PIN pinname="Y Input Value" slicecount="1" values="0.1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Module" filename="Module.v4p" componentmode="Hidden" id="2" nodename="Graphics\Module.v4p">
+   <BOUNDS type="Node" left="2340" top="4620" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="2340" top="4620" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="22332" top="13812" width="13944" height="7476">
+   </BOUNDS>
+   <PIN pinname="Geometry" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Lower module transform" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Radius" visible="1" slicecount="1" values="0.1">
+   </PIN>
+   <PIN pinname="Height" visible="1">
+   </PIN>
+   <PIN pinname="Next Module Offset" visible="1">
+   </PIN>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="Rotation" slicecount="2" visible="1" values="-0.238095228407118,0">
+   </PIN>
+   <PIN pinname="Wireframe" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Sqrt (Complex)" nodename="Sqrt (Complex)" componentmode="Hidden" id="3">
+   <BOUNDS type="Node" left="1500" top="2160" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input Real" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output Real" visible="1">
+   </PIN>
+   </NODE>
+   <NODE id="4" systemname="Cylinder (DX11.Geometry)" filename="%VVVV%\packs\dx11\nodes\plugins\VVVV.DX11.Nodes.dll" nodename="Cylinder (DX11.Geometry)" componentmode="Hidden" hiddenwhenlocked="0" managers="">
+   <PIN pinname="Length" visible="1" slicecount="1" pintype="Input" values="1">
+   </PIN>
+   <PIN pinname="Geometry Out" visible="1" pintype="Output">
+   </PIN>
+   <PIN pinname="Radius 2" visible="1" slicecount="1" pintype="Input" values="0.18">
+   </PIN>
+   <PIN pinname="Radius 1" visible="1" slicecount="1" pintype="Input" values="0.18">
+   </PIN>
+   <BOUNDS type="Node" left="1500" top="2604" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Resolution X" slicecount="1" pintype="Input" visible="1" values="32">
+   </PIN>
+   <BOUNDS type="Box" left="-3312" top="444" width="2400" height="1800">
+   </BOUNDS>
+   <BOUNDS type="Window" left="0" top="0" width="6000" height="4500">
+   </BOUNDS>
+   <PIN pinname="Descriptive Name" pintype="Configuration" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Cycles" pintype="Input" visible="1" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Caps" pintype="Input" visible="1" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Center Y" pintype="Input" visible="1" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Resolution Y" pintype="Input" visible="1" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Window Handle" pintype="Output">
+   </PIN>
+   <PIN pinname="ID" pintype="Output" visible="-1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Module" filename="Module.v4p" componentmode="Hidden" id="5" nodename="Graphics\Module.v4p">
+   <BOUNDS type="Node" left="3912" top="4608" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="3912" top="4608" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="22332" top="13812" width="13944" height="7476">
+   </BOUNDS>
+   <PIN pinname="Geometry" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Lower module transform" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Radius" visible="1" slicecount="1" values="0.1">
+   </PIN>
+   <PIN pinname="Height" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Next Module Offset" visible="1">
+   </PIN>
+   <PIN pinname="Rotation" slicecount="2" visible="1" values="-0.15,-0.15">
+   </PIN>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="Wireframe" visible="1">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="6" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="8532" top="1512" width="792" height="720">
+   </BOUNDS>
+   <BOUNDS type="Node" left="8532" top="1512" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="3" visible="1" values="0,0.11,0.19">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Vector Size" slicecount="1" values="3">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="3">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="|Next Module Offset|">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Group (DX11.Layer)" filename="%VVVV%\packs\dx11\nodes\plugins\VVVV.DX11.Nodes.dll" nodename="Group (DX11.Layer)" componentmode="Hidden" id="7">
+   <BOUNDS type="Node" left="2436" top="5532" width="5328" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="5">
+   </PIN>
+   <PIN pinname="Layer 1" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer 2" visible="1">
+   </PIN>
+   <PIN pinname="Layer 3" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer 4" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer Out" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Module" filename="Module.v4p" componentmode="Hidden" id="8" nodename="Graphics\Module.v4p">
+   <BOUNDS type="Node" left="5436" top="4584" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="5436" top="4584" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="22332" top="13812" width="13944" height="7476">
+   </BOUNDS>
+   <PIN pinname="Geometry" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Lower module transform" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Radius" visible="1" slicecount="1" values="0.1">
+   </PIN>
+   <PIN pinname="Height" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Next Module Offset" visible="1" slicecount="3" values="0,0,0">
+   </PIN>
+   <PIN pinname="Rotation" slicecount="1" visible="1" values="0">
+   </PIN>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   <PIN pinname="Wireframe" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Module" filename="Module.v4p" componentmode="Hidden" id="9" nodename="Graphics\Module.v4p">
+   <BOUNDS type="Node" left="6960" top="4560" width="100" height="100">
+   </BOUNDS>
+   <BOUNDS type="Box" left="6960" top="4560" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="22332" top="13812" width="15540" height="7476">
+   </BOUNDS>
+   <PIN pinname="Geometry" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Lower module transform" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Layer" visible="1">
+   </PIN>
+   <PIN pinname="Radius" visible="1" slicecount="1" values="0.1">
+   </PIN>
+   <PIN pinname="Height" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Next Module Offset" visible="1" slicecount="3" values="0,0,0">
+   </PIN>
+   <PIN pinname="Rotation" slicecount="2" visible="1" values="2,2">
+   </PIN>
+   <PIN pinname="Wireframe" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="0" srcpinname="Y Output Value" dstnodeid="3" dstpinname="Input Real" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="1560" y="1950">
+   </LINKPOINT>
+   <LINKPOINT x="1476" y="1950">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="3" srcpinname="Output Real" dstnodeid="4" dstpinname="Radius 1">
+   </LINK>
+   <LINK srcnodeid="3" srcpinname="Output Real" dstnodeid="4" dstpinname="Radius 2">
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Y Output Value" dstnodeid="4" dstpinname="Length" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="2928" y="2166">
+   </LINKPOINT>
+   <LINKPOINT x="1896" y="2166">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="4" srcpinname="Geometry Out" dstnodeid="2" dstpinname="Geometry">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="Y Output Value" dstnodeid="2" dstpinname="Radius" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="1596" y="3174">
+   </LINKPOINT>
+   <LINKPOINT x="2628" y="3174">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Y Output Value" dstnodeid="2" dstpinname="Height" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="2940" y="3186">
+   </LINKPOINT>
+   <LINKPOINT x="2892" y="3186">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="2" dstpinname="Next Module Offset" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="8532" y="3414">
+   </LINKPOINT>
+   <LINKPOINT x="3276" y="3414">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="2" srcpinname="Layer" dstnodeid="7" dstpinname="Layer 1" linkstyle="Bezier">
+   <LINKPOINT x="2400" y="5214">
+   </LINKPOINT>
+   <LINKPOINT x="3312" y="5214">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="5" srcpinname="Layer" dstnodeid="7" dstpinname="Layer 2" linkstyle="Bezier">
+   <LINKPOINT x="3948" y="5202">
+   </LINKPOINT>
+   <LINKPOINT x="4188" y="5202">
+   </LINKPOINT>
+   </LINK>
+   <NODE id="12" systemname="IOBox (Node)" componentmode="InABox" nodename="IOBox (Node)">
+   <PIN pinname="Descriptive Name" slicecount="1" values="|Layer Out|">
+   </PIN>
+   <BOUNDS type="Box" left="2436" top="6308" width="750" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="2436" top="6308" width="750" height="240">
+   </BOUNDS>
+   </NODE>
+   <LINK srcnodeid="7" srcpinname="Layer Out" dstnodeid="12" dstpinname="Input Node">
+   </LINK>
+   <LINK srcnodeid="8" srcpinname="Layer" dstnodeid="7" dstpinname="Layer 3" linkstyle="Bezier">
+   <LINKPOINT x="5436" y="5196">
+   </LINKPOINT>
+   <LINKPOINT x="5112" y="5196">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="9" srcpinname="Layer" dstnodeid="7" dstpinname="Layer 4" linkstyle="Bezier">
+   <LINKPOINT x="6960" y="5172">
+   </LINKPOINT>
+   <LINKPOINT x="6012" y="5172">
+   </LINKPOINT>
+   </LINK>
+   <NODE id="13" systemname="IOBox (Value Advanced)" componentmode="InABox" nodename="IOBox (Value Advanced)">
+   <PIN pinname="Descriptive Name" slicecount="1" values="Rotations">
+   </PIN>
+   <BOUNDS type="Box" left="204" top="824" width="750" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="204" top="824" width="750" height="240">
+   </BOUNDS>
+   </NODE>
+   <LINK srcnodeid="2" srcpinname="Transform Out" dstnodeid="5" dstpinname="Lower module transform">
+   </LINK>
+   <LINK srcnodeid="4" srcpinname="Geometry Out" dstnodeid="5" dstpinname="Geometry">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="Y Output Value" dstnodeid="5" dstpinname="Radius" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="1620" y="3174">
+   </LINKPOINT>
+   <LINKPOINT x="4188" y="3174">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Y Output Value" dstnodeid="5" dstpinname="Height" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="2964" y="3174">
+   </LINKPOINT>
+   <LINKPOINT x="4440" y="3174">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="5" dstpinname="Next Module Offset" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="8532" y="3414">
+   </LINKPOINT>
+   <LINKPOINT x="4848" y="3414">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="5" srcpinname="Transform Out" dstnodeid="8" dstpinname="Lower module transform">
+   </LINK>
+   <LINK srcnodeid="4" srcpinname="Geometry Out" dstnodeid="8" dstpinname="Geometry">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="Y Output Value" dstnodeid="8" dstpinname="Radius" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="1620" y="3162">
+   </LINKPOINT>
+   <LINKPOINT x="5724" y="3162">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Y Output Value" dstnodeid="8" dstpinname="Height" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="2988" y="3180">
+   </LINKPOINT>
+   <LINKPOINT x="5964" y="3180">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="8" dstpinname="Next Module Offset" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="8520" y="3402">
+   </LINKPOINT>
+   <LINKPOINT x="6372" y="3402">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="8" srcpinname="Transform Out" dstnodeid="9" dstpinname="Lower module transform">
+   </LINK>
+   <LINK srcnodeid="4" srcpinname="Geometry Out" dstnodeid="9" dstpinname="Geometry">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="Y Output Value" dstnodeid="9" dstpinname="Radius" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="1620" y="3144">
+   </LINKPOINT>
+   <LINKPOINT x="7248" y="3144">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Y Output Value" dstnodeid="9" dstpinname="Height" hiddenwhenlocked="1" linkstyle="Bezier">
+   <LINKPOINT x="2988" y="3156">
+   </LINKPOINT>
+   <LINKPOINT x="7488" y="3156">
+   </LINKPOINT>
+   </LINK>
+   <LINK srcnodeid="6" srcpinname="Y Output Value" dstnodeid="9" dstpinname="Next Module Offset" linkstyle="Bezier" hiddenwhenlocked="1">
+   <LINKPOINT x="8544" y="3396">
+   </LINKPOINT>
+   <LINKPOINT x="7860" y="3396">
+   </LINKPOINT>
+   </LINK>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="15" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="10044" top="1272" width="480" height="480">
+   </BOUNDS>
+   <BOUNDS type="Node" left="10044" top="1272" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="0">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Boolean">
+   </PIN>
+   <PIN pinname="Behavior" slicecount="1" values="Toggle">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Wireframe">
+   </PIN>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="15" srcpinname="Y Output Value" dstnodeid="9" dstpinname="Wireframe">
+   </LINK>
+   <LINK srcnodeid="15" srcpinname="Y Output Value" dstnodeid="8" dstpinname="Wireframe">
+   </LINK>
+   <LINK srcnodeid="15" srcpinname="Y Output Value" dstnodeid="5" dstpinname="Wireframe">
+   </LINK>
+   <LINK srcnodeid="15" srcpinname="Y Output Value" dstnodeid="2" dstpinname="Wireframe">
+   </LINK>
+   <NODE systemname="First Transform" filename="Graphics\First Transform.v4p" nodename="Graphics\First Transform.v4p" componentmode="Hidden" id="16">
+   <BOUNDS type="Node" left="468" top="4644" width="0" height="0">
+   </BOUNDS>
+   <BOUNDS type="Box" left="0" top="2656" width="3732" height="3976">
+   </BOUNDS>
+   <BOUNDS type="Window" left="-1" top="-1" width="3732" height="3976">
+   </BOUNDS>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="16" srcpinname="Transform Out" dstnodeid="2" dstpinname="Lower module transform">
+   </LINK>
+   <NODE systemname="Unzip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Unzip (Value)" componentmode="Hidden" id="10">
+   <BOUNDS type="Node" left="2952" top="4056" width="4584" height="276">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Output 1" visible="1">
+   </PIN>
+   <PIN pinname="Output 1 Bin Size" visible="1">
+   </PIN>
+   <PIN pinname="Output 2" visible="1">
+   </PIN>
+   <PIN pinname="Output 2 Bin Size" visible="1">
+   </PIN>
+   <PIN pinname="Input Bin Size" slicecount="1" values="1">
+   </PIN>
+   <PIN pinname="Output Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Output 4" visible="1">
+   </PIN>
+   <PIN pinname="Output 3" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="10" srcpinname="Output 1" dstnodeid="2" dstpinname="Rotation">
+   </LINK>
+   <LINK srcnodeid="13" srcpinname="Y Output Value" dstnodeid="10" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="10" srcpinname="Output 4" dstnodeid="9" dstpinname="Rotation">
+   </LINK>
+   <LINK srcnodeid="10" srcpinname="Output 3" dstnodeid="8" dstpinname="Rotation">
+   </LINK>
+   <LINK srcnodeid="10" srcpinname="Output 2" dstnodeid="5" dstpinname="Rotation">
+   </LINK>
+   </PATCH>

@@ -56,6 +56,11 @@ public:
 		PIDIntegral = 71,
 		PIDDifferential = 72,
 		PIDIntegralMax = 75,
+
+		// CAN debug
+		CANRxThisFrame = 80,
+		CANTxThisFrame = 81,
+		CANErrorsThisFrame = 81,
 	};
 
 	enum Operation : uint8_t {
