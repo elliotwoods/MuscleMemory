@@ -34,9 +34,14 @@ namespace GUI {
 		void
 		Dashboard::draw(U8G2& u8g2)
 		{
-			const auto & DeviceID = Registry::X().registers.at(Registry::RegisterType::DeviceID); 
-			const auto & MultiTurnPosition = Registry::X().registers.at(Registry::RegisterType::MultiTurnPosition); 
-			const auto & TargetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition); 
+			static auto & registry = Registry::X();
+			const auto & DeviceID = registry.registers.at(Registry::RegisterType::DeviceID); 
+			const auto & MultiTurnPosition = registry.registers.at(Registry::RegisterType::MultiTurnPosition); 
+			const auto & TargetPosition = registry.registers.at(Registry::RegisterType::TargetPosition); 
+			const auto & CanRxThisFrame = registry.registers.at(Registry::RegisterType::CANRxThisFrame); 
+			const auto & CanTxThisFrame = registry.registers.at(Registry::RegisterType::CANTxThisFrame); 
+			const auto & CanErrorsThisFrame = registry.registers.at(Registry::RegisterType::CANErrorsThisFrame); 
+			
 
 			// Outer circle
 			u8g2.drawCircle(centerCircle[0], centerCircle[1], notchRadiusOuter, U8G2_DRAW_ALL);
@@ -123,6 +128,7 @@ namespace GUI {
 				u8g2.drawPixel(single_x, single_y);
 			}
 
+			// Right side text
 			{
 				u8g2.setFont(u8g2_font_nerhoe_tr);
 				
@@ -140,6 +146,19 @@ namespace GUI {
 				u8g2.drawStr(105, 27, message);
 				
 				// show Current Position , Target Position	
+				{
+					if(CanRxThisFrame.value > 0) {
+						u8g2.drawStr(0, 10, "Rx");
+					}
+
+					if(CanTxThisFrame.value > 0) {
+						u8g2.drawStr(0, 64, "Tx");
+					}
+
+					if(CanErrorsThisFrame.value > 0) {
+						u8g2.drawStr(0, 10, "ERR");
+					}
+				}
 			}
 		}
 

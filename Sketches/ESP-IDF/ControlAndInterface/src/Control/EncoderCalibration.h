@@ -6,6 +6,8 @@
 
 #include "stdint.h"
 
+#include "GUI/Panel.h"
+
 namespace Control {
 	class EncoderCalibration {
 	public:
@@ -48,5 +50,20 @@ namespace Control {
 			, uint32_t * accumulatedEncoderValue
 			, uint8_t * visitsPerStep);
 		Settings settings;
-	};
+	public:
+
+		class Panel : public GUI::Panel {
+		public:
+			void update() override;
+			void draw(U8G2 &) override;
+			bool buttonPressed() override;
+			void dial(int8_t) override;
+
+			struct {
+				float voltage;
+				MultiTurnPosition position;
+				uint16_t stepIndex;
+			} info;
+		};
+	}; 
 }
