@@ -1,0 +1,483 @@
+<!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta34.1.dtd" >
+   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Subpatches\AllMotorFeedback.v4p" systemname="AllMotorFeedback" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Subpatches\AllMotorFeedback.v4p" scrollx="0" scrolly="0">
+   <BOUNDS type="Window" left="18348" top="14016" width="18024" height="6372">
+   </BOUNDS>
+   <PACK Name="addonpack" Version="34.1.0">
+   </PACK>
+   <NODE systemname="MotorFeedback (MuscleMemory)" filename="..\modules\MotorFeedback (MuscleMemory).v4p" componentmode="Hidden" id="0" nodename="Modules\MotorFeedback (MuscleMemory).v4p">
+   <BOUNDS type="Node" left="1500" top="1500" width="8664" height="276">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1500" top="1500" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="4224" top="13284" width="12048" height="9564">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Torque" visible="1">
+   </PIN>
+   <PIN pinname="Position" visible="1">
+   </PIN>
+   <PIN pinname="Velocity" visible="1">
+   </PIN>
+   <PIN pinname="BusVoltage" visible="1">
+   </PIN>
+   <PIN pinname="MCF" visible="1">
+   </PIN>
+   <PIN pinname="ACF" visible="1">
+   </PIN>
+   <PIN pinname="RxCount" visible="1">
+   </PIN>
+   <PIN pinname="ID" visible="1" slicecount="1" values="1">
+   </PIN>
+   </NODE>
+   <NODE id="1" systemname="IOBox (Node)" componentmode="InABox" nodename="IOBox (Node)">
+   <PIN pinname="Descriptive Name" slicecount="1" values="Input">
+   </PIN>
+   <BOUNDS type="Box" left="1500" top="500" width="750" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="1500" top="500" width="750" height="240">
+   </BOUNDS>
+   <PIN pinname="Output Node" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="1" srcpinname="Output Node" dstnodeid="0" dstpinname="Input">
+   </LINK>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="10" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="9888" top="1032" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="9888" top="1032" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="1">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="10" srcpinname="Y Output Value" dstnodeid="0" dstpinname="ID">
+   </LINK>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="11" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="1500" top="3672" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="1500" top="3672" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Torque">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="12" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="2940" top="3672" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="2940" top="3672" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Position">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="13" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="4380" top="3672" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="4380" top="3672" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="Velocity">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="15" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="7236" top="3672" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="7236" top="3672" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Units" slicecount="1" values="Hz">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="MCF">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="16" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="8652" top="3672" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="8652" top="3672" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Units" slicecount="1" values="Hz">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="ACF">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="17" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="10092" top="3672" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="10092" top="3672" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="RxCount">
+   </PIN>
+   <PIN pinname="Y Input Value" visible="1" slicecount="1" values="0">
+   </PIN>
+   </NODE>
+   <NODE systemname="MotorFeedback (MuscleMemory)" filename="..\modules\MotorFeedback (MuscleMemory).v4p" componentmode="Hidden" id="19" nodename="Modules\MotorFeedback (MuscleMemory).v4p">
+   <BOUNDS type="Node" left="1800" top="1800" width="8664" height="276">
+   </BOUNDS>
+   <BOUNDS type="Box" left="1800" top="1800" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="18384" top="14076" width="12048" height="9564">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Torque" visible="1">
+   </PIN>
+   <PIN pinname="Position" visible="1">
+   </PIN>
+   <PIN pinname="Velocity" visible="1">
+   </PIN>
+   <PIN pinname="BusVoltage" visible="1">
+   </PIN>
+   <PIN pinname="MCF" visible="1">
+   </PIN>
+   <PIN pinname="ACF" visible="1">
+   </PIN>
+   <PIN pinname="RxCount" visible="1">
+   </PIN>
+   <PIN pinname="ID" visible="1" slicecount="1" values="1">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="18" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="10188" top="1332" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="10188" top="1332" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="2">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="18" srcpinname="Y Output Value" dstnodeid="19" dstpinname="ID">
+   </LINK>
+   <NODE systemname="MotorFeedback (MuscleMemory)" filename="..\modules\MotorFeedback (MuscleMemory).v4p" componentmode="Hidden" id="21" nodename="Modules\MotorFeedback (MuscleMemory).v4p">
+   <BOUNDS type="Node" left="2100" top="2100" width="8664" height="276">
+   </BOUNDS>
+   <BOUNDS type="Box" left="2100" top="2100" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="8436" top="9108" width="12048" height="9564">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Torque" visible="1">
+   </PIN>
+   <PIN pinname="Position" visible="1">
+   </PIN>
+   <PIN pinname="Velocity" visible="1">
+   </PIN>
+   <PIN pinname="BusVoltage" visible="1">
+   </PIN>
+   <PIN pinname="MCF" visible="1">
+   </PIN>
+   <PIN pinname="ACF" visible="1">
+   </PIN>
+   <PIN pinname="RxCount" visible="1">
+   </PIN>
+   <PIN pinname="ID" visible="1" slicecount="1" values="1">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="20" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="10488" top="1632" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="10488" top="1632" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="3">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="20" srcpinname="Y Output Value" dstnodeid="21" dstpinname="ID">
+   </LINK>
+   <NODE systemname="MotorFeedback (MuscleMemory)" filename="..\modules\MotorFeedback (MuscleMemory).v4p" componentmode="Hidden" id="23" nodename="Modules\MotorFeedback (MuscleMemory).v4p">
+   <BOUNDS type="Node" left="2400" top="2400" width="8664" height="276">
+   </BOUNDS>
+   <BOUNDS type="Box" left="2400" top="2400" width="4800" height="3600">
+   </BOUNDS>
+   <BOUNDS type="Window" left="18420" top="9852" width="12048" height="9564">
+   </BOUNDS>
+   <PIN pinname="Input" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Torque" visible="1">
+   </PIN>
+   <PIN pinname="Position" visible="1">
+   </PIN>
+   <PIN pinname="Velocity" visible="1">
+   </PIN>
+   <PIN pinname="BusVoltage" visible="1">
+   </PIN>
+   <PIN pinname="MCF" visible="1">
+   </PIN>
+   <PIN pinname="ACF" visible="1">
+   </PIN>
+   <PIN pinname="RxCount" visible="1">
+   </PIN>
+   <PIN pinname="ID" visible="1" slicecount="1" values="1">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="22" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="10788" top="1932" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="10788" top="1932" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="4">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="22" srcpinname="Y Output Value" dstnodeid="23" dstpinname="ID">
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Output Node" dstnodeid="19" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Output Node" dstnodeid="21" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="1" srcpinname="Output Node" dstnodeid="23" dstpinname="Input">
+   </LINK>
+   <NODE systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" id="24">
+   <BOUNDS type="Node" left="1500" top="3060" width="960" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Input 2" visible="1">
+   </PIN>
+   <PIN pinname="Input 3" visible="1">
+   </PIN>
+   <PIN pinname="Input 4" visible="1">
+   </PIN>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="19" srcpinname="Torque" dstnodeid="24" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="21" srcpinname="Torque" dstnodeid="24" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="Torque" dstnodeid="24" dstpinname="Input 4">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="Torque" dstnodeid="24" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="24" srcpinname="Output" dstnodeid="11" dstpinname="Y Input Value">
+   </LINK>
+   <NODE systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" id="25">
+   <BOUNDS type="Node" left="2928" top="3060" width="960" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 3" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 4" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 1" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="25" srcpinname="Output" dstnodeid="12" dstpinname="Y Input Value">
+   </LINK>
+   <NODE systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" id="27">
+   <BOUNDS type="Node" left="4380" top="3060" width="960" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 3" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 4" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 1" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" id="28">
+   <BOUNDS type="Node" left="5796" top="3060" width="960" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 3" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 4" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 1" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" id="29">
+   <BOUNDS type="Node" left="7236" top="3060" width="960" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 3" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 4" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 1" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" id="30">
+   <BOUNDS type="Node" left="8676" top="3060" width="960" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 3" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 4" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 1" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <NODE systemname="Zip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Zip (Value)" componentmode="Hidden" id="31">
+   <BOUNDS type="Node" left="10104" top="3060" width="960" height="276">
+   </BOUNDS>
+   <PIN pinname="Input Count" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 3" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 4" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Input 1" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="27" srcpinname="Output" dstnodeid="13" dstpinname="Y Input Value">
+   </LINK>
+   <LINK srcnodeid="29" srcpinname="Output" dstnodeid="15" dstpinname="Y Input Value">
+   </LINK>
+   <LINK srcnodeid="30" srcpinname="Output" dstnodeid="16" dstpinname="Y Input Value">
+   </LINK>
+   <LINK srcnodeid="31" srcpinname="Output" dstnodeid="17" dstpinname="Y Input Value">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="Position" dstnodeid="25" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="19" srcpinname="Position" dstnodeid="25" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="21" srcpinname="Position" dstnodeid="25" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="Position" dstnodeid="25" dstpinname="Input 4">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="Velocity" dstnodeid="27" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="19" srcpinname="Velocity" dstnodeid="27" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="21" srcpinname="Velocity" dstnodeid="27" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="Velocity" dstnodeid="27" dstpinname="Input 4">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="BusVoltage" dstnodeid="28" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="19" srcpinname="BusVoltage" dstnodeid="28" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="21" srcpinname="BusVoltage" dstnodeid="28" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="BusVoltage" dstnodeid="28" dstpinname="Input 4">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="MCF" dstnodeid="29" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="19" srcpinname="MCF" dstnodeid="29" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="21" srcpinname="MCF" dstnodeid="29" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="MCF" dstnodeid="29" dstpinname="Input 4">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="ACF" dstnodeid="30" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="19" srcpinname="ACF" dstnodeid="30" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="21" srcpinname="ACF" dstnodeid="30" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="ACF" dstnodeid="30" dstpinname="Input 4">
+   </LINK>
+   <LINK srcnodeid="0" srcpinname="RxCount" dstnodeid="31" dstpinname="Input 1">
+   </LINK>
+   <LINK srcnodeid="19" srcpinname="RxCount" dstnodeid="31" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="21" srcpinname="RxCount" dstnodeid="31" dstpinname="Input 3">
+   </LINK>
+   <LINK srcnodeid="23" srcpinname="RxCount" dstnodeid="31" dstpinname="Input 4">
+   </LINK>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="32" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="5784" top="3672" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="5784" top="3672" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Units" slicecount="1" values="V">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="2">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="BusVoltage">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="28" srcpinname="Output" dstnodeid="32" dstpinname="Y Input Value">
+   </LINK>
+   </PATCH>
