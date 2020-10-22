@@ -23,6 +23,9 @@ namespace VVVV.Nodes.RoboTell
 		[Input("Input")]
 		public ISpread<Stream> FStreamIn;
 		
+		[Input("DeviceID Filter")]
+		public ISpread<int> FDeviceIDFilterIn;
+		
 		[Output("ID")]
 		public ISpread<int> FOutID;
 		
@@ -176,6 +179,8 @@ namespace VVVV.Nodes.RoboTell
 		//called when data for any output pin is requested
 		public void Evaluate(int spreadMax)
 		{
+			var filter = new HashSet<int>(FDeviceIDFilterIn);
+			
 			// Add incoming to buffer
 			foreach(var inputSlice in FStreamIn)
 			{
@@ -194,6 +199,11 @@ namespace VVVV.Nodes.RoboTell
 				
 				foreach(var buffer in this.FCompleteMessages)
 				{
+					int ID;
+					int operation;
+					int registerID;
+					int value;
+					
 					if(buffer[15] == 0xFF) {
 						// System message, ignore it
 						continue;
@@ -201,12 +211,17 @@ namespace VVVV.Nodes.RoboTell
 					
 					if(buffer[16] == 0) {
 						// Standard
-						FOutID.Add((buffer[3] << 8) + buffer[2]);
+						ID = (buffer[3] << 8) + buffer[2];
 					}
 					else {
 						// Extended
-						FOutID.Add((buffer[5] << 24) + (buffer[4] << 16) + (buffer[3] << 8) + buffer[2]);
+						ID = (buffer[5] << 24) + (buffer[4] << 16) + (buffer[3] << 8) + buffer[2];
 					}
+					
+					if(!filter.Contains(ID)) {
+						continue;
+					}
+					
 					var binaryReader = new BinaryReader(new MemoryStream(buffer.ToArray()));
 					
 					// HEADER
@@ -220,13 +235,18 @@ namespace VVVV.Nodes.RoboTell
 					binaryReader.Read();
 					
 					// OPERATION
-					FOutOperation.Add(binaryReader.Read());
+					operation = binaryReader.Read();
 					
 					// REGISTER ID
-					FOutRegisterID.Add((int) binaryReader.ReadUInt16());
+					registerID = (int) binaryReader.ReadUInt16();
 					
 					// VALUE
-					FOutValue.Add((int) binaryReader.ReadInt32());
+					value = (int) binaryReader.ReadInt32();
+					
+					FOutID.Add(ID);
+					FOutOperation.Add(operation);
+					FOutRegisterID.Add(registerID);
+					FOutValue.Add(value);
 					
 				}
 				this.FCompleteMessages.Clear();

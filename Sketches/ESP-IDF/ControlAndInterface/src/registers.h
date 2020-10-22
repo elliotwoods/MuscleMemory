@@ -155,4 +155,20 @@ std::map<RegisterType, Register> registers {
 		, 1 << 24
 		, Access::ReadWrite
 	}},
+
+	{ RegisterType::CANRxThisFrame, {
+		"CANRxThisFrame"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::CANTxThisFrame, {
+		"CANTxThisFrame"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::CANTxThisFrame, {
+		"CANErrorsThisFrame"
+		, 0
+		, Access::ReadOnly
+	}},
 };

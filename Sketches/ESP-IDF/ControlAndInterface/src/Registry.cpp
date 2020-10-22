@@ -229,7 +229,7 @@ Registry::loadDefaults()
 {
 	auto file = fopen(registerDefaultsFilename, "rb");
 	if(!file) {
-		printf("[Registry] Cannot open file for reading (%s)", registerDefaultsFilename);
+		printf("[Registry] Cannot open file for reading (%s)\n", registerDefaultsFilename);
 		return;
 	}
 

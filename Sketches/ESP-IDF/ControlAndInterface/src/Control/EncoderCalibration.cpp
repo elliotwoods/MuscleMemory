@@ -1,5 +1,7 @@
 #include "EncoderCalibration.h"
 #include "stdio.h"
+#include "GUI/Controller.h"
+#include "Registry.h"
 
 const char filePath[] = "/appdata/encoder.dat";
 
@@ -123,6 +125,10 @@ namespace Control {
 		, Devices::MotorDriver & motorDriver
 		, const Settings & settings)
 	{
+		// auto panel = std::make_shared<Panel>();
+		// GUI::Controller::X().push_panel(panel);
+		// panel->info.voltage = Registry::X().registers.at(Registry::)
+
 		this->clear();
 		this->settings = settings;
 
@@ -132,6 +138,7 @@ namespace Control {
 
 		memset(accumulatedEncoderValue, 0, sizeof(uint32_t) * stepCycleCount);
 		memset(visitsPerStepCycle, 0, sizeof(uint8_t) * stepCycleCount);
+
 
 		// Step up to the lowest encoder value
 		{
@@ -286,10 +293,41 @@ namespace Control {
 				// We've overflowed the encoder - offset the sample
 				position += 1 << 14;
 			}
+			printf("stepIndex (%d), encoder reading (%d)\n"
+				, stepIndex
+				, position);
 
 			auto stepCycle = stepIndex / 4;
 			accumulatedEncoderValue[stepCycle] += position;
 			visitsPerStepCycle[stepCycle]++;
 		}
+	}
+
+	//----------
+	void
+	EncoderCalibration::Panel::update()
+	{
+
+	}
+
+	//----------
+	void
+	EncoderCalibration::Panel::draw(U8G2 &)
+	{
+		
+	}
+
+	//----------
+	bool
+	EncoderCalibration::Panel::buttonPressed()
+	{
+		return false;
+	}
+
+	//----------
+	void
+	EncoderCalibration::Panel::dial(int8_t)
+	{
+		
 	}
 }
