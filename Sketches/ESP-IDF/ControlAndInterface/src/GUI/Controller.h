@@ -19,6 +19,9 @@ namespace GUI {
 		void setRootPanel(std::shared_ptr<Panel> rootPanel);
 
 		bool isDialButtonPressed() const;
+
+		void pushPanel(std::shared_ptr<Panel>);
+		void popPanel();
 	private:
 		Controller() {}
 		std::shared_ptr<Panel> currentPanel = nullptr;
