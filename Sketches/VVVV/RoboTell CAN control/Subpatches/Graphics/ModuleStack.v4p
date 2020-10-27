@@ -283,6 +283,8 @@
    </BOUNDS>
    <BOUNDS type="Node" left="204" top="824" width="750" height="240">
    </BOUNDS>
+   <PIN pinname="Y Output Value" visible="1">
+   </PIN>
    </NODE>
    <LINK srcnodeid="2" srcpinname="Transform Out" dstnodeid="5" dstpinname="Lower module transform">
    </LINK>
@@ -388,12 +390,10 @@
    <PIN pinname="Transform Out" visible="1">
    </PIN>
    </NODE>
-   <LINK srcnodeid="16" srcpinname="Transform Out" dstnodeid="2" dstpinname="Lower module transform">
-   </LINK>
    <NODE systemname="Unzip (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Unzip (Value)" componentmode="Hidden" id="10">
    <BOUNDS type="Node" left="2952" top="4056" width="4584" height="276">
    </BOUNDS>
-   <PIN pinname="Input" visible="1">
+   <PIN pinname="Input" visible="1" slicecount="4" values="0.000159386528862847,0.0388453335232205,-0.0192965698242188,0.00936665852864584">
    </PIN>
    <PIN pinname="Output 1" visible="1">
    </PIN>
@@ -414,12 +414,70 @@
    </NODE>
    <LINK srcnodeid="10" srcpinname="Output 1" dstnodeid="2" dstpinname="Rotation">
    </LINK>
-   <LINK srcnodeid="13" srcpinname="Y Output Value" dstnodeid="10" dstpinname="Input">
-   </LINK>
    <LINK srcnodeid="10" srcpinname="Output 4" dstnodeid="9" dstpinname="Rotation">
    </LINK>
    <LINK srcnodeid="10" srcpinname="Output 3" dstnodeid="8" dstpinname="Rotation">
    </LINK>
    <LINK srcnodeid="10" srcpinname="Output 2" dstnodeid="5" dstpinname="Rotation">
+   </LINK>
+   <NODE systemname="Add (Value)" nodename="Add (Value)" componentmode="Hidden" id="17">
+   <BOUNDS type="Node" left="444" top="1368" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Input 1" visible="1">
+   </PIN>
+   <PIN pinname="Input 2" visible="1" slicecount="1" values="0">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="13" srcpinname="Y Output Value" dstnodeid="17" dstpinname="Input 1">
+   </LINK>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="19" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="2304" top="216" width="795" height="960">
+   </BOUNDS>
+   <BOUNDS type="Node" left="2304" top="216" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="4" visible="1" values="-0.0278,-0.0556,-0.0555555555555556,-0.0555555555555556">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Rows" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Vector Size" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Default" slicecount="1" values="|0, 0, 0, 1|">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="19" srcpinname="Y Output Value" dstnodeid="17" dstpinname="Input 2">
+   </LINK>
+   <LINK srcnodeid="17" srcpinname="Output" dstnodeid="10" dstpinname="Input">
+   </LINK>
+   <NODE systemname="Multiply (Transform)" nodename="Multiply (Transform)" componentmode="Hidden" id="20">
+   <BOUNDS type="Node" left="156" top="5088" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Transform In 1" visible="1">
+   </PIN>
+   <PIN pinname="Transform In 2" visible="1" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Transform Out" visible="1">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="16" srcpinname="Transform Out" dstnodeid="20" dstpinname="Transform In 1">
+   </LINK>
+   <NODE nodename="IOBox (Node)" componentmode="InABox" id="21" systemname="IOBox (Node)">
+   <BOUNDS type="Box" left="4416" top="864" width="792" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="4416" top="864" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Input Node" slicecount="1" visible="1" values="||">
+   </PIN>
+   <PIN pinname="Descriptive Name" slicecount="1" values="|Transform In 2|">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="21" srcpinname="Output Node" dstnodeid="20" dstpinname="Transform In 2">
+   </LINK>
+   <LINK srcnodeid="20" srcpinname="Transform Out" dstnodeid="2" dstpinname="Lower module transform">
    </LINK>
    </PATCH>
