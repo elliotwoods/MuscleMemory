@@ -31,6 +31,8 @@
 
 #include "driver/can.h"
 
+//#define AGENT_ENABLED
+
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047; // The magnetic encoder
 Devices::INA219 ina219; // The current sensor
@@ -38,7 +40,9 @@ Devices::FileSystem fileSystem;
 
 Control::EncoderCalibration encoderCalibration;
 Control::MultiTurn multiTurn(encoderCalibration);
+#ifdef AGENT_ENABLED
 Control::Agent agent;
+#endif
 Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
@@ -102,6 +106,14 @@ initDevices()
 
 	showSplashMessage("Load registry defaults...");	
 	Registry::X().loadDefaults();
+	
+#ifdef AGENT_ENABLED
+	// Agent based
+	Registry::X().registers.at(Registry::RegisterType::ControlMode).value = 2;
+#else
+	// PID
+	Registry::X().registers.at(Registry::RegisterType::ControlMode).value = 1;
+#endif
 
 	showSplashMessage("Initialise AS5047...");
 	as5047.init();
@@ -112,8 +124,10 @@ initDevices()
 	showSplashMessage("Initialise INA219...");
 	ina219.init();	
 
-	//showSplashMessage("Connect to WiFi ...");
-	//Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
+#ifdef AGENT_ENABLED
+	showSplashMessage("Connect to WiFi ...");
+	Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
+#endif
 }
 
 //----------
@@ -159,9 +173,11 @@ agentTask(void*)
 				case 1:
 					pid.update();
 					break;
+#ifdef AGENT_ENABLED
 				case 2:
 					agent.update();
 					break;
+#endif
 				default:
 					break;
 			}
@@ -172,12 +188,14 @@ agentTask(void*)
 	}
 }
 
+#ifdef AGENT_ENABLED
 //----------
 void
 agentServerCommunicateTask(void*)
 {
 	agent.serverCommunicateTask();
 }
+#endif
 
 //----------
 void
@@ -203,8 +221,10 @@ initController()
 	// Initialise target to initial reading
 	Registry::X().registers.at(Registry::RegisterType::TargetPosition).value = multiTurn.getMultiTurnPosition();
 
-	// showSplashMessage("Initialise Agent");
-	// agent.init();
+#ifdef AGENT_ENABLED
+	showSplashMessage("Initialise Agent");
+	agent.init();
+#endif
 
 	showSplashMessage("Initialise Drive");
 	drive.init();
@@ -230,13 +250,15 @@ initController()
 		, &agentTaskHandle
 		, 1);
 
-	// xTaskCreatePinnedToCore(agentServerCommunicateTask
-	// 	, "AgentServer"
-	// 	, 1024 * 4
-	// 	, NULL
-	// 	, PRIORITY_AGENT_SERVER_COMMS
-	// 	, NULL 
-	// 	, 0);
+#ifdef AGENT_ENABLED
+	xTaskCreatePinnedToCore(agentServerCommunicateTask
+		, "AgentServer"
+		, 1024 * 4
+		, NULL
+		, PRIORITY_AGENT_SERVER_COMMS
+		, NULL 
+		, 0);
+#endif
 }
 
 //----------
