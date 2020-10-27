@@ -134,3 +134,26 @@ def transmitTrajectories(request: TransmitTrajectoriesRequest):
 @simple_api
 def saveMemory():
 	agents.save_memory()
+
+
+class InitSamplingSessionRequest(BaseModel):
+	client_id: str
+	registers: object = {}
+	duration: float = 10.0
+
+@app.post("/runSamplingSession")
+def initSamplingSession(request: InitSamplingSessionRequest):
+	def action():
+		return {}
+	
+	return simple_api(action)()
+
+
+class TransmitSamplesRequest(BaseModel):
+	client_id: str
+
+@app.post("/transmitSamples")
+def transmitSamples(request: TransmitSamplesRequest):
+	def action():
+		return {}
+	return simple_api(action)()
