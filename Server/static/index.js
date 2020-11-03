@@ -4,6 +4,28 @@ import EditableValue from "./Utils/EditableValue.js"
 let deviceViews = {};
 let webSocket = new WebSocket(`ws://${window.location.host}/interface/`);
 
+function printUs(seconds) {
+	let minutes = Math.floor(seconds / 60);
+	seconds %= 60;
+	let hours = Math.floor(minutes / 60);
+	minutes %= 60;
+	let days = Math.floor(hours / 24);
+	hours %= 24;
+
+	if(days > 0) {
+		return `${days} days\n${hours}h ${minutes}m ${seconds}s`;
+	}
+	else if(hours > 0) {
+		return `${hours}h ${minutes}m ${seconds}s`;
+	}
+	else if(minutes > 0) {
+		return `${minutes}m ${seconds}s`;
+	}
+	else if(seconds > 0) {
+		return `${seconds.toFixed(2)}s`;
+	}
+}
+
 const recordStates = {
 	Playing : {
 		button : $("#playButton"),
@@ -99,12 +121,29 @@ class Graph {
 			title: "Test",
 			width: 600,
 			height: 600,
+			scales : {
+				x : {
+					time: false
+				}
+			},
 			series: [
-				{}
+				{
+					label : "UpTime",
+					value : (u, v) => v == null ? "-" : printUs(v)
+				}
 			],
 			axes: [
-				{}
-			]
+				{
+					values : (u, vals, space) => vals.map(printUs)
+				}
+			],
+			cursor : {
+				drag : {
+					x : true,
+					y : true,
+					uni : 50
+				}
+			}
 		};
 		let data = [
 			[0]
@@ -181,7 +220,7 @@ class SelectorColor {
 
 	constructor(index) {
 		const goldenRatioInverse = 0.618033988749895;
-		this.hue = (goldenRatioInverse * index) % 1.0;
+		this.hue = (goldenRatioInverse * (index + 1)) % 1.0;
 		this.saturation = '90%';
 		this.luminance = '50%';
 	}
@@ -407,8 +446,9 @@ class DeviceView {
 		if('register_values' in message) {
 			// get a timestamp if there is one
 			let upTime = null;
+			let graphNeedsUpdate = false;
 			if('42' in message['register_values']) {
-				upTime = message['register_values']['42'];
+				upTime = message['register_values']['42'] / 1000;
 			}
 
 			// push the data into the RegisterView objects
@@ -418,13 +458,16 @@ class DeviceView {
 
 				registerView.setValue(value);
 
-				if(upTime) {
+				if(upTime && recordingState.recordState != recordStates.Paused) {
 					registerView.recordSample(upTime, value)
+					graphNeedsUpdate = true;
 				}
 			}
 
 			// notify graph to update
-			graph.updateData();
+			if(graphNeedsUpdate) {
+				graph.updateData();
+			}
 		}
 	}
 
