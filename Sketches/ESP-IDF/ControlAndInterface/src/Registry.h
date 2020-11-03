@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef ARDUINO
 #include "FreeRTOS.h"
+#else
+#include <freertos/FreeRTOS.h>
+#endif
 
 #include <map>
 #include <set>
@@ -77,7 +81,7 @@ public:
 		int32_t max;
 	};
 
-	enum Access {
+	enum Access : uint8_t {
 		ReadOnly
 		, ReadWrite
 	};
