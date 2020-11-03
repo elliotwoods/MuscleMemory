@@ -3,40 +3,44 @@ import agents
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
 import db
 from datetime import datetime
 import base64
 
-from TrainingDaemon import run_training_daemon
-from threading import Thread
+from routers import samplingSession, client, interface
+client.interface = interface
+interface.client = client
+
+from utils import *
 
 app = FastAPI()
-training_daemon = None
 
-def ckeck_training_deamon():
-	# This needs to be started from the web server process (not main)
-	global training_daemon
-	if training_daemon is None:
-		training_daemon = Thread(target=run_training_daemon
-			, args=(agents.client_agents, agents.client_agents_lock)
-			, daemon=True, name="Training")
-		training_daemon.start()
-	
-def simple_api(endpoint):
-	ckeck_training_deamon()
-	def action():
-		try:
-			result = endpoint()
-			return {
-				"success" : True,
-				"content" : result
-			}
-		except Exception as e:
-			return {
-				"success" : False,
-				"exception" : str(e)
-			}
-	return action
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.include_router(
+	samplingSession.router
+	, prefix="/samplingSession"
+	, tags=["samplingSession"]
+)
+
+app.include_router(
+	client.router
+	, prefix="/client"
+	, tags=["client"]
+)
+
+app.include_router(
+	interface.router
+	, prefix="/interface"
+	, tags=["interface"]
+)
+
+@app.get("/")
+def root():
+	return RedirectResponse(url="/static/index.html")
 
 @app.get("/testError")
 @simple_api
@@ -56,7 +60,9 @@ class StartSessionRequest(BaseModel):
 
 @app.post("/startSession")
 def new_session(request: StartSessionRequest):
-	def action():	
+	def action():
+		ckeck_training_deamon()
+
 		query = db.Query()
 
 		# remove existing sessions
@@ -83,26 +89,6 @@ def new_session(request: StartSessionRequest):
 	result = simple_api(action)()
 	return result
 
-# Old API : Don't use this any more
-# 
-# class RemoteUpdateRequest(BaseModel):
-# 	client_id: str
-# 	states: list
-# 	actions: list
-# 	rewards: list
-# 
-# @app.post("/remoteUpdate")
-# def remoteUpdate(request: RemoteUpdateRequest):
-# 	def action():
-# 		agent = agents.get_agent(request.client_id)
-		
-# 		agent.update(request.states, request.actions, request.rewards)
-
-# 		return {
-# 			"model" : agent.get_model_string()
-# 		}
-# 	result = simple_api(action)()
-# 	return result
 
 class TransmitTrajectoriesRequest(BaseModel):
 	client_id: str
@@ -111,6 +97,8 @@ class TransmitTrajectoriesRequest(BaseModel):
 @app.post("/transmitTrajectories")
 def transmitTrajectories(request: TransmitTrajectoriesRequest):
 	def action():
+		ckeck_training_deamon()
+
 		agent = agents.get_agent(request.client_id)
 		if agent.replay_memory_lock.acquire():
 			agent.replay_memory.add_trajectories_base64(request.trajectories)
@@ -130,30 +118,10 @@ def transmitTrajectories(request: TransmitTrajectoriesRequest):
 	result = simple_api(action)()
 	return result
 
+
+
+
 @app.get("/saveMemory")
 @simple_api
 def saveMemory():
 	agents.save_memory()
-
-
-class InitSamplingSessionRequest(BaseModel):
-	client_id: str
-	registers: object = {}
-	duration: float = 10.0
-
-@app.post("/runSamplingSession")
-def initSamplingSession(request: InitSamplingSessionRequest):
-	def action():
-		return {}
-	
-	return simple_api(action)()
-
-
-class TransmitSamplesRequest(BaseModel):
-	client_id: str
-
-@app.post("/transmitSamples")
-def transmitSamples(request: TransmitSamplesRequest):
-	def action():
-		return {}
-	return simple_api(action)()
