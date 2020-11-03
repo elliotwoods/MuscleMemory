@@ -1,5 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 tinydb
 tensorflow
 tf_agents
+msgpack-python
+aiofiles
