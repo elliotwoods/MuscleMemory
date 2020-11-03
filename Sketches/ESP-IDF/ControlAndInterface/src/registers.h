@@ -21,7 +21,7 @@ std::map<RegisterType, Register> registers {
 		, Access::ReadOnly
 	}},
 	{ RegisterType::Velocity, {
-		"Veloctity"
+		"Velocity"
 		, 0
 		, Access::ReadOnly
 	}},
@@ -34,6 +34,8 @@ std::map<RegisterType, Register> registers {
 		"Torque"
 		, 0
 		, Access::ReadOnly
+		, -128
+		, 128
 	}},
 	{ RegisterType::MaximumTorque, {
 		"MaximumTorque"
