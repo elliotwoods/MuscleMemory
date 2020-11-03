@@ -10,6 +10,7 @@
 #include "Control/Agent.h"
 #include "Control/Drive.h"
 #include "Control/PID.h"
+#include "Control/WebSockets.h"
 
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
@@ -27,11 +28,21 @@
 
 #include "cJSON.h"
 
+#ifdef Arduino
 #include "FreeRTOS.h"
+#else
+#include <freertos/FreeRTOS.h>
+#endif
 
 #include "driver/can.h"
 
 //#define AGENT_ENABLED
+#define SESSION_ENABLED
+
+#if defined(AGENT_ENABLED) || defined(SESSION_ENABLED)
+#define WIFI_ENABLED
+#endif
+
 
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047; // The magnetic encoder
@@ -45,6 +56,7 @@ Control::Agent agent;
 #endif
 Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
+Control::WebSockets webSockets;
 
 Interface::SystemInfo systemInfo(ina219);
 Interface::CANResponder canResponder;
@@ -99,6 +111,12 @@ initDevices()
 	// Initilaise the GUI here!
 	GUI::Controller::X().init(splashScreen);
 
+	// Print IDF version
+	{
+		char message[100];
+		sprintf(message, "ESP-IDF : %s", esp_get_idf_version());
+		showSplashMessage(message);
+	}
 
 	// Initialise devices
 	showSplashMessage("Mount File System...");	
@@ -106,7 +124,7 @@ initDevices()
 
 	showSplashMessage("Load registry defaults...");	
 	Registry::X().loadDefaults();
-	
+
 #ifdef AGENT_ENABLED
 	// Agent based
 	Registry::X().registers.at(Registry::RegisterType::ControlMode).value = 2;
@@ -124,9 +142,9 @@ initDevices()
 	showSplashMessage("Initialise INA219...");
 	ina219.init();	
 
-#ifdef AGENT_ENABLED
+#ifdef WIFI_ENABLED
 	showSplashMessage("Connect to WiFi ...");
-	Devices::Wifi::X().init(MUSCLE_MEMORY_SERVER);
+	Devices::Wifi::X().init();
 #endif
 }
 
@@ -231,7 +249,10 @@ initController()
 
 	showSplashMessage("Initialise PID");
 	pid.init();
-	
+
+	showSplashMessage("Initialising websockets");
+	webSockets.init();
+
 	showSplashMessage("Starting system tasks");
 
 	xTaskCreatePinnedToCore(motorTask
@@ -269,6 +290,7 @@ updateInterface()
 	multiTurn.mainLoopUpdate();
 	systemInfo.update();
 	canResponder.update();
+	webSockets.update();
 	GUI::Controller::X().update();
 }
 
