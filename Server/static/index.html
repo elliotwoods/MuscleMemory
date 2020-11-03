@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+
+<head>
+	<title>Muscle Memory</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<link type="text/css" rel="stylesheet" href="./css/bootstrap.min.css" />
+	<link type="text/css" rel="stylesheet" href="./css/bootstrap-custom.css" />
+	<script src="./node_modules/@fortawesome/fontawesome-free/js/all.js" crossorigin="anonymous"></script>
+	<link type="text/css" rel="stylesheet" href="./css/main.css" />
+</head>
+
+<body>
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="./node_modules/jquery/dist/jquery.js"></script>
+
+	<script src="./thirdparty/popper.min.js"></script>
+	<script src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+	<script src="./thirdparty/plotly-latest.min.js"></script>
+
+	<script src="./node_modules/jsoneditor/dist/jsoneditor.js"></script>
+	<script src="./node_modules/uplot/dist/uPlot.iife.min.js"></script>
+
+	<script src="./index.js" type="module"></script>
+
+	<div id="modal" class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+		aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+		<div id="modal_dialog" class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 id="modal_title" class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div id="modal_body" class="modal-body">
+					Modal body
+				</div>
+				<div id="modal_footer" class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="title">
+		<h1>Muscle Memory</h1>
+	</div>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col">
+				<div id="clients"></div>
+			</div>
+			<div class="col">
+				<div id="captureControls">
+					<nav class="navbar navbar-expand-lg navbar-light bg-light">
+						<!-- Select recording state-->
+						<div class="btn-group btn-group-toggle" data-toggle="buttons">
+							<label id="playButton" class="btn active">
+								<input type="radio" name="options" id="option1" autocomplete="off" checked="">
+								<i class="fas fa-play"></i>
+							</label>
+							<label id="recordButton" class="btn">
+								<input type="radio" name="options" id="option2" autocomplete="off">
+								<i class="fas fa-circle"></i>
+							</label>
+							<label id="pauseButton" class="btn">
+								<input type="radio" name="options" id="option3" autocomplete="off">
+								<i class="fas fa-pause"></i>
+							</label>
+						</div>
+
+
+						<!-- Select recording duration-->
+						<span class="nav-item">
+							Record duration (frames): <span id="recordDuration"></span>>
+						</span>
+					</nav>
+				</div>
+				<div id="graph">
+					stuff
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
