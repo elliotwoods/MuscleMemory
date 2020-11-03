@@ -1,5 +1,12 @@
 #include "Serial.h"
 
+#ifdef ARDUINO
+	#define TX_PIN GPIO_NUM_1
+	#define RX_PIN GPIO_NUM_2
+#else
+	#define TX_PIN 1
+	#define RX_PIN 2
+#endif
 
 namespace Devices {
 	//---------
@@ -13,6 +20,7 @@ namespace Devices {
 			uart_config.parity    = UART_PARITY_DISABLE;
 			uart_config.stop_bits = UART_STOP_BITS_1;
 			uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
+			uart_config.rx_flow_ctrl_thresh = 0;
 		}
 
 		{
@@ -32,8 +40,8 @@ namespace Devices {
 
 		{
 			auto result = uart_set_pin(port
-				, GPIO_NUM_1
-				, GPIO_NUM_2
+				, TX_PIN
+				, RX_PIN
 				, UART_PIN_NO_CHANGE
 				, UART_PIN_NO_CHANGE);
 			ESP_ERROR_CHECK(result);
