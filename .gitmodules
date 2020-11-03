@@ -1,0 +1,3 @@
+[submodule "Sketches/ESP-IDF/ControlAndInterface/lib/msgpack"]
+	path = Sketches/ESP-IDF/ControlAndInterface/lib/msgpack
+	url = https://github.com/msgpack/msgpack-c.git
