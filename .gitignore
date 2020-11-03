@@ -5,3 +5,4 @@ logs_debug
 /samples.json
 bin/
 *~.xml
+node_modules
