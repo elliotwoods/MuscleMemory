@@ -1,7 +1,12 @@
 #include "CANResponder.h"
 #include "Registry.h"
 
+#ifdef ARDUINO
 #include "FreeRTOS.h"
+#else
+#include <freertos/FreeRTOS.h>
+#endif
+
 #include "esp_log.h"
 
 #include <set>
