@@ -64,26 +64,13 @@ namespace Control {
 	void
 	Agent::init()
 	{
-		// Render our Client ID
-		{
-			uint8_t macAddress[6];
-			{
-				auto result = esp_efuse_mac_get_default(macAddress);
-				ESP_ERROR_CHECK(result);
-			}
-			
-			char clientID[18];
-			sprintf(clientID, "%X:%X:%X:%X:%X:%X", macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
-			this->clientID = std::string(clientID);
-		}
-
 		// Start the session on the server
 		{
 			// Make the request
 			cJSON * response = nullptr;
 			{
 				auto request = cJSON_CreateObject();
-				cJSON_AddStringToObject(request, "client_id", this->clientID.c_str());
+				cJSON_AddStringToObject(request, "client_id", Devices::Wifi::X().getMacAddress().c_str());
 				cJSON_AddBoolToObject(request, "recycle_session", true);
 				response = Devices::Wifi::X().post("/startSession", request);
 				cJSON_Delete(request);
@@ -250,7 +237,7 @@ namespace Control {
 					
 					bool jsonSerialiseFail = false;
 					auto request = cJSON_CreateObject();
-					if(!cJSON_AddStringToObject(request, "client_id", this->clientID.c_str())) {
+					if(!cJSON_AddStringToObject(request, "client_id", Devices::Wifi::X().getMacAddress().c_str())) {
 						jsonSerialiseFail |= true;
 					}
 					if(!cJSON_AddStringToObject(request, "trajectories", (char *) base64Text)) {

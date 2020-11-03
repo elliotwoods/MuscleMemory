@@ -18,7 +18,7 @@ namespace Devices {
 
 	//----------
 	void 
-	Wifi::init(const std::string & baseURI)
+	Wifi::init()
 	{
 		printf("Connecting to : %s\n", WIFI_SSID);
 		WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -31,13 +31,34 @@ namespace Devices {
 		printf("Wifi connected. IP Address : %d.%d.%d.%d\n"
 			, WiFi.localIP()[0]
 			, WiFi.localIP()[1]
+			, WiFi.localIP()[2]
 			, WiFi.localIP()[3]
-			, WiFi.localIP()[4]
 		);
 
+		// Render our Client ID
 		{
-			this->baseURI = baseURI;
+			uint8_t macAddress[6];
+			{
+				auto result = esp_efuse_mac_get_default(macAddress);
+				ESP_ERROR_CHECK(result);
+			}
+			
+			char macAddressString[18];
+			sprintf(macAddressString, "%X:%X:%X:%X:%X:%X", macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
+			this->macAddress.assign(macAddressString);
 		}
+
+		// Build the base URI
+		{
+			this->baseURI = "http://" MUSCLE_MEMORY_SERVER_HOST ":" MUSCLE_MEMORY_SERVER_PORT_STRING;
+		}
+	}
+
+	//----------
+	const std::string &
+	Wifi::getMacAddress() const
+	{
+		return this->macAddress;
 	}
 
 	//----------
