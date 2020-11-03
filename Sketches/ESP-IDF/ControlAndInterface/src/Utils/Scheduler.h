@@ -3,6 +3,9 @@
 #include "driver/timer.h"
 #include <vector>
 
+//#define SCHEDULER_ENABLE
+
+#ifdef SCHEDULER_ENABLE
 namespace Utils {
 	class Scheduler {
 	public:
@@ -32,3 +35,4 @@ namespace Utils {
 		std::vector<TimerTask> timerTasks;
 	};
 }
+#endif

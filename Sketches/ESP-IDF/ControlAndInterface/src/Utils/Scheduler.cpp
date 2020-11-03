@@ -4,8 +4,11 @@
 #include "esp_types.h"
 #include "driver/timer.h"
 
+#ifdef SCHEDULER_ENABLE
+
 #define TIMER_DIVIDER         16  //  Hardware timer clock divider
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to s
+
 
 namespace Utils {
 	//----------
@@ -43,7 +46,7 @@ namespace Utils {
 			, callback
 		});
 
-		timer_config_t config {0};
+		timer_config_t config = {0};
 		{
 			config.divider = TIMER_DIVIDER;
 			config.counter_dir = TIMER_COUNT_UP;
@@ -66,3 +69,5 @@ namespace Utils {
 		timer_start(timerSlot.group, timerSlot.index);
 	}
 }
+
+#endif
