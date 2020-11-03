@@ -1,4 +1,12 @@
 #include "I2C.h"
+#include "driver/i2c.h"
+
+#ifdef ARDUINO
+	#define I2C_PORT i2c_port_t::I2C_NUM_0
+#else
+	#define I2C_PORT I2C_NUM_0
+#endif
+
 
 namespace Devices {
 	//----------
@@ -22,8 +30,9 @@ namespace Devices {
 			busConfiguration.sda_pullup_en = gpio_pullup_t::GPIO_PULLUP_ENABLE;
 			busConfiguration.master.clk_speed = 1000000;
 		}
-		i2c_driver_install(i2c_port_t::I2C_NUM_0, i2c_mode_t::I2C_MODE_MASTER, 0, 0, 0);
-		i2c_param_config(i2c_port_t::I2C_NUM_0, &busConfiguration);
+
+		i2c_driver_install(I2C_PORT, i2c_mode_t::I2C_MODE_MASTER, 0, 0, 0);
+		i2c_param_config(I2C_PORT, &busConfiguration);
 	}
 
 	//----------
@@ -39,7 +48,7 @@ namespace Devices {
 			i2c_master_write_byte(cmd, (i << 1) | I2C_MASTER_WRITE, true);
 			i2c_master_stop(cmd);
 
-			auto result = i2c_master_cmd_begin(i2c_port_t::I2C_NUM_0, cmd, 50 / portTICK_RATE_MS);
+			auto result = i2c_master_cmd_begin(I2C_PORT, cmd, 50 / portTICK_RATE_MS);
 
 			i2c_cmd_link_delete(cmd);
 
@@ -56,7 +65,7 @@ namespace Devices {
 	bool
 	I2C::perform(i2c_cmd_handle_t cmd)
 	{
-		auto result = i2c_master_cmd_begin(i2c_port_t::I2C_NUM_0, cmd, 50 / portTICK_RATE_MS);
+		auto result = i2c_master_cmd_begin(I2C_PORT, cmd, 50 / portTICK_RATE_MS);
 		i2c_cmd_link_delete(cmd);
 		return result == ESP_OK;
 	}
