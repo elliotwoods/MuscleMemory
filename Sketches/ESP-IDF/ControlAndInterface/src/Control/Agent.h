@@ -9,7 +9,11 @@ extern "C" {
 	#include "cJSON.h"
 }
 
+#ifdef ARDUINO
 #include "FreeRTOS.h"
+#else
+#include <freertos/FreeRTOS.h>
+#endif
 
 #include <string>
 #include <vector>
@@ -64,8 +68,6 @@ namespace Control {
 		bool checkOutputSize();
 		void processIncoming(cJSON *);
 
-
-		std::string clientID;
 		std::vector<uint8_t> modelString;
 
 		Utils::FrameTimer frameTimer;
