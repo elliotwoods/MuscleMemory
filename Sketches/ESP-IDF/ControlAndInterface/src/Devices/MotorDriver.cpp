@@ -1,5 +1,13 @@
 #include "MotorDriver.h"
 
+#ifdef ARDUINO
+	#define DAC_A DAC_GPIO25_CHANNEL
+	#define DAC_B DAC_GPIO26_CHANNEL
+#else
+	#define DAC_A dac_channel_t::DAC_CHANNEL_1
+	#define DAC_B dac_channel_t::DAC_CHANNEL_2
+#endif
+
 namespace Devices {
 	//----------
 	MotorDriver::Configuration::Configuration()
@@ -9,8 +17,8 @@ namespace Devices {
 		this->coilPins.coil_A_negative = GPIO_NUM_33;
 		this->coilPins.coil_B_negative = GPIO_NUM_27;
 
-		this->vrefDacs.A = DAC_GPIO25_CHANNEL;
-		this->vrefDacs.B = DAC_GPIO26_CHANNEL;
+		this->vrefDacs.A = DAC_A;
+		this->vrefDacs.B = DAC_B;
 	}
 
 	//----------
