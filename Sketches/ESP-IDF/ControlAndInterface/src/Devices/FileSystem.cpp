@@ -48,9 +48,33 @@ namespace Devices {
 			return false;
 		}
 
+		// Format the partition if user is holding button
 		if(GUI::Controller::X().isDialButtonPressed()) {
-			printf("Erasing FAT partition\n");
-			esp_partition_erase_range(partition, 0, partition->size);
+			bool holdingButton = true;
+
+			// They have to hold for 3 seconds
+			for(uint8_t i=1; i<=3; i++) {
+				printf("User is holding button (%u)\n", i);
+
+				// wait
+				vTaskDelay(1000 / portTICK_RATE_MS);
+
+				if(!GUI::Controller::X().isDialButtonPressed()) {
+					holdingButton = false;
+					break;
+				}
+			}
+
+			// If they didn't let go - then perform the format
+			if(holdingButton) {
+				printf("Erasing FAT partition\n");
+				
+				// Erase entire partition
+				//esp_partition_erase_range(partition, 0, partition->size);
+
+				// Break partition formatting only
+				esp_partition_erase_range(partition, 0, 4096);
+			}			
 		}
 
 		esp_vfs_fat_mount_config_t config = {
