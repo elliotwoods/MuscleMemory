@@ -1,4 +1,5 @@
 import uPlot from "./node_modules/uplot/dist/uPlot.esm.js"
+import EditableValue from "./Utils/EditableValue.js"
 
 let deviceViews = {};
 let webSocket = new WebSocket(`ws://${window.location.host}/interface/`);
@@ -23,6 +24,13 @@ class RecordingState {
 		this.recordState = recordStates.Playing;
 		this.recordDuration = 1000;
 		this.initInterface();
+		this.editRecordDuration = new EditableValue($("#recordDuration"), this.recordDuration, (value) => {
+			this.recordDuration = value;
+		}, (value) => {
+			if(value < 1) {
+				throw("Duration must be at least 1 frame");
+			}
+		});
 	}
 
 	initInterface() {
@@ -46,8 +54,6 @@ class RecordingState {
 				recordState.button.removeClass(recordState.selectedClass);
 			}
 		}
-
-		$("#recordDuration").text(this.recordDuration.toFixed());
 	}
 }
 let recordingState = new RecordingState();
