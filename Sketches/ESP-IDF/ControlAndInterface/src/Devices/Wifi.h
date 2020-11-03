@@ -11,10 +11,11 @@ namespace Devices {
 		Wifi() {}
 	public:
 		static Wifi & X();
-		void init(const std::string & baseURI);
+		void init();
+		const std::string & getMacAddress() const;
 		cJSON * post(const std::string & path, cJSON * content);
-
+	private:
 		std::string baseURI;
+		std::string macAddress;
 	};
 }
-
