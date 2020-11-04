@@ -88,6 +88,40 @@ namespace Devices {
 	}
 
 	//----------
+	EncoderReading
+	AS5047::getPositionAveraged(uint8_t count)
+	{
+		const auto halfWay = (EncoderReading) (1 << 13);
+		const auto firstQuarter = halfWay * 1 / 2;
+		const auto lastQuarter = halfWay * 3 / 2;
+
+		uint32_t accumulatorValue = 0;
+		uint32_t accumulatorCount = 0;
+		EncoderReading priorReading;
+
+		for(uint8_t i=0; i<count; i++) {
+			auto currentReading = this->readRegister(Register::PositionCompensated);
+			if(accumulatorCount != 0) {
+				if((priorReading > lastQuarter && currentReading < firstQuarter)
+					|| (priorReading < firstQuarter && currentReading > lastQuarter)) {
+					accumulatorCount = 1;
+					accumulatorValue = currentReading;
+				}
+				else {
+					accumulatorValue += currentReading;
+					accumulatorCount += 1;
+				}
+			}
+			else {
+				accumulatorCount = 1;
+				accumulatorValue = currentReading;
+			}
+			priorReading = currentReading;
+		}
+		return (EncoderReading) (accumulatorValue / accumulatorCount);
+	}
+
+	//----------
 	uint8_t
 	AS5047::getErrors()
 	{
