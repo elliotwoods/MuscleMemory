@@ -94,6 +94,14 @@ std::map<RegisterType, Register> registers {
 		, 0 // ms
 		, Access::ReadOnly
 	}},
+	{ RegisterType::InterfaceEnabled, {
+		"InterfaceEnabled"
+		, 1
+		, Access::ReadWrite
+		, 0
+		, 1
+	}},
+	
 
 	{ RegisterType::MotorControlFrequency, {
 		"MCF"

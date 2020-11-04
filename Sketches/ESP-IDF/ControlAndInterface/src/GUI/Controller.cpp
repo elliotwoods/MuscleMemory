@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "U8G2HAL.h"
+#include "Registry.h"
 
 namespace GUI {
 	//----------
@@ -39,6 +40,26 @@ namespace GUI {
 	void
 	Controller::update()
 	{
+		// check if interface is disabled
+		{
+			static auto & registry = Registry::X();
+			auto & isEnabled = registry.registers.at(Registry::RegisterType::InterfaceEnabled).value;
+			if(isEnabled == 0) {
+				if(!this->priorInterfaceDisabledScreenShown) {
+					this->drawDisabledScreen();
+					this->priorInterfaceDisabledScreenShown = true;
+				}
+
+				if(this->isDialButtonPressed()) {
+					isEnabled = 1;
+				}
+				return;
+			}
+			else {
+				this->priorInterfaceDisabledScreenShown = false;
+			}
+		}
+
 		if(!this->currentPanel) {
 			this->currentPanel = this->rootPanel;
 		}
@@ -103,5 +124,21 @@ namespace GUI {
 	Controller::isDialButtonPressed() const
 	{
 		return gpio_get_level(GPIO_DIAL_BUTTON) == 0;
+	}
+
+	//----------
+	void
+	Controller::drawDisabledScreen()
+	{
+		this->u8g2.firstPage();
+		do
+		{
+			this->u8g2.setFont(u8g2_font_nerhoe_tr);
+			this->u8g2.setFontMode(0);
+			this->u8g2.drawStr(10, 28, "Screen disabled");
+			this->u8g2.drawStr(10, 38, "Press button to restore...");
+			this->u8g2.drawFrame(0, 0, 128, 64);
+		}
+		while(this->u8g2.nextPage());
 	}
 }
