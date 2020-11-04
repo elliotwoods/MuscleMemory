@@ -83,6 +83,7 @@ Registry::update()
 	// Handle data outgoing to motor control loop
 	if(xSemaphoreTake(this->motorControlReadsMutex, waitTime)) {
 		this->motorControlReads.torque = this->registers.at(RegisterType::Torque).value;
+		this->motorControlReads.encoderPositionAveraging = this->registers.at(RegisterType::EncoderPositionAveraging).value;
 		xSemaphoreGive(this->motorControlReadsMutex);
 	}
 
