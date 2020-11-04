@@ -42,6 +42,7 @@ public:
 		FreeMemory = 40,
 		CPUTemperature = 41,
 		UpTime = 42,
+		InterfaceEnabled = 43,
 
 		// Update frequencies
 		MotorControlFrequency = 50,
