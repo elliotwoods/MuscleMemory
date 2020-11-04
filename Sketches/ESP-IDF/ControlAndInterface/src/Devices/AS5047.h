@@ -31,6 +31,7 @@ namespace Devices {
 
 		void init();
 		EncoderReading getPosition();
+		EncoderReading getPositionAveraged(uint8_t count);
 		uint8_t getErrors();
 		void clearErrors();
 

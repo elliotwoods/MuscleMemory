@@ -50,11 +50,11 @@ namespace Control {
 	void
 	MultiTurn::driveLoopUpdate(SingleTurnPosition currentSingleTurnPosition)
 	{
-		if(this->priorSingleTurnPosition > HALF_WAY / 4 * 3 && currentSingleTurnPosition < HALF_WAY / 4)
+		if(this->priorSingleTurnPosition > HALF_WAY / 2 * 3 && currentSingleTurnPosition < HALF_WAY / 2)
 		{
 			this->turns++;
 		}
-		else if(this->priorSingleTurnPosition < HALF_WAY / 4 && currentSingleTurnPosition > HALF_WAY / 4 * 3)
+		else if(this->priorSingleTurnPosition < HALF_WAY / 2 && currentSingleTurnPosition > HALF_WAY / 2 * 3)
 		{
 			this->turns--;
 		}
