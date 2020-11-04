@@ -24,6 +24,8 @@ namespace GUI {
 		void popPanel();
 	private:
 		Controller() {}
+		void drawDisabledScreen();
+		
 		std::shared_ptr<Panel> currentPanel = nullptr;
 		std::vector<std::shared_ptr<Panel>> viewStack;
 
@@ -34,6 +36,8 @@ namespace GUI {
 
 		bool priorDialButtonPressed = false;
 		int16_t priorDialPosition = 0;
+
+		bool priorInterfaceDisabledScreenShown = false;
 	};
 }
 
