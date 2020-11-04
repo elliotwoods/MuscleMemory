@@ -66,6 +66,13 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
+	{ RegisterType::EncoderPositionAveraging, {
+		"EncoderPositionAveraging"
+		, 0
+		, Access::ReadWrite
+		, 0
+		, 255
+	}},
 
 
 	{ RegisterType::Current, {
