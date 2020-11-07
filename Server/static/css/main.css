@@ -11,3 +11,15 @@
 	display: inline-block;
 	margin-bottom: 20px;
 }
+
+a.editableValue:visited
+, a.editableValue:hover
+, a.editableValue:link
+{
+	color: black;
+	border-bottom: 1px dotted;
+	text-decoration: none;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
