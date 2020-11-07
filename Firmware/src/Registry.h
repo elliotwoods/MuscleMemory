@@ -67,6 +67,10 @@ public:
 		CANRxThisFrame = 80,
 		CANTxThisFrame = 81,
 		CANErrorsThisFrame = 81,
+
+		// Boot
+		Reboot = 90,
+		NeedsProvisioning = 91,
 	};
 
 	enum Operation : uint8_t {

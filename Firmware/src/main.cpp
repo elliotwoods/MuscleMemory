@@ -38,7 +38,7 @@
 #include "driver/can.h"
 
 //#define AGENT_ENABLED
-//#define WEBSOCKETS_ENABLED
+#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
@@ -226,11 +226,13 @@ void
 initController()
 {
 #ifdef PROVISIONING_ENABLED
-	Control::Provisioning provisioning(motorDriver, ina219, as5047, encoderCalibration);
-	provisioning.perform();
+	if(Registry::X().registers.at(Registry::RegisterType::NeedsProvisioning).value) {
+		Control::Provisioning provisioning(motorDriver, ina219, as5047, encoderCalibration);
+		provisioning.perform();
+	}
 #endif
 
-	// Force a calibration if the button is pressed when we get to this stage
+	// Load calibration for encoder, or perform one if none available
 	if(encoderCalibration.load()) {
 		showSplashMessage("Encoder calibration loaded");
 	}
