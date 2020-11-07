@@ -279,60 +279,29 @@ class RegisterView {
 			this.valueCell = $(`<td></td>`);
 			this.tableRow.append(this.valueCell);
 
-			this.liveValue = $(`<span></span>`);
-			this.valueCell.append(this.liveValue);
+			this.editableValue = new EditableValue(this.valueCell, 0,
+				// Set value
+				(value) => {
+					this.deviceView.pushRegisterValue(this.registerIndex, value);
+				},
 
-			this.editValue = $(`<input type="search" value="" class="form-control is-valid" id="inputValid" />`);
-			this.valueCell.append(this.editValue);
-			this.editValue.hide();
-
-			this.editValueError = $(`<div class="invalid-feedback">Sorry, that username's taken. Try another?</div>`);
-			this.valueCell.append(this.editValueError);
-			this.editValueError.hide();
-
-			this.liveValue.click(() => {
-				this.openEditor();
-			});
-
-			this.editValue.focusout(() => {
-				this.closeEditor();
-			});
-
-			this.editValue.on('search', () => {
-				if(this.validate()) {
-					this.deviceView.pushRegisterValue(this.registerIndex, eval(this.editValue.val()));
-					this.closeEditor();
-				}
-			});
-
-			this.editValue.on('keydown', (args) => {
-				if(args.key == 'Escape') {
-					this.closeEditor();
-				}
-			});
-
-			this.editValue.on('input', () => {
-				this.validate();
-			});
+				// Validate
+				(value) => {
+					if(this.registerInfo) {
+						if(this.registerInfo.range) {
+							if(value < this.registerInfo.range.min) {
+								throw(`Value (${result}) is less than allowed minimum (${this.registerInfo.range.min})`);
+							}
+							if(value > this.registerInfo.range.max) {
+								throw(`Value (${result}) is greater than allowed maximum (${this.registerInfo.range.max})`);
+							}
+						}
+					}
+				});
 		}
 
 		this.actionsCell = $(`<td></td>`);
 		this.tableRow.append(this.actionsCell);
-	}
-
-	openEditor() {
-		this.editValue.show();
-		this.editValueError.hide();
-		this.liveValue.hide();
-		this.editValue.val(this.liveValue.text());
-		this.editValue.focus();
-		this.editValue.select();
-	}
-
-	closeEditor() {
-		this.editValue.hide();
-		this.editValueError.hide();
-		this.liveValue.show();
 	}
 
 	setInfo(registerInfo) {
@@ -340,10 +309,13 @@ class RegisterView {
 		if('name' in registerInfo) {
 			this.nameCell.text(registerInfo['name']);
 		}
+		if('access' in registerInfo) {
+			this.editableValue.setEditEnabled(registerInfo['access'] == 1);
+		}
 	}
 
 	setValue(value) {
-		this.liveValue.text(value);
+		this.editableValue.setValue(value);
 	}
 
 	recordSample(time, value) {
@@ -353,36 +325,6 @@ class RegisterView {
 		});
 		if(this.recordSamples.length > recordingState.recordDuration) {
 			this.recordSamples = this.recordSamples.slice(this.recordSamples.length - recordingState.recordDuration);
-		}
-	}
-
-	validate() {
-		try {
-			let result = eval(this.editValue.val());
-			if(isNaN(result)) {
-				throw("Result is not a number");
-			}
-			if(this.registerInfo) {
-				if(this.registerInfo.range) {
-					if(result < this.registerInfo.range.min) {
-						throw(`Value (${result}) is less than allowed minimum (${this.registerInfo.range.min})`);
-					}
-					if(result > this.registerInfo.range.max) {
-						throw(`Value (${result}) is greater than allowed maximum (${this.registerInfo.range.max})`);
-					}
-				}
-			}
-			this.editValueError.hide();
-			this.editValue.addClass('is-valid');
-			this.editValue.removeClass('is-invalid');
-			return true;
-		}
-		catch(exception) {
-			this.editValueError.show();
-			this.editValueError.text(exception);
-			this.editValue.removeClass('is-valid');
-			this.editValue.addClass('is-invalid');
-			return false;
 		}
 	}
 
