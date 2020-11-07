@@ -33,7 +33,7 @@ namespace Control {
 		bool load();
 		bool save();
 
-		void calibrate(Devices::AS5047 &
+		bool calibrate(Devices::AS5047 &
 			, Devices::MotorDriver &
 			, const Settings & settings = Settings());
 
@@ -49,7 +49,10 @@ namespace Control {
 			, Devices::AS5047 & encoder
 			, Devices::MotorDriver & motorDriver
 			, uint32_t * accumulatedEncoderValue
-			, uint8_t * visitsPerStep);
+			, uint8_t * visitsPerStep
+			, EncoderReading & priorReading);
 		Settings settings;
+
+		uint16_t skippedSteps = 0;
 	};
 }
