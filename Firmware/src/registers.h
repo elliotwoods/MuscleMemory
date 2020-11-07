@@ -188,4 +188,19 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
+
+	{ RegisterType::Reboot, {
+		"Reboot"
+		, 0
+		, Access::ReadWrite
+		, 0
+		, 1
+	}},
+	{ RegisterType::NeedsProvisioning, {
+		"NeedsProvisioning"
+		, 0
+		, Access::ReadWrite
+		, 0
+		, 1
+	}},
 };
