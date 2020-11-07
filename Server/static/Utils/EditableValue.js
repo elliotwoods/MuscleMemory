@@ -2,11 +2,15 @@ class EditableValue {
 	constructor(parent, defaultValue, onSetValue, validateFunction) {
 		this.parent = parent;
 
-		this.liveValue = $(`<a href="#"></a>`);
-		this.parent.append(this.liveValue);
-		this.liveValue.click(() => {
+		this.valueDisplay = $(`<a href="#" class="editableValue"></a>`);
+		this.parent.append(this.valueDisplay);
+		this.valueDisplay.click(() => {
 			this.openEditor();
 		});
+
+		this.valueDisplayNonInteractive = $(`<span class="liveValue"></span>`);
+		this.parent.append(this.valueDisplayNonInteractive);
+
 
 		
 		this.editValue = $(`<input type="search" value="" class="form-control is-valid" id="inputValid" />`);
@@ -30,7 +34,11 @@ class EditableValue {
 			this.validate();
 		});
 
-		this.editValueError = $(`<div class="invalid-feedback">Sorry, that username's taken. Try another?</div>`);
+		this.extraFeedback = $(`<div class="valid-feedback"></div>`);
+		this.parent.append(this.extraFeedback);
+		this.extraFeedback.hide();
+
+		this.editValueError = $(`<div class="invalid-feedback"></div>`);
 		this.parent.append(this.editValueError);
 		this.editValueError.hide();
 
@@ -42,27 +50,43 @@ class EditableValue {
 
 	openEditor() {
 		this.editValue.show();
+		this.extraFeedback.hide();
 		this.editValueError.hide();
-		this.liveValue.hide();
-		this.editValue.val(this.liveValue.text());
+		this.valueDisplay.hide();
+		this.editValue.val(this.valueDisplay.text());
 		this.editValue.focus();
 		this.editValue.select();
+
+		this.validate();
 	}
 
 	closeEditor() {
 		this.editValue.hide();
+		this.extraFeedback.hide();
 		this.editValueError.hide();
-		this.liveValue.show();
+		this.valueDisplay.show();
+	}
+
+	setEditEnabled(editEnabled) {
+		if(editEnabled) {
+			this.valueDisplay.show();
+			this.valueDisplayNonInteractive.hide();
+		}
+		else {
+			this.valueDisplay.hide();
+			this.valueDisplayNonInteractive.show();
+		}
 	}
 
 	setValue(value) {
-		this.liveValue.text(value);
+		this.valueDisplay.text(value);
+		this.valueDisplayNonInteractive.text(value);
 	}
 
 	pushValue() {
 		let value = eval(this.editValue.val());
 		this.onSetValue(value);
-		this.liveValue.text(value);
+		this.valueDisplay.text(value);
 	}
 
 	validate() {
@@ -78,9 +102,21 @@ class EditableValue {
 			this.editValueError.hide();
 			this.editValue.addClass('is-valid');
 			this.editValue.removeClass('is-invalid');
+
+			if(result == Math.floor(result)) {
+				if(result < 0) {
+					this.extraFeedback.text("-0x" + Math.abs(result.toString(16)));
+					this.extraFeedback.show();
+				}
+				else {
+					this.extraFeedback.text("0x" + result.toString(16));
+				}
+				this.extraFeedback.show();
+			}
 			return true;
 		}
 		catch(exception) {
+			this.extraFeedback.hide();
 			this.editValueError.show();
 			this.editValueError.text(exception);
 			this.editValue.removeClass('is-valid');
