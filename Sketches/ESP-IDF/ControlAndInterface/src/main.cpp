@@ -226,7 +226,7 @@ void
 initController()
 {
 #ifdef PROVISIONING_ENABLED
-	Control::Provisioning provisioning(motorDriver, ina219, as5047);
+	Control::Provisioning provisioning(motorDriver, ina219, as5047, encoderCalibration);
 	provisioning.perform();
 #endif
 
@@ -237,11 +237,12 @@ initController()
 	else {
 		// Perform encoder calibration
 		showSplashMessage("Calibrating encoder");
-		encoderCalibration.calibrate(as5047, motorDriver);
-		if(!encoderCalibration.save()) {
-			abort();
+		if(encoderCalibration.calibrate(as5047, motorDriver)) {
+			if(!encoderCalibration.save()) {
+				abort();
+			}
+			printf("Motor calibration saved\n");
 		}
-		printf("Motor calibration saved\n");
 	}
 
 	showSplashMessage("Initialise MultiTurn");
