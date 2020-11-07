@@ -33,7 +33,7 @@ public:
 		// Encoder
 		EncoderReading = 21,
 		EncoderErrors = 22,
-		EncoderPositionAveraging = 23,
+		EncoderPositionFilterSize = 23,
 
 		// Power
 		Current = 30,
@@ -126,7 +126,7 @@ public:
 
 	struct MotorControlReads {
 		Torque torque;
-		uint8_t encoderPositionAveraging;
+		uint8_t encoderPositionFilterSize;
 	};
 
 	struct AgentReads {
