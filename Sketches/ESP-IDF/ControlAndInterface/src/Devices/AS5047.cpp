@@ -15,14 +15,6 @@ namespace Devices {
 	void
 	AS5047::init()
 	{
-		// Setup the CSn line
-		// ESP_ERROR_CHECK(
-		// 	gpio_set_direction(GPIO_NUM_5, gpio_mode_t::GPIO_MODE_OUTPUT)
-		// );
-		// ESP_ERROR_CHECK(
-		// 	gpio_set_level(GPIO_NUM_5, 1)
-		// );
-
 		// Initialise the SPI bus
 		{
 			spi_bus_config_t busConfiguration = {0};
@@ -47,7 +39,7 @@ namespace Devices {
 			{
 				deviceConfiguration.mode = 1;
 
-				deviceConfiguration.clock_speed_hz = 100000;
+				deviceConfiguration.clock_speed_hz = SPI_MASTER_FREQ_10M;
 				//deviceConfiguration.input_delay_ns = 10;
 				
 				deviceConfiguration.queue_size = 2;
@@ -57,7 +49,6 @@ namespace Devices {
 				deviceConfiguration.cs_ena_posttrans = 2;
 
 				deviceConfiguration.input_delay_ns = 51;
-				//deviceConfiguration.flags = SPI_DEVICE_BIT_LSBFIRST;
 			};
 
 			auto result = spi_bus_add_device(SPI_HOST
@@ -89,36 +80,35 @@ namespace Devices {
 
 	//----------
 	EncoderReading
-	AS5047::getPositionAveraged(uint8_t count)
+	AS5047::getPositionFiltered(uint8_t windowSize)
 	{
 		const auto halfWay = (EncoderReading) (1 << 13);
 		const auto firstQuarter = halfWay * 1 / 2;
 		const auto lastQuarter = halfWay * 3 / 2;
 
-		uint32_t accumulatorValue = 0;
-		uint32_t accumulatorCount = 0;
-		EncoderReading priorReading;
+		std::vector<EncoderReading> readings;
 
-		for(uint8_t i=0; i<count; i++) {
+		// Collect samples
+		for(uint8_t i=0; i<windowSize; i++) {
 			auto currentReading = this->readRegister(Register::PositionCompensated);
-			if(accumulatorCount != 0) {
-				if((priorReading > lastQuarter && currentReading < firstQuarter)
-					|| (priorReading < firstQuarter && currentReading > lastQuarter)) {
-					accumulatorCount = 1;
-					accumulatorValue = currentReading;
-				}
-				else {
-					accumulatorValue += currentReading;
-					accumulatorCount += 1;
-				}
+			if(readings.empty()) {
+				readings.push_back(currentReading);
 			}
 			else {
-				accumulatorCount = 1;
-				accumulatorValue = currentReading;
+				// Consider that we might have cycled
+				const auto & priorReading = readings.back();
+				if((priorReading > lastQuarter && currentReading < firstQuarter)
+					|| (priorReading < firstQuarter && currentReading > lastQuarter)) {
+					// We cycled
+					readings.clear();
+				}
+				readings.push_back(currentReading);
 			}
-			priorReading = currentReading;
 		}
-		return (EncoderReading) (accumulatorValue / accumulatorCount);
+
+		// Return the median
+		std::sort(readings.begin(), readings.end());
+		return readings.at(readings.size() / 2);
 	}
 
 	//----------
@@ -132,7 +122,7 @@ namespace Devices {
 			this->errors |= Errors::errorReported;
 
 			auto value = this->readRegister(Register::Errors);
-			//printf("Error response : %d\n", value);
+
 			this->errors |= value;
 			this->hasIncomingError = false;
 			return this->errors;
@@ -144,6 +134,29 @@ namespace Devices {
 	AS5047::clearErrors()
 	{
 		this->errors = 0;
+	}
+
+	//----------
+	AS5047::Diagnostics
+	AS5047::getDiagnostics()
+	{
+		auto value = this->readRegister(Register::Diagnostics);
+		Diagnostics diagnostics;
+		{
+			diagnostics.fieldStrengthTooLow = (value >> 11) & 1;
+			diagnostics.fieldStrengthTooHigh = (value >> 10) & 1;
+			diagnostics.cordicOverflow = (value >> 9) & 1;
+			diagnostics.internalOffsetLoopFinished = (value >> 8) & 1;
+			diagnostics.automaticGainControl = value & 0xFF;
+		}
+		return diagnostics;
+	}
+
+	//----------
+	uint16_t
+	AS5047::getCordicMagnitude()
+	{
+		return this->readRegister(Register::CordicMagnitude);
 	}
 
 	//----------

@@ -8,7 +8,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::ControlMode, {
 		"ControlMode"
-		, 1 // 0=Standby, 1=PID, 2=Agent
+		, 0 // 0=Standby, 1=PID, 2=Agent
 		, Access::ReadWrite
 		, 0
 		, 3
@@ -39,7 +39,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::MaximumTorque, {
 		"MaximumTorque"
-		, 32
+		, 16
 		, Access::ReadWrite
 		, 0
 		, 128
@@ -66,11 +66,11 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
-	{ RegisterType::EncoderPositionAveraging, {
-		"EncoderPositionAveraging"
-		, 0
+	{ RegisterType::EncoderPositionFilterSize, {
+		"EncoderPositionFilterSize"
+		, 1
 		, Access::ReadWrite
-		, 0
+		, 1
 		, 255
 	}},
 
@@ -154,22 +154,22 @@ std::map<RegisterType, Register> registers {
 
 	{ RegisterType::PIDProportional, {
 		"PIDProportional"
-		, 10
+		, 16
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDIntegral, {
 		"PIDIntegral"
-		, 320
+		, 16384
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDDifferential, {
 		"PIDDifferential"
-		, 0 //1 << 20
+		, 524288
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDIntegralMax, {
 		"PIDIntegralMax"
-		, 1 << 24
+		, 2097152
 		, Access::ReadWrite
 	}},
 

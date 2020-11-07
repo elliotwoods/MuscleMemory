@@ -73,7 +73,7 @@ namespace Devices {
 				//esp_partition_erase_range(partition, 0, partition->size);
 
 				// Break partition formatting only
-				esp_partition_erase_range(partition, 0, 4096);
+				esp_partition_erase_range(partition, 0, 0x10000);
 			}			
 		}
 
