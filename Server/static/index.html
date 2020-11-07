@@ -61,19 +61,22 @@
 					<nav class="navbar navbar-expand-lg navbar-light bg-light">
 						<!-- Select recording state-->
 						<div class="btn-group btn-group-toggle" data-toggle="buttons">
-							<label id="playButton" class="btn active">
+							<label id="playButton" class="btn active" title="Continuous sampling">
 								<input type="radio" name="options" id="option1" autocomplete="off" checked="">
 								<i class="fas fa-play"></i>
 							</label>
-							<label id="recordButton" class="btn">
+							<label id="recordButton" class="btn" title="One shot sampling">
 								<input type="radio" name="options" id="option2" autocomplete="off">
 								<i class="fas fa-circle"></i>
 							</label>
-							<label id="pauseButton" class="btn">
+							<label id="pauseButton" class="btn" title="Pause playback">
 								<input type="radio" name="options" id="option3" autocomplete="off">
 								<i class="fas fa-pause"></i>
 							</label>
 						</div>
+						<button id="clearButton" class="btn" title="Clear recording">
+							<i class="fas fa-times"></i>
+						</button>
 
 
 						<!-- Select recording duration-->
