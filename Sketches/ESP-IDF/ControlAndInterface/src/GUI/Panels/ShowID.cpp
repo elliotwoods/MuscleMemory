@@ -33,13 +33,10 @@ namespace GUI {
 
 			u8g2.setFont(u8g2_font_fub35_tn);
 			sprintf(message, "%d", value);
-			int IDxPosition = 75;
-			if(value>99){
-				IDxPosition-=30;
-			}else if(value>9){
-				IDxPosition-=15;
-			}
-			u8g2.drawStr(IDxPosition, 51, message);
+			int IDxPosition = 93;
+			auto pxWidth = int(log(value) / log(10)) * 30;
+
+			u8g2.drawStr(IDxPosition - pxWidth, 53, message);
 
 			if(this->editing) {
 				u8g2.drawFrame(0, 0, 128, 64);
