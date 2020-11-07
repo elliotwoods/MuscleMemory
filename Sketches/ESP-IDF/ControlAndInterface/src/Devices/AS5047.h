@@ -29,11 +29,22 @@ namespace Devices {
 			, PositionCompensated = 0x3FFF
 		};
 
+		struct Diagnostics {
+			bool fieldStrengthTooLow = false;
+			bool fieldStrengthTooHigh = false;
+			bool cordicOverflow = false;
+			bool internalOffsetLoopFinished = false;
+			uint8_t automaticGainControl = 0;
+		};
+
 		void init();
+
 		EncoderReading getPosition();
-		EncoderReading getPositionAveraged(uint8_t count);
+		EncoderReading getPositionFiltered(uint8_t windowSize);
 		uint8_t getErrors();
 		void clearErrors();
+		Diagnostics getDiagnostics();
+		uint16_t getCordicMagnitude();
 
 		void printDebug();
 		void drawDebug(U8G2 &);

@@ -11,6 +11,7 @@
 #include "Control/Drive.h"
 #include "Control/PID.h"
 #include "Control/WebSockets.h"
+#include "Control/Provisioning.h"
 
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
@@ -37,9 +38,10 @@
 #include "driver/can.h"
 
 //#define AGENT_ENABLED
-#define SESSION_ENABLED
+//#define WEBSOCKETS_ENABLED
+#define PROVISIONING_ENABLED
 
-#if defined(AGENT_ENABLED) || defined(SESSION_ENABLED)
+#if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
 #define WIFI_ENABLED
 #endif
 
@@ -56,7 +58,10 @@ Control::Agent agent;
 #endif
 Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
+
+#ifdef WEBSOCKETS_ENABLED
 Control::WebSockets webSockets;
+#endif
 
 Interface::SystemInfo systemInfo(ina219);
 Interface::CANResponder canResponder;
@@ -154,6 +159,7 @@ motorTask(void*)
 {
 	while(true) {
 		drive.update();
+		vTaskDelay(1);
 	}
 }
 
@@ -219,6 +225,11 @@ agentServerCommunicateTask(void*)
 void
 initController()
 {
+#ifdef PROVISIONING_ENABLED
+	Control::Provisioning provisioning(motorDriver, ina219, as5047);
+	provisioning.perform();
+#endif
+
 	// Force a calibration if the button is pressed when we get to this stage
 	if(encoderCalibration.load()) {
 		showSplashMessage("Encoder calibration loaded");
@@ -250,8 +261,10 @@ initController()
 	showSplashMessage("Initialise PID");
 	pid.init();
 
+#ifdef WEBSOCKETS_ENABLED
 	showSplashMessage("Initialising websockets");
 	webSockets.init();
+#endif
 
 	showSplashMessage("Starting system tasks");
 
@@ -280,6 +293,8 @@ initController()
 		, NULL 
 		, 0);
 #endif
+
+	showSplashMessage("Controller initialised");
 }
 
 //----------
@@ -290,7 +305,9 @@ updateInterface()
 	multiTurn.mainLoopUpdate();
 	systemInfo.update();
 	canResponder.update();
+#ifdef WEBSOCKETS_ENABLED
 	webSockets.update();
+#endif
 	GUI::Controller::X().update();
 }
 
@@ -328,7 +345,7 @@ setup()
 {
 	initDevices();
 	initController();
-	
+
 	// Display ID
 	{
 		auto showID = std::make_shared<GUI::Panels::ShowID>();

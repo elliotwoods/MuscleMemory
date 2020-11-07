@@ -26,11 +26,12 @@ namespace GUI {
 		Controller() {}
 		void drawDisabledScreen();
 		
-		std::shared_ptr<Panel> currentPanel = nullptr;
+		// The highest member of the view stack is currently shown
 		std::vector<std::shared_ptr<Panel>> viewStack;
-
-		// This will be shown when everything else exits
+		
+		// This will be shown when the view stack is empty
 		std::shared_ptr<Panel> rootPanel;
+
 		U8G2 u8g2;
 		Devices::Dial dial;
 
