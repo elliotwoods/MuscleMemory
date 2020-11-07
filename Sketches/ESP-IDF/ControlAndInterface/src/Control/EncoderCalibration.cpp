@@ -121,7 +121,7 @@ namespace Control {
 
 
 	//----------
-	void
+	bool
 	EncoderCalibration::calibrate(Devices::AS5047 & encoder
 		, Devices::MotorDriver & motorDriver
 		, const Settings & settings)
@@ -167,6 +167,11 @@ namespace Control {
 
 				char message[100];
 
+				if(this->skippedSteps > 0) {
+					sprintf(message, "SKIPPED STEPS : %d", this->skippedSteps);
+					u8g2.drawStr(10, 34, message);
+				}
+
 				{
 					sprintf(message, "Enc AGC %.2f %s%s%s%s"
 						, (float) guiInfo.encoderDiagnostics.automaticGainControl / ((float) (1 << 16))
@@ -179,15 +184,15 @@ namespace Control {
 				}
 
 				{
-					sprintf(message, "Enc Value : %d (%.2f%)"
+					sprintf(message, "Enc Value : %d (%.2f)"
 						, guiInfo.encoderReading
-						, guiInfo.encoderReadingNormalised * 100.0f
+						, guiInfo.encoderReadingNormalised * this->settings.stepsPerRevolution
 					);
 					u8g2.drawStr(10, 44, message);
 				}
 
 				{
-					sprintf(message, "Enc cordic mag : %d (%.2f%)"
+					sprintf(message, "Enc cordic mag : %d (%.2f%%)"
 						, guiInfo.encoderCordicMagnitude
 						, guiInfo.encoderCordicMagnitudeNormalised * 100.0f
 					);
@@ -231,6 +236,8 @@ namespace Control {
 		
 		// Record data
 		{
+			EncoderReading priorReading = encoder.getPositionFiltered(this->settings.encoderFilterSize);
+
 			// alternate forwards and backwards
 			for(uint8_t cycle = 0; cycle < settings.cycles; cycle++) {
 				printf("Calibration cycle : %d \n", cycle);
@@ -244,7 +251,8 @@ namespace Control {
 							, encoder
 							, motorDriver
 							, accumulatedEncoderValue
-							, visitsPerStepCycle);
+							, visitsPerStepCycle
+							, priorReading);
 						
 					}
 				}
@@ -257,7 +265,8 @@ namespace Control {
 							, encoder
 							, motorDriver
 							, accumulatedEncoderValue
-							, visitsPerStepCycle);
+							, visitsPerStepCycle
+							, priorReading);
 						//printf(" BB step %d, visits %d \n", step, visitsPerStepCycle[step]);
 
 						// Since the counter can't pass 0, we just manually break when we get to 0 on this one
@@ -297,8 +306,37 @@ namespace Control {
 		delete[] accumulatedEncoderValue;
 		delete[] visitsPerStepCycle;
 
+		// Push result message to screen
+		{
+			if(this->skippedSteps == 0) {
+				panel->onDraw = [](U8G2 & u8g2) {
+					u8g2.drawStr(10, 30, "CALIBRATION OK");
+				};
+				gui.update();
+			}
+			else {
+				panel->onDraw = [this](U8G2 & u8g2) {
+					u8g2.drawStr(10, 30, "CALIBRATION FAILED!");
+
+					{
+						char message[100];
+						sprintf(message,"%d skipped steps", this->skippedSteps);
+						u8g2.drawStr(10, 40, message);
+					}
+
+					u8g2.setDrawColor(2);
+					u8g2.drawBox(0, 0, 128, 64);
+					u8g2.setDrawColor(1);
+				};
+				gui.update();
+				vTaskDelay(2000 / portTICK_PERIOD_MS);
+			}
+		}
+
 		// remove our preview panel
 		gui.popPanel();
+
+		return this->skippedSteps == 0;
 	}
 
 	//----------
@@ -343,15 +381,17 @@ namespace Control {
 		, Devices::AS5047 & encoder
 		, Devices::MotorDriver & motorDriver
 		, uint32_t * accumulatedEncoderValue
-		, uint8_t * visitsPerStepCycle)
+		, uint8_t * visitsPerStepCycle
+		, EncoderReading & priorReading)
 	{
 		motorDriver.step(stepIndex % 4, this->settings.current);
 
 		vTaskDelay(this->settings.stepHoldTimeMS / portTICK_PERIOD_MS);
 
+		auto position = encoder.getPositionFiltered(settings.encoderFilterSize);
+
 		// Only record complete step cycles
 		if(stepIndex % 4 == 0) {
-			auto position = encoder.getPositionFiltered(settings.encoderFilterSize);
 		
 			if(stepIndex == 0 && position > 1 << 13) {
 				// We've underflowed the encoder - don't record this sample. We recorded one sample when finding the first step
@@ -372,6 +412,15 @@ namespace Control {
 			auto stepCycle = stepIndex / 4;
 			accumulatedEncoderValue[stepCycle] += position;
 			visitsPerStepCycle[stepCycle]++;
+		}
+
+		// check skipped steps
+		{
+			const auto stepMagnitude = (1 << 14) / this->settings.stepsPerRevolution;
+			if(abs(position - priorReading) < stepMagnitude / 2) {
+				this->skippedSteps++;
+			}
+			priorReading = position;
 		}
 	}
 }

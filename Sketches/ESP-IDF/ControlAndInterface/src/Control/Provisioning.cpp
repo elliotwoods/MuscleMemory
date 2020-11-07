@@ -40,8 +40,14 @@ void provisioningTask(void *provisioningUntyped)
 namespace Control
 {
 	//----------
-	Provisioning::Provisioning(Devices::MotorDriver &motorDriver, Devices::INA219 &ina219, Devices::AS5047 &as5047)
-		: motorDriver(motorDriver), ina219(ina219), as5047(as5047)
+	Provisioning::Provisioning(Devices::MotorDriver &motorDriver
+		, Devices::INA219 &ina219
+		, Devices::AS5047 &as5047
+		, EncoderCalibration &encoderCalibration)
+	: motorDriver(motorDriver)
+	, ina219(ina219)
+	, as5047(as5047)
+	, encoderCalibration(encoderCalibration)
 	{
 	}
 
@@ -96,6 +102,15 @@ namespace Control
 				},
 				[&]() {
 					this->settings.speed--;
+				}
+			},
+			{
+				[&](char * text) {
+					sprintf(text, "Calibrate encoder");
+				},
+				[&]() {
+					this->encoderCalibration.calibrate(this->as5047, this->motorDriver);
+					this->encoderCalibration.save();
 				}
 			},
 			{
