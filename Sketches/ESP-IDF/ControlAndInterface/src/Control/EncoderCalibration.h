@@ -13,6 +13,7 @@ namespace Control {
 	public:
 		struct Settings {
 			Settings() { }
+			uint8_t encoderFilterSize = 16;
 			uint16_t stepsPerRevolution = 360 / 1.8;
 			uint8_t current = 64; // Equivalent amperes value 
 			uint8_t cycles = 2; // Iterations to run the calibration routine for
@@ -50,20 +51,5 @@ namespace Control {
 			, uint32_t * accumulatedEncoderValue
 			, uint8_t * visitsPerStep);
 		Settings settings;
-	public:
-
-		class Panel : public GUI::Panel {
-		public:
-			void update() override;
-			void draw(U8G2 &) override;
-			bool buttonPressed() override;
-			void dial(int8_t) override;
-
-			struct {
-				float voltage;
-				MultiTurnPosition position;
-				uint16_t stepIndex;
-			} info;
-		};
-	}; 
+	};
 }

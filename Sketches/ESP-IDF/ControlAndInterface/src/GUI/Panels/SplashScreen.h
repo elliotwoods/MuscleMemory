@@ -11,7 +11,7 @@ namespace GUI {
 			SplashScreen();
 			void update() override;
 			void draw(U8G2 &) override;
-			bool buttonPressed() override;
+			void buttonPressed() override;
 			void dial(int8_t) override;
 
 			void setMessage(const std::string&);
