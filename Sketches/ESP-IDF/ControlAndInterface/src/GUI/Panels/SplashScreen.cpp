@@ -33,10 +33,10 @@ namespace GUI {
 		}
 		
 		//----------
-		bool
+		void
 		SplashScreen::buttonPressed()
 		{
-			return false;
+			
 		}
 
 		//----------

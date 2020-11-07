@@ -32,7 +32,17 @@ namespace Control {
 
 		this->frameTimer.update();
 
-		auto encoderReading = this->as5047.getPosition();
+		// read from registry
+		Registry::MotorControlReads motorControlReads;
+		{
+			registry.motorControlRead(motorControlReads);
+		}
+
+		// Get the encoder reading (using averaging if enabled)
+		auto encoderReading = motorControlReads.encoderPositionFilterSize > 1
+			? this->as5047.getPositionFiltered(motorControlReads.encoderPositionFilterSize)
+			: this->as5047.getPosition();
+		
 		this->multiTurn.driveLoopUpdate(encoderReading);
 		auto multiTurnPosition = this->multiTurn.getMultiTurnPosition();
 		auto positionWithinStepCycle = this->encoderCalibration.getPositionWithinStepCycle(encoderReading);
@@ -40,12 +50,6 @@ namespace Control {
 		// Calculate velocity
 		auto velocity = (multiTurnPosition - this->priorPosition) * 1000000 / this->frameTimer.getPeriod();
 		this->priorPosition = multiTurnPosition;
-
-		// read from registry
-		Registry::MotorControlReads motorControlReads;
-		{
-			registry.motorControlRead(motorControlReads);
-		}		
 
 		// apply torque
 		this->motorDriver.setTorque(motorControlReads.torque, positionWithinStepCycle);

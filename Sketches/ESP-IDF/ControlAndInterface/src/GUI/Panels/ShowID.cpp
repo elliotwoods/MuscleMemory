@@ -48,7 +48,7 @@ namespace GUI {
 
 		
 		//----------
-		bool
+		void
 		ShowID::buttonPressed()
 		{
 			if(!this->editing) {
@@ -59,9 +59,6 @@ namespace GUI {
 				this->editing = false;
 				this->shouldExit = true;
 			}
-
-			// we manually clear the panel
-			return false;
 		}
 
 		

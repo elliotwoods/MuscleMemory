@@ -164,11 +164,10 @@ namespace GUI {
 
 		
 		//----------
-		bool
+		void
 		Dashboard::buttonPressed()
 		{
 			Controller::X().setRootPanel(std::make_shared<RegisterList>());
-			return false;
 		}
 
 		
