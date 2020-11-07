@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "GUI/Controller.h"
 #include "Registry.h"
+#include "GUI/Panels/Lambda.h"
 
 const char filePath[] = "/appdata/encoder.dat";
 
@@ -125,43 +126,105 @@ namespace Control {
 		, Devices::MotorDriver & motorDriver
 		, const Settings & settings)
 	{
-		// auto panel = std::make_shared<Panel>();
-		// GUI::Controller::X().push_panel(panel);
-		// panel->info.voltage = Registry::X().registers.at(Registry::)
-
+		// Clear any existing calibration and cache the settings we used
 		this->clear();
 		this->settings = settings;
 
+		// Allocate and clear the data storage
 		auto stepCycleCount = settings.stepsPerRevolution / 4;
 		auto accumulatedEncoderValue = new uint32_t[stepCycleCount];
 		auto visitsPerStepCycle = new uint8_t[stepCycleCount];
+		{
+			memset(accumulatedEncoderValue, 0, sizeof(uint32_t) * stepCycleCount);
+			memset(visitsPerStepCycle, 0, sizeof(uint8_t) * stepCycleCount);
+		}
+	
+		// Initialise the GUI panel
+		auto & gui = GUI::Controller::X();
+		auto panel = std::make_shared<GUI::Panels::Lambda>();
+		char guiStatus[100];
+		sprintf(guiStatus, "Starting calibration...");
+		gui.pushPanel(panel);
+		{
+			struct { 
+				Devices::AS5047::Diagnostics encoderDiagnostics;
+				EncoderReading encoderReading;
+				float encoderReadingNormalised;
+				uint16_t encoderCordicMagnitude;
+				float encoderCordicMagnitudeNormalised;
+			} guiInfo;
+			panel->onUpdate = [&]() {
+				guiInfo.encoderDiagnostics = encoder.getDiagnostics();
+				guiInfo.encoderReading = encoder.getPositionFiltered(settings.encoderFilterSize);
+				guiInfo.encoderReadingNormalised = (float) guiInfo.encoderReading / (float) (1 << 14);
+				guiInfo.encoderCordicMagnitude = encoder.getCordicMagnitude();
+				guiInfo.encoderCordicMagnitudeNormalised = guiInfo.encoderCordicMagnitude / (float) (1 << 14);
+			};
+			panel->onDraw = [&](U8G2 & u8g2) {
+				u8g2.setFont(u8g2_font_nerhoe_tr);
+		
+				u8g2.drawStr(10, 10, guiStatus);
 
-		memset(accumulatedEncoderValue, 0, sizeof(uint32_t) * stepCycleCount);
-		memset(visitsPerStepCycle, 0, sizeof(uint8_t) * stepCycleCount);
+				char message[100];
 
+				{
+					sprintf(message, "Enc AGC %.2f %s%s%s%s"
+						, (float) guiInfo.encoderDiagnostics.automaticGainControl / ((float) (1 << 16))
+						, guiInfo.encoderDiagnostics.fieldStrengthTooHigh ? "HIGH " : ""
+						, guiInfo.encoderDiagnostics.fieldStrengthTooLow ? "LOW " : ""
+						, guiInfo.encoderDiagnostics.cordicOverflow ? "OVER " : ""
+						, guiInfo.encoderDiagnostics.internalOffsetLoopFinished ? "FIN " : ""
+					);
+					u8g2.drawStr(10, 34, message);
+				}
+
+				{
+					sprintf(message, "Enc Value : %d (%.2f%)"
+						, guiInfo.encoderReading
+						, guiInfo.encoderReadingNormalised * 100.0f
+					);
+					u8g2.drawStr(10, 44, message);
+				}
+
+				{
+					sprintf(message, "Enc cordic mag : %d (%.2f%)"
+						, guiInfo.encoderCordicMagnitude
+						, guiInfo.encoderCordicMagnitudeNormalised * 100.0f
+					);
+					u8g2.drawStr(10, 54, message);
+				}
+
+				u8g2.drawFrame(0, 0, 128, 64);
+			};
+		}
 
 		// Step up to the lowest encoder value
 		{
 
 			uint8_t step = 0;
 			motorDriver.step(step, settings.current);
-			auto startValue = encoder.getPosition();
+			auto startValue = encoder.getPositionFiltered(settings.encoderFilterSize);
 
 			printf("Stepping to lowest encoder value (start value = %d)...\n", startValue);
+			sprintf(guiStatus, "Step to start");
+			gui.update();
 
 			// Step until we get to the beginning of the encoder readings
 			do {
 				motorDriver.step(++step % 4, settings.current);
 				vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
-			} while (encoder.getPosition() > startValue);
+				gui.update();
+			} while (encoder.getPositionFiltered(settings.encoderFilterSize) > startValue);
 
 			// Step up to the start of the next step cycle
 			while(step % 4 != 0) {
 				motorDriver.step(step++ % 4, settings.current);
 				vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
+				gui.update();
 			}
 
-			printf("Encoder is now : %d , First step : %d \n", encoder.getPosition(), step);
+			printf("Encoder is now : %d , First step : %d \n", encoder.getPositionFiltered(settings.encoderFilterSize), step);
+			gui.update();
 		}
 
 		vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
@@ -175,6 +238,8 @@ namespace Control {
 				if(cycle % 2 == 0) {
 					// step forwards
 					for(uint16_t step = 0; step < settings.stepsPerRevolution; step++) {
+						sprintf(guiStatus, "Cycle : %d, Step : %d\n", cycle, step);
+						gui.update();
 						this->recordStep(step
 							, encoder
 							, motorDriver
@@ -186,6 +251,8 @@ namespace Control {
 				else {
 					// step backwards
 					for(uint16_t step = settings.stepsPerRevolution - 1; ; step--) {
+						sprintf(guiStatus, "Cycle : %d, Step : %d\n", cycle, step);
+						gui.update();
 						this->recordStep(step
 							, encoder
 							, motorDriver
@@ -200,6 +267,7 @@ namespace Control {
 					}
 				}
 
+				gui.update();
 				vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
 			}
 			printf("------------- visits array----------- \n");
@@ -211,6 +279,7 @@ namespace Control {
 
 		// Create the StepCycleCalibration (average the values)
 		{
+			sprintf(guiStatus, "Averaging values");
 			this->stepCycleCalibration.stepCycleCount = stepCycleCount;
 			this->stepCycleCalibration.encoderValuePerStepCycle = new uint16_t[stepCycleCount];
 			for(uint16_t i=0; i<stepCycleCount; i++) {
@@ -227,6 +296,9 @@ namespace Control {
 
 		delete[] accumulatedEncoderValue;
 		delete[] visitsPerStepCycle;
+
+		// remove our preview panel
+		gui.popPanel();
 	}
 
 	//----------
@@ -279,7 +351,7 @@ namespace Control {
 
 		// Only record complete step cycles
 		if(stepIndex % 4 == 0) {
-			auto position = encoder.getPosition();
+			auto position = encoder.getPositionFiltered(settings.encoderFilterSize);
 		
 			if(stepIndex == 0 && position > 1 << 13) {
 				// We've underflowed the encoder - don't record this sample. We recorded one sample when finding the first step
@@ -301,33 +373,5 @@ namespace Control {
 			accumulatedEncoderValue[stepCycle] += position;
 			visitsPerStepCycle[stepCycle]++;
 		}
-	}
-
-	//----------
-	void
-	EncoderCalibration::Panel::update()
-	{
-
-	}
-
-	//----------
-	void
-	EncoderCalibration::Panel::draw(U8G2 &)
-	{
-		
-	}
-
-	//----------
-	bool
-	EncoderCalibration::Panel::buttonPressed()
-	{
-		return false;
-	}
-
-	//----------
-	void
-	EncoderCalibration::Panel::dial(int8_t)
-	{
-		
 	}
 }

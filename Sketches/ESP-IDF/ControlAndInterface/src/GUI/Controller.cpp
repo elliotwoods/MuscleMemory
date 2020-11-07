@@ -60,32 +60,28 @@ namespace GUI {
 			}
 		}
 
-		if(!this->currentPanel) {
-			this->currentPanel = this->rootPanel;
+		// Handle view exit events
+		if(!this->viewStack.empty()) {
+			if(this->viewStack.back()->shouldExit) {
+				this->viewStack.pop_back();
+			}
 		}
-		
+
+		// Select current panel to show
+		auto currentPanel = this->viewStack.empty()
+			? this->rootPanel
+			: this->viewStack.back();
+
+		if(!currentPanel) {
+			// No panel active
+			return;
+		}
+
 		// DIAL BUTTON
 		{
 			auto buttonPressed = this->isDialButtonPressed();
 			if(buttonPressed && !this->priorDialButtonPressed) {
-				if(this->currentPanel->buttonPressed()) {
-					// The panel quit
-
-					// Look through the view stack
-					if(!viewStack.empty()) {
-						// We are currently not in the root panel, so we want to go back
-						viewStack.pop_back();
-
-						if(viewStack.empty()) {
-							// Now we should be in the root panel
-							this->currentPanel = this->rootPanel;
-						}
-						else {
-							// Now we want to be the previous panel which is not the root panel still
-							this->currentPanel = viewStack.back();
-						}
-					}
-				}
+				currentPanel->buttonPressed();
 			}
 			this->priorDialButtonPressed = buttonPressed;
 		}
@@ -95,19 +91,19 @@ namespace GUI {
 			auto currentDialPosition = this->dial.getPosition();
 			auto dialMovements = currentDialPosition - this->priorDialPosition;
 			if(dialMovements != 0) {
-				this->currentPanel->dial(dialMovements);
+				currentPanel->dial(dialMovements);
 				this->priorDialPosition = currentDialPosition;
 			}
 		}
 		
 		// UPDATE THE CURRENT PANEL
-		this->currentPanel->update();
+		currentPanel->update();
 
 		// DRAW THE CURRENT PANEL
 		this->u8g2.firstPage();
 		do
 		{
-			this->currentPanel->draw(this->u8g2);
+			currentPanel->draw(this->u8g2);
 		}
 		while(this->u8g2.nextPage());
 	}
@@ -116,7 +112,7 @@ namespace GUI {
 	void
 	Controller::setRootPanel(std::shared_ptr<Panel> rootPanel)
 	{
-		this->currentPanel = rootPanel;
+		this->rootPanel = rootPanel;
 	}
 
 	//----------
@@ -124,6 +120,22 @@ namespace GUI {
 	Controller::isDialButtonPressed() const
 	{
 		return gpio_get_level(GPIO_DIAL_BUTTON) == 0;
+	}
+
+	//----------
+	void
+	Controller::pushPanel(std::shared_ptr<Panel> panel)
+	{
+		this->viewStack.push_back(panel);
+	}
+
+	//----------
+	void
+	Controller::popPanel()
+	{
+		if(!this->viewStack.empty()) {
+			this->viewStack.pop_back();
+		}
 	}
 
 	//----------

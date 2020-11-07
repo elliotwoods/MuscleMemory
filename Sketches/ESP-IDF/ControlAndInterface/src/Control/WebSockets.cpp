@@ -5,7 +5,7 @@
 #include "Devices/WiFi.h"
 #include "WifiConfig.h"
 
-#define WEBSOCKETS_DEBUG
+//#define WEBSOCKETS_DEBUG
 
 //WebSocketsClient library conflicts with tensorflow
 // Since Wifi is a singleton, this is safe to keep it here
