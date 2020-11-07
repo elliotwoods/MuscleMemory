@@ -63,6 +63,9 @@ class RecordingState {
 				this.updateInterface();
 			});
 		}
+		$("#clearButton").click(() => {
+			this.clearRecordings();
+		});
 		this.updateInterface();
 	}
 
@@ -74,6 +77,17 @@ class RecordingState {
 			}
 			else {
 				recordState.button.removeClass(recordState.selectedClass);
+			}
+		}
+	}
+
+	clearRecordings() {
+		for(let hardwareID in deviceViews) {
+			let deviceView = deviceViews[hardwareID];
+			for(let registerIndex in deviceView.registerViews) {
+				let registerView = deviceView.registerViews[registerIndex];
+
+				registerView.recordSamples = [];
 			}
 		}
 	}

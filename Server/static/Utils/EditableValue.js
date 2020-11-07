@@ -10,8 +10,7 @@ class EditableValue {
 
 		this.valueDisplayNonInteractive = $(`<span class="liveValue"></span>`);
 		this.parent.append(this.valueDisplayNonInteractive);
-
-
+		this.valueDisplayNonInteractive.hide();
 		
 		this.editValue = $(`<input type="search" value="" class="form-control is-valid" id="inputValid" />`);
 		this.parent.append(this.editValue);
