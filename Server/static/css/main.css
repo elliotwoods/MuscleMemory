@@ -23,3 +23,15 @@ a.editableValue:visited
 	padding-right: 2px;
 }
 
+.codeTip,
+.codeEditor {
+	font-family: "Lucida Console", "Monaco", "monospace";
+	font-weight: 900;
+}
+
+.resultDisplay
+{
+	font-family: "Lucida Console", "Monaco", "monospace";
+	font-weight: 900;
+	font-size: 24px;
+}
