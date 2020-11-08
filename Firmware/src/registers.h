@@ -130,6 +130,13 @@ std::map<RegisterType, Register> registers {
 		, 0 // Hz
 		, Access::ReadOnly
 	}},
+	{ RegisterType::MainLoopDelay, {
+		"MainLoopDelay"
+		, 10 // ms
+		, Access::ReadWrite
+		, 0
+		, 1000
+	}},
 
 	{ RegisterType::AgentLocalHistorySize, {
 		"LocalHistorySize"
@@ -201,9 +208,9 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, 1
 	}},
-	{ RegisterType::NeedsProvisioning, {
-		"NeedsProvisioning"
-		, 0
+	{ RegisterType::ProvisioningEnabled, {
+		"ProvisioningEnabled"
+		, 1
 		, Access::ReadWrite
 		, 0
 		, 1
