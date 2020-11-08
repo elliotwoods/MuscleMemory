@@ -13,13 +13,13 @@ function printUs(seconds) {
 	hours %= 24;
 
 	if(days > 0) {
-		return `${days} days\n${hours}h ${minutes}m ${seconds}s`;
+		return `${days} days\n${hours}h ${minutes}m ${seconds.toFixed()}s`;
 	}
 	else if(hours > 0) {
-		return `${hours}h ${minutes}m ${seconds}s`;
+		return `${hours}h ${minutes}m ${seconds.toFixed()}s`;
 	}
 	else if(minutes > 0) {
-		return `${minutes}m ${seconds}s`;
+		return `${minutes}m ${seconds.toFixed()}s`;
 	}
 	else if(seconds > 0) {
 		return `${seconds.toFixed(2)}s`;
