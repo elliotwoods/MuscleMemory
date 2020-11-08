@@ -38,6 +38,7 @@ public:
 		// Power
 		Current = 30,
 		BusVoltage = 32,
+		ShuntVoltage = 33,
 
 		// System
 		FreeMemory = 40,
