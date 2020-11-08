@@ -33,6 +33,8 @@ namespace Control {
 		bool load();
 		bool save();
 
+		bool getHasCalibration() const;
+
 		bool calibrate(Devices::AS5047 &
 			, Devices::MotorDriver &
 			, const Settings & settings = Settings());
@@ -53,6 +55,7 @@ namespace Control {
 			, EncoderReading & priorReading);
 		Settings settings;
 
+		bool hasCalibration = false;
 		uint16_t skippedSteps = 0;
 	};
 }

@@ -2,6 +2,7 @@
 #include "GUI/Controller.h"
 #include "Devices/INA219.h"
 #include "GUI/Panels/Options.h"
+#include "Registry.h"
 
 int mod(int a, int b)
 {
@@ -56,6 +57,7 @@ namespace Control
 	Provisioning::perform()
 	{
 		auto &gui = GUI::Controller::X();
+		auto &registry = Registry::X();
 		auto panel = std::make_shared<GUI::Panels::Options>("PROVISIONING", std::vector<GUI::Panels::Options::Option> {
 			{
 				[&](char * text) {
@@ -106,11 +108,32 @@ namespace Control
 			},
 			{
 				[&](char * text) {
+					sprintf(text, "Has calibration : %s"
+						, this->encoderCalibration.getHasCalibration()
+						? "TRUE"
+						: "FALSE");
+				},
+				NULL
+			},
+			{
+				[&](char * text) {
 					sprintf(text, "Calibrate encoder");
 				},
 				[&]() {
 					this->encoderCalibration.calibrate(this->as5047, this->motorDriver);
 					this->encoderCalibration.save();
+				}
+			},
+			{
+				[&](char * text) {
+					sprintf(text, "Provisioning enabled : %s"
+						, registry.registers.at(Registry::RegisterType::ProvisioningEnabled).value
+						? "TRUE"
+						: "FALSE");
+				},
+				[&]() {
+					registry.registers.at(Registry::RegisterType::ProvisioningEnabled).value ^= true;
+					registry.saveDefault(Registry::RegisterType::ProvisioningEnabled);
 				}
 			},
 			{
