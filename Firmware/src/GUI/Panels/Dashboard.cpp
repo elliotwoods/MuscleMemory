@@ -135,12 +135,12 @@ namespace GUI {
 				auto BusVoltage = Registry::X().registers.at(Registry::RegisterType::BusVoltage);
 				auto Current = Registry::X().registers.at(Registry::RegisterType::Current);
 
-				sprintf(message, "%.2f", (float)BusVoltage.value/1000);			
+				sprintf(message, "%.2f", (float)BusVoltage.value / 1000);			
 				u8g2.drawStr(75, 15, message);
 				sprintf(message, "V.");			
 				u8g2.drawStr(105, 15, message);
 
-				sprintf(message, "%.2f", (float)Current.value);			
+				sprintf(message, "%.2f", (float)Current.value / 1000.0f);			
 				u8g2.drawStr(75, 27, message);
 				sprintf(message, "A.");			
 				u8g2.drawStr(105, 27, message);

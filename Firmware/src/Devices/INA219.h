@@ -79,15 +79,16 @@ namespace Devices {
 
 			VoltageRange voltageRange = VoltageRange::From_0_to_32V;
 			Gain gain = Gain::Gain_Auto;
-			ADCResolution currentResolution = ADCResolution::Resolution12bit_532us;
-			ADCResolution busVoltageResolution = ADCResolution::Resolution12bit_532us;
+			ADCResolution currentResolution = ADCResolution::Samples128_68_10ms;
+			ADCResolution busVoltageResolution = ADCResolution::Samples128_68_10ms;
 			OperatingMode operatingMode = OperatingMode::ShuntAndBusContinuous;
 
 			// Shunt resistor value in Ohms
 			float shuntValue = 5e-3;
 
-			/// Maximum expected current in Amps. This is used to calculate the current LSB readback and gain values
-			float maximumCurrent = 2;
+			// Maximum expected current in Amps. This is used to calculate the current LSB readback and gain values
+			// Note if this value is too small, then we get an overflow in the calibration register (e.g. 2A is too low with a 5mOhm shunt)
+			float maximumCurrent = 8;
 		};
 
 		enum Errors : uint8_t
@@ -102,6 +103,7 @@ namespace Devices {
 		float getCurrent();
 		float getPower();
 		float getBusVoltage();
+		float getShuntVoltage();
 
 		void printDebug();
 		void drawDebug(U8G2 &oled);
@@ -119,8 +121,8 @@ namespace Devices {
 
 		uint8_t errors = 0;
 
-		// A cached value
-		float lsbToCurrent;
+		// Cached inside setCalibration() method
+		float currentLSB;
 	};
 
 }

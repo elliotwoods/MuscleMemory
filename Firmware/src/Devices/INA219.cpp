@@ -1,6 +1,8 @@
 #include "INA219.h"
 #include "I2C.h"
 
+//#define DEBUG_INA219
+
 namespace Devices {
 	//---------
 	INA219::INA219()
@@ -24,7 +26,7 @@ namespace Devices {
 	{
 		auto readValue = this->readRegister(Register::Current);
 		auto &signedValue = *(int16_t *)&readValue;
-		return this->lsbToCurrent * (float)signedValue;
+		return this->currentLSB * (float)signedValue;
 	}
 
 	//---------
@@ -32,7 +34,7 @@ namespace Devices {
 	INA219::getPower()
 	{
 		auto readValue = this->readRegister(Register::Power);
-		return this->lsbToCurrent * 20 * (float)readValue;
+		return this->currentLSB * 20.0f * (float)readValue;
 	}
 
 	//---------
@@ -45,6 +47,15 @@ namespace Devices {
 		this->errors |= readValue & 1;
 
 		return 4e-3f * (float)(readValue >> 3);
+	}
+
+	//---------
+	float
+	INA219::getShuntVoltage()
+	{
+		auto readValue = this->readRegister(Register::ShuntVoltage);
+		const auto & signedReadValue = * (int16_t*) & readValue;
+		return 10e-6 * (float)(signedReadValue);
 	}
 
 	//---------
@@ -124,20 +135,27 @@ namespace Devices {
 		}
 
 		this->writeRegister(Register::Configuration, value);
-
-		printf("Calibration set to : %#04x\n", value);
+#ifdef DEBUG_INA219
+		printf("Configuration set to : %#04x\n", value);
 		printf("Read back : %#04x\n", this->readRegister(Register::Configuration));
+#endif
 	}
 
 	//---------
 	void
 	INA219::setCalibration()
 	{
-		auto current_lsb = this->configuration.maximumCurrent / (float)(1 << 15);
-		auto value = (uint16_t)((0.04096f) / (current_lsb * this->configuration.shuntValue));
+		this->currentLSB = this->configuration.maximumCurrent / (float)(1 << 15);
+		auto value = (uint16_t)((0.04096f) / (this->currentLSB * this->configuration.shuntValue));
 
 		this->writeRegister(Register::Calibration, value);
-		this->lsbToCurrent = current_lsb;
+
+#ifdef DEBUG_INA219
+		printf("currentLSB : %f\n", this->currentLSB);
+		printf("shuntValue : %f\n", this->configuration.shuntValue);
+		printf("Calibration set to : %#04x\n", value);
+		printf("Read back : %#04x\n", this->readRegister(Register::Calibration));
+#endif
 	}
 
 	//---------
