@@ -21,6 +21,7 @@ namespace Control {
 			delete[] this->stepCycleCalibration.encoderValuePerStepCycle;
 			this->stepCycleCalibration.encoderValuePerStepCycle = nullptr;
 		}
+		this->hasCalibration = false;
 	}
 
 	//----------
@@ -76,6 +77,8 @@ namespace Control {
 			return false;
 		}
 		
+		this->hasCalibration = true;
+
 		return true;
 	}
 
@@ -119,6 +122,12 @@ namespace Control {
 		}
 	}
 
+	//----------
+	bool
+	EncoderCalibration::getHasCalibration() const
+	{
+		return this->hasCalibration;
+	}
 
 	//----------
 	bool
@@ -329,14 +338,15 @@ namespace Control {
 					u8g2.setDrawColor(1);
 				};
 				gui.update();
-				vTaskDelay(2000 / portTICK_PERIOD_MS);
+				vTaskDelay(4000 / portTICK_PERIOD_MS);
 			}
 		}
 
 		// remove our preview panel
 		gui.popPanel();
 
-		return this->skippedSteps == 0;
+		this->hasCalibration = (this->skippedSteps == 0);
+		return this->hasCalibration;
 	}
 
 	//----------
