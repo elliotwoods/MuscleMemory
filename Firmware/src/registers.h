@@ -33,7 +33,7 @@ std::map<RegisterType, Register> registers {
 	{ RegisterType::Torque, {
 		"Torque"
 		, 0
-		, Access::ReadOnly
+		, Access::ReadWrite
 		, -128
 		, 128
 	}},
@@ -82,6 +82,11 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::BusVoltage, {
 		"BusVoltage"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::ShuntVoltage, {
+		"ShuntVoltage"
 		, 0
 		, Access::ReadOnly
 	}},
