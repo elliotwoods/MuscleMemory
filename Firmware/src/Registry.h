@@ -50,6 +50,7 @@ public:
 		MotorControlFrequency = 50,
 		AgentControlFrequency = 51,
 		RegistryControlFrequency = 52,
+		MainLoopDelay = 53,
 
 		// Agent
 		AgentLocalHistorySize = 60,
@@ -71,7 +72,7 @@ public:
 
 		// Boot
 		Reboot = 90,
-		NeedsProvisioning = 91,
+		ProvisioningEnabled = 91,
 	};
 
 	enum Operation : uint8_t {

@@ -130,14 +130,6 @@ initDevices()
 	showSplashMessage("Load registry defaults...");	
 	Registry::X().loadDefaults();
 
-#ifdef AGENT_ENABLED
-	// Agent based
-	Registry::X().registers.at(Registry::RegisterType::ControlMode).value = 2;
-#else
-	// PID
-	Registry::X().registers.at(Registry::RegisterType::ControlMode).value = 1;
-#endif
-
 	showSplashMessage("Initialise AS5047...");
 	as5047.init();
 	
@@ -226,7 +218,7 @@ void
 initController()
 {
 #ifdef PROVISIONING_ENABLED
-	if(Registry::X().registers.at(Registry::RegisterType::NeedsProvisioning).value) {
+	if(Registry::X().registers.at(Registry::RegisterType::ProvisioningEnabled).value) {
 		Control::Provisioning provisioning(motorDriver, ina219, as5047, encoderCalibration);
 		provisioning.perform();
 	}
@@ -319,7 +311,8 @@ void
 interfaceTask(void*)
 {
 	while(true) {
-		vTaskDelay(10 / portTICK_PERIOD_MS);
+		const auto & delay = Registry::X().registers.at(Registry::RegisterType::MainLoopDelay).value;
+		vTaskDelay(delay / portTICK_PERIOD_MS);
 		updateInterface();
 	}
 }
