@@ -39,7 +39,7 @@ namespace Devices {
 			{
 				deviceConfiguration.mode = 1;
 
-				deviceConfiguration.clock_speed_hz = SPI_MASTER_FREQ_10M;
+				deviceConfiguration.clock_speed_hz = SPI_MASTER_FREQ_16M;
 				//deviceConfiguration.input_delay_ns = 10;
 				
 				deviceConfiguration.queue_size = 2;
@@ -106,9 +106,28 @@ namespace Devices {
 			}
 		}
 
-		// Return the median
-		std::sort(readings.begin(), readings.end());
-		return readings.at(readings.size() / 2);
+		if(readings.size() == 0) {
+			return 0;
+		}
+		else if(readings.size() == 1) {
+			return readings.front();
+		}
+		else if(readings.size() == 2) {
+			auto sum = (uint32_t) readings.front() + (uint32_t) readings.back();
+			return (EncoderReading) (sum / 2);
+		}
+		else {
+			// Return the mean of the 25th to 75th percentiles
+			std::sort(readings.begin(), readings.end());
+			uint32_t accumulator = 0;
+			size_t firstIndex = readings.size() * 1 / 4;
+			size_t lastIndex = readings.size() * 3 / 4;
+			for(size_t i=firstIndex; i<lastIndex; i++) {
+				accumulator += readings[i];
+			}
+			return (EncoderReading) (accumulator / (lastIndex - firstIndex));
+		}
+		
 	}
 
 	//----------
