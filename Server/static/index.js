@@ -1,5 +1,6 @@
 import uPlot from "./node_modules/uplot/dist/uPlot.esm.js"
 import EditableValue from "./Utils/EditableValue.js"
+import RegisterGenerator from "./Utils/RegisterGenerator.js"
 
 let deviceViews = {};
 let webSocket = new WebSocket(`ws://${window.location.host}/interface/`);
@@ -44,7 +45,7 @@ const recordStates = {
 class RecordingState {
 	constructor() {
 		this.recordState = recordStates.Playing;
-		this.recordDuration = 1000;
+		this.recordDuration = 300;
 		this.initInterface();
 		this.editRecordDuration = new EditableValue($("#recordDuration"), this.recordDuration, (value) => {
 			this.recordDuration = value;
@@ -250,6 +251,8 @@ function indexToColor(index) {
 	
 }
 
+let pushes = 0;
+
 class RegisterView {
 	constructor(parentTable, registerIndex, deviceView) {
 		this.registerIndex = registerIndex;
@@ -296,7 +299,7 @@ class RegisterView {
 			this.editableValue = new EditableValue(this.valueCell, 0,
 				// Set value
 				(value) => {
-					this.deviceView.pushRegisterValue(this.registerIndex, value);
+					this.pushValue(value);
 				},
 
 				// Validate
@@ -316,6 +319,13 @@ class RegisterView {
 
 		this.actionsCell = $(`<td></td>`);
 		this.tableRow.append(this.actionsCell);
+
+		this.registerGenerator = new RegisterGenerator(this.actionsCell, this);
+	}
+
+	pushValue(value) {
+		this.deviceView.pushRegisterValue(this.registerIndex, value);
+		console.log(pushes++);
 	}
 
 	setInfo(registerInfo) {
@@ -324,7 +334,14 @@ class RegisterView {
 			this.nameCell.text(registerInfo['name']);
 		}
 		if('access' in registerInfo) {
-			this.editableValue.setEditEnabled(registerInfo['access'] == 1);
+			let editable = registerInfo['access'] == 1;
+			this.editableValue.setEditEnabled(editable);
+			if(editable) {
+				this.registerGenerator.show();
+			}
+			else {
+				this.registerGenerator.hide();
+			}
 		}
 	}
 
@@ -444,16 +461,18 @@ class DeviceView {
 	}
 };
 
-webSocket.onmessage = (args) => {
-	let dataDeviceArray = JSON.parse(args.data);
-	for(let dataDevice of dataDeviceArray) {
-		if('hardware_id' in dataDevice) {
-			let hardwareID = dataDevice['hardware_id'];
-			if(!(hardwareID in deviceViews)) {
-				deviceViews[hardwareID] = new DeviceView(hardwareID);
-				console.log(`Adding HW ID : ${hardwareID}`);
+$(document).ready(() => {
+	webSocket.onmessage = (args) => {
+		let dataDeviceArray = JSON.parse(args.data);
+		for(let dataDevice of dataDeviceArray) {
+			if('hardware_id' in dataDevice) {
+				let hardwareID = dataDevice['hardware_id'];
+				if(!(hardwareID in deviceViews)) {
+					deviceViews[hardwareID] = new DeviceView(hardwareID);
+					console.log(`Adding HW ID : ${hardwareID}`);
+				}
+				deviceViews[hardwareID].onMessage(dataDevice.content);
 			}
-			deviceViews[hardwareID].onMessage(dataDevice.content);
 		}
-	}
-};
+	};
+});
