@@ -56,6 +56,57 @@ namespace Control {
 		// Scale output
 		output = output >> 12;
 		int8_t torque;
+
+		// Apply anti-stall
+		if(registry.registers.at(Registry::RegisterType::AntiStallEnabled).value) {
+			auto & antiStallValue = registry.registers.at(Registry::RegisterType::AntiStallValue).value;
+
+			// Check dead zone
+			if(abs(errorOnPosition) <= registry.registers.at(Registry::RegisterType::AntiStallDeadZone).value) {
+				// Inside dead zone, zero the anti-stall and don't apply it
+				antiStallValue = 0;
+			}
+			else {
+				const auto speed = abs(agentReads.velocity);
+
+				// Attack if speed too low
+				if(speed < registry.registers.at(Registry::RegisterType::AntiStallMinVelocity).value) {
+					const auto & attack = registry.registers.at(Registry::RegisterType::AntiStallAttack).value;
+					// Increase in direction of errorOnPosition
+					if(errorOnPosition > 0) {
+						antiStallValue += attack;
+					}
+					else {
+						antiStallValue -= attack;
+					}
+				}
+				else {
+					const auto & decay = registry.registers.at(Registry::RegisterType::AntiStallDecay).value;
+					// Decay if speed is above threshold
+					if(antiStallValue > 0) {
+						antiStallValue -= decay;
+
+						// Clamp to 0
+						if(antiStallValue < 0) {
+							antiStallValue = 0;
+						}
+					}
+					else {
+						antiStallValue += decay;
+
+						// Clamp to 0
+						if(antiStallValue > 0) {
+							antiStallValue = 0;
+						}
+					}
+				}
+
+				// Apply anti-stall
+				torque += antiStallValue >> 4;
+			}
+		}
+
+		// Clamp output
 		if(output > agentReads.maximumTorque) {
 			torque = agentReads.maximumTorque;
 		}
