@@ -179,13 +179,13 @@ namespace Control {
 			panel->onDraw = [&](U8G2 & u8g2) {
 				u8g2.setFont(u8g2_font_nerhoe_tr);
 		
-				u8g2.drawStr(10, 10, guiStatus);
+				u8g2.drawStr(5, 10, guiStatus);
 
 				char message[100];
 
 				if(this->skippedSteps > 0) {
 					sprintf(message, "SKIPPED STEPS : %d", this->skippedSteps);
-					u8g2.drawStr(10, 34, message);
+					u8g2.drawStr(5, 34, message);
 				}
 
 				{
@@ -196,7 +196,7 @@ namespace Control {
 						, guiInfo.encoderDiagnostics.cordicOverflow ? "OVER " : ""
 						, guiInfo.encoderDiagnostics.internalOffsetLoopFinished ? "FIN " : ""
 					);
-					u8g2.drawStr(10, 34, message);
+					u8g2.drawStr(5, 34, message);
 				}
 
 				{
@@ -204,7 +204,7 @@ namespace Control {
 						, guiInfo.encoderReading
 						, guiInfo.encoderReadingNormalised * this->settings.stepsPerRevolution
 					);
-					u8g2.drawStr(10, 44, message);
+					u8g2.drawStr(5, 44, message);
 				}
 
 				{
@@ -212,147 +212,179 @@ namespace Control {
 						, guiInfo.encoderCordicMagnitude
 						, guiInfo.encoderCordicMagnitudeNormalised * 100.0f
 					);
-					u8g2.drawStr(10, 54, message);
+					u8g2.drawStr(5, 54, message);
 				}
 
 				u8g2.drawFrame(0, 0, 128, 64);
 			};
 		}
 
-		// Step up to the lowest encoder value
-		{
+		try {
+			// Step up to the lowest encoder value
+			uint16_t stepIndexOffset;
+			{
+				const auto encoderTicksPerStep = (1 << 14) / this->settings.stepsPerRevolution;
 
-			uint8_t step = 0;
-			motorDriver.step(step, settings.current);
-			auto startValue = encoder.getPositionFiltered(settings.encoderFilterSize);
+				uint8_t step = 0;
 
-			printf("Stepping to lowest encoder value (start value = %d)...\n", startValue);
-			sprintf(guiStatus, "Step to start");
-			gui.update();
-
-			// Step until we get to the beginning of the encoder readings
-			do {
-				motorDriver.step(++step % 4, settings.current);
+				// Perform first step
+				motorDriver.step(step, settings.current);
 				vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
-				gui.update();
-			} while (encoder.getPositionFiltered(settings.encoderFilterSize) > startValue);
+				auto startValue = encoder.getPositionFiltered(settings.encoderFilterSize);
 
-			// Step up to the start of the next step cycle
-			while(step % 4 != 0) {
-				motorDriver.step(step++ % 4, settings.current);
-				vTaskDelay(settings.stepHoldTimeMS / portTICK_PERIOD_MS);
-				gui.update();
-			}
-
-			printf("Encoder is now : %d , First step : %d \n", encoder.getPositionFiltered(settings.encoderFilterSize), step);
-			gui.update();
-		}
-
-		vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
-		
-		// Record data
-		{
-			EncoderReading priorReading = encoder.getPositionFiltered(this->settings.encoderFilterSize);
-
-			// alternate forwards and backwards
-			for(uint8_t cycle = 0; cycle < settings.cycles; cycle++) {
-				printf("Calibration cycle : %d \n", cycle);
-
-				if(cycle % 2 == 0) {
-					// step forwards
-					for(uint16_t step = 0; step < settings.stepsPerRevolution; step++) {
-						sprintf(guiStatus, "Cycle : %d, Step : %d\n", cycle, step);
-						gui.update();
-						this->recordStep(step
-							, encoder
-							, motorDriver
-							, accumulatedEncoderValue
-							, visitsPerStepCycle
-							, priorReading);
-						
-					}
+				//check if we're already at the start
+				if(startValue < encoderTicksPerStep * 3 / 2) {
+					printf("Already at first step (start value = %d)\n", startValue);
 				}
 				else {
-					// step backwards
-					for(uint16_t step = settings.stepsPerRevolution - 1; ; step--) {
-						sprintf(guiStatus, "Cycle : %d, Step : %d\n", cycle, step);
-						gui.update();
-						this->recordStep(step
-							, encoder
-							, motorDriver
-							, accumulatedEncoderValue
-							, visitsPerStepCycle
-							, priorReading);
-						//printf(" BB step %d, visits %d \n", step, visitsPerStepCycle[step]);
+					printf("Stepping to first step in encoder range (start value = %d)...\n", startValue);
+					sprintf(guiStatus, "Step to start");
+					gui.update();
 
-						// Since the counter can't pass 0, we just manually break when we get to 0 on this one
-						if(step == 0) {
-							break;
+					// Step until we get to the beginning of the encoder readings
+					auto position = startValue;
+					do {
+						motorDriver.step(++step % 4, settings.current);
+
+						// Move fast until we get close to the end
+						auto period = position > (1 << 14) - 5
+							? settings.stepHoldTimeMS
+							: settings.stepToStartPeriodMS;
+
+						vTaskDelay(period / portTICK_PERIOD_MS);
+						position = encoder.getPositionFiltered(settings.encoderFilterSize);
+						gui.update();
+					} while (position > startValue);
+				}
+
+				stepIndexOffset = step % 4;
+
+				printf("Encoder is now : %d , stepIndexOffset : %d \n", encoder.getPositionFiltered(settings.encoderFilterSize), stepIndexOffset);
+				gui.update();
+			}
+
+			vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
+			
+			// Record data
+			{
+				EncoderReading priorPosition = encoder.getPositionFiltered(this->settings.encoderFilterSize);
+
+				uint16_t step = 0;
+				uint16_t priorStep = 0; // This is true for first step
+				
+				// alternate forwards and backwards
+				for(uint8_t cycle = 0; cycle < settings.cycles; cycle++) {
+					printf("Calibration cycle : %d \n", cycle);
+
+					if(cycle % 2 == 0) {
+						// step forwards
+						for(; ; step++) {
+							sprintf(guiStatus, "Cycle : %d, Step : %d\n", cycle, step);
+							this->recordStep(step
+								, priorStep
+								, stepIndexOffset
+								, encoder
+								, motorDriver
+								, accumulatedEncoderValue
+								, visitsPerStepCycle
+								, priorPosition);
+							priorStep = step;
+							gui.update();
+
+							// For some reason this is corrupted on the gui update
+							priorPosition = encoder.getPositionFiltered(this->settings.encoderFilterSize);
+
+							// The next cycle should start here, not at next step
+							if(step == settings.stepsPerRevolution - 1) {
+								break;
+							}
 						}
 					}
-				}
+					else {
+						// step backwards
+						for(; ; step--) {
+							sprintf(guiStatus, "Cycle : %d, Step : %d\n", cycle, step);
+							this->recordStep(step
+								, priorStep
+								, stepIndexOffset
+								, encoder
+								, motorDriver
+								, accumulatedEncoderValue
+								, visitsPerStepCycle
+								, priorPosition);
+							priorStep = step;
+							gui.update();
 
-				gui.update();
-				vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
-			}
-			printf("------------- visits array----------- \n");
-			for(int i = 0;i<sizeof(uint8_t) * stepCycleCount;i++){
-				printf("%d - %d \n", i, visitsPerStepCycle[i]);
-			}
-			//printf("\n");
-		}
+							// For some reason this is corrupted on the gui update
+							priorPosition = encoder.getPositionFiltered(this->settings.encoderFilterSize);
 
-		// Create the StepCycleCalibration (average the values)
-		{
-			sprintf(guiStatus, "Averaging values");
-			this->stepCycleCalibration.stepCycleCount = stepCycleCount;
-			this->stepCycleCalibration.encoderValuePerStepCycle = new uint16_t[stepCycleCount];
-			for(uint16_t i=0; i<stepCycleCount; i++) {
-				if(visitsPerStepCycle[i] == 0) {
-					printf("Error : 0 visits for step index %d\n", i);
-					abort();
-				}
-				this->stepCycleCalibration.encoderValuePerStepCycle[i] = accumulatedEncoderValue[i] / visitsPerStepCycle[i];
-			}
-			this->stepCycleCalibration.encoderPerStepCycle = (1 << 14) / this->stepCycleCalibration.stepCycleCount; // gradient
-		}
-
-		printf("Calibration complete\n");
-
-		delete[] accumulatedEncoderValue;
-		delete[] visitsPerStepCycle;
-
-		// Push result message to screen
-		{
-			if(this->skippedSteps == 0) {
-				panel->onDraw = [](U8G2 & u8g2) {
-					u8g2.drawStr(10, 30, "CALIBRATION OK");
-				};
-				gui.update();
-			}
-			else {
-				panel->onDraw = [this](U8G2 & u8g2) {
-					u8g2.drawStr(10, 30, "CALIBRATION FAILED!");
-
-					{
-						char message[100];
-						sprintf(message,"%d skipped steps", this->skippedSteps);
-						u8g2.drawStr(10, 40, message);
+							// Don't underflow the step, also next cycle should start here
+							if(step == 0) {
+								break;
+							}
+						}
 					}
 
-					u8g2.setDrawColor(2);
-					u8g2.drawBox(0, 0, 128, 64);
-					u8g2.setDrawColor(1);
-				};
-				gui.update();
-				vTaskDelay(4000 / portTICK_PERIOD_MS);
+					gui.update();
+					vTaskDelay(settings.pauseTimeBetweenCyclesMS / portTICK_PERIOD_MS);
+				}
 			}
+
+			// Create the StepCycleCalibration (average the values)
+			{
+				sprintf(guiStatus, "Averaging values");
+				this->stepCycleCalibration.stepCycleCount = stepCycleCount;
+				this->stepCycleCalibration.encoderValuePerStepCycle = new uint16_t[stepCycleCount];
+				for(uint16_t i=0; i<stepCycleCount; i++) {
+					if(visitsPerStepCycle[i] == 0) {
+						throw(Exception("Error : 0 visits for step index %d\n", i));
+					}
+					this->stepCycleCalibration.encoderValuePerStepCycle[i] = accumulatedEncoderValue[i] / visitsPerStepCycle[i];
+				}
+				this->stepCycleCalibration.encoderPerStepCycle = (1 << 14) / this->stepCycleCalibration.stepCycleCount; // gradient
+			}
+
+			// Store the stepCycleOffset
+			this->stepCycleCalibration.stepCycleOffset = (uint8_t) stepIndexOffset * 64;
+
+			// Notify success
+			printf("Calibration complete\n");
+			panel->onDraw = [](U8G2 & u8g2) {
+				u8g2.setFont(u8g2_font_10x20_mr);
+				u8g2.drawStr(0, 32, "CALIBRATE OK");
+				u8g2.setFont(u8g2_font_nerhoe_tr);
+			};
+			this->hasCalibration = true;
 		}
+		catch(const Exception & e) {
+			this->hasCalibration = false;
+
+			printf("CALIBRATION FAILED : %s\n", e.what());
+
+			panel->onDraw = [e](U8G2 & u8g2) {
+				u8g2.setFont(u8g2_font_10x20_mr);
+				u8g2.drawStr(0, 16, "CALIBRATION");
+				u8g2.drawStr(0, 32, "FAIL!");
+
+				u8g2.setFont(u8g2_font_nerhoe_tr);
+				u8g2.drawStr(5, 50, e.what());
+
+				u8g2.setDrawColor(2);
+				u8g2.drawBox(0, 0, 128, 64);
+				u8g2.setDrawColor(1);
+			};
+		}
+		gui.update();
+		vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+		// Clean up data
+		delete[] accumulatedEncoderValue;
+		delete[] visitsPerStepCycle;
 
 		// remove our preview panel
 		gui.popPanel();
 
-		this->hasCalibration = (this->skippedSteps == 0);
+		// Remember if calibration completed, and exit returning this information
 		return this->hasCalibration;
 	}
 
@@ -360,7 +392,7 @@ namespace Control {
 	PositionWithinStepCycle
 	EncoderCalibration::getPositionWithinStepCycle(EncoderReading encoderReading) const
 	{
-		if(!this->stepCycleCalibration.encoderValuePerStepCycle) {
+		if(!this->hasCalibration) {
 	#ifndef NDEBUG
 			printf("No calibration\n");
 			abort();
@@ -395,30 +427,44 @@ namespace Control {
 	//----------
 	void
 	EncoderCalibration::recordStep(uint16_t stepIndex
+		, uint16_t priorStep
+		, uint16_t stepIndexOffset
 		, Devices::AS5047 & encoder
 		, Devices::MotorDriver & motorDriver
 		, uint32_t * accumulatedEncoderValue
 		, uint8_t * visitsPerStepCycle
-		, EncoderReading & priorReading)
+		, const EncoderReading & priorPosition)
 	{
-		motorDriver.step(stepIndex % 4, this->settings.current);
+		// Size of one step in encoder readings
+		const int32_t stepMagnitude = (1 << 14) / (int) this->settings.stepsPerRevolution;
 
+		// Perform the step
+		printf("Step : %d, Offset : %d\n", stepIndex, stepIndexOffset);
+		motorDriver.step((stepIndex + stepIndexOffset) % 4, this->settings.current);
 		vTaskDelay(this->settings.stepHoldTimeMS / portTICK_PERIOD_MS);
 
-		auto position = encoder.getPositionFiltered(settings.encoderFilterSize);
+		// Take the reading
+		auto position = (uint32_t) encoder.getPositionFiltered(settings.encoderFilterSize);
+		printf("Position : %d, Prior : %d\n", position, priorPosition);
+
+		// check skipped steps by magnitude
+		if(stepIndex != priorStep) {
+			const auto delta = (int32_t) abs((int32_t)position - (int32_t)priorPosition);
+			if(delta < stepMagnitude / 2) {
+				throw(Exception("Step %d underflow (%d/%d)", stepIndex, delta, stepMagnitude));
+			}
+			else if(delta > stepMagnitude * 3 / 2) {
+				throw(Exception("Step %d overflow (%d/%d)", stepIndex, delta, stepMagnitude));
+			}
+		}
 
 		// Only record complete step cycles
 		if(stepIndex % 4 == 0) {
-		
-			if(stepIndex == 0 && position > 1 << 13) {
-				// We've underflowed the encoder - don't record this sample. We recorded one sample when finding the first step
+			if(stepIndex < this->settings.stepsPerRevolution * 1 / 4 && position > (1 << 14) * 3 / 4) {
+				// We've underflowed the encoder - don't record this sample
 				return;
 			}
-			if(position> 1<<14){
-				position -= 1 << 14;
-			}
-			if(stepIndex == this->settings.stepsPerRevolution - 1 && position < 1 << 13)
-			{
+			if(stepIndex > this->settings.stepsPerRevolution * 3 / 4 && position < (1 << 14) * 1 / 4) {
 				// We've overflowed the encoder - offset the sample
 				position += 1 << 14;
 			}
@@ -427,17 +473,19 @@ namespace Control {
 				, position);
 
 			auto stepCycle = stepIndex / 4;
+
+			// Check skipped steps by change from prior readings
+			if(visitsPerStepCycle[stepCycle] > 0) {
+				const auto priorMean = accumulatedEncoderValue[stepCycle] / visitsPerStepCycle[stepCycle];
+				const auto delta = abs(priorMean - position);
+				const auto allowableDeviation = 8;
+				if(delta > allowableDeviation) {
+					this->skippedSteps++;
+				}
+			}
+
 			accumulatedEncoderValue[stepCycle] += position;
 			visitsPerStepCycle[stepCycle]++;
-		}
-
-		// check skipped steps
-		{
-			const auto stepMagnitude = (1 << 14) / this->settings.stepsPerRevolution;
-			if(abs(position - priorReading) < stepMagnitude / 2) {
-				this->skippedSteps++;
-			}
-			priorReading = position;
 		}
 	}
 }
