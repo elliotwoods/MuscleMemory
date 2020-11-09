@@ -280,9 +280,10 @@ class RegisterView {
 			this.selectorLink = $(`<a href="#"></a>`);
 			this.selectCell.append(this.selectorLink);
 
-			this.selectorLink.click(() => {
+			this.selectorLink.click((event) => {
 				this.selected = !this.selected;
 				this.updateSelected();
+				event.preventDefault();
 			});
 
 			this.selector = $(`<div class="selector"></div>`);
