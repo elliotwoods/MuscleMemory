@@ -60,7 +60,11 @@ namespace GUI {
 				{
 					screen.setDrawColor(1);
 					char message[100];
+#ifdef ATOMIC_REGISTERS
+					sprintf(message, "%s : %d", registerItem.name.c_str(), registerItem.value.load());
+#else
 					sprintf(message, "%s : %d", registerItem.name.c_str(), registerItem.value);
+#endif
 					screen.drawStr(3, i * rowHeight + rowHeight, message);
 				}
 

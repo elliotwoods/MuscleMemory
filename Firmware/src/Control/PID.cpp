@@ -16,22 +16,25 @@ namespace Control {
 	void
 	PID::update()
 	{
-		static auto & registry = Registry::X();
-		Registry::AgentReads agentReads;
-		registry.agentRead(agentReads);
-		
+		// Registry reads
+		const auto & multiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
+		const auto & targetPosition = getRegisterValue(Registry::RegisterType::TargetPosition);
+		const auto & kP = getRegisterValue(Registry::RegisterType::PIDProportional);
+		const auto & kD = getRegisterValue(Registry::RegisterType::PIDDifferential);
+		const auto & kI = getRegisterValue(Registry::RegisterType::PIDIntegral);
+		const auto & integralMax = getRegisterValue(Registry::RegisterType::PIDIntegralMax);
+		const auto & antiStallEnabled = getRegisterValue(Registry::RegisterType::AntiStallEnabled);
+		const auto & softLimitMax = getRegisterValue(Registry::RegisterType::SoftLimitMax);
+		const auto & softLimitMin = getRegisterValue(Registry::RegisterType::SoftLimitMin);
+		const auto & maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
+
 		// Get frame time
 		this->frameTimer.update();
 		auto dt = this->frameTimer.getPeriod();
 
 		// Get error on position (we scale down to get it closer to torque values)
-		int32_t rawErrorOnPosition = (agentReads.targetPosition - agentReads.multiTurnPosition);
+		int32_t rawErrorOnPosition = (targetPosition - multiTurnPosition);
 		auto scaledErrorOnPosition = rawErrorOnPosition >> 4;
-
-		// These values aren't semaphored! but they do change slowly so should be fine
-		const auto & kP = registry.registers.at(Registry::RegisterType::PIDProportional).value;
-		const auto & kD = registry.registers.at(Registry::RegisterType::PIDDifferential).value;
-		const auto & kI = registry.registers.at(Registry::RegisterType::PIDIntegral).value;
 
 		// Calculate ID 
 		auto integral = this->priorIntegral + scaledErrorOnPosition * dt / 1000000; // normalise for seconds
@@ -39,12 +42,11 @@ namespace Control {
 
 		// clamp integral
 		{
-			const auto & maxIntegral = registry.registers.at(Registry::RegisterType::PIDIntegralMax).value;
-			if(integral > maxIntegral) {
-				integral = maxIntegral;
+			if(integral > integralMax) {
+				integral = integralMax;
 			}
-			else if(integral < -maxIntegral) {
-				integral = -maxIntegral;
+			else if(integral < -integralMax) {
+				integral = -integralMax;
 			}
 			else {
 				integral = integral;
@@ -59,11 +61,17 @@ namespace Control {
 		output = output >> 20;
 
 		// Apply anti-stall
-		if(registry.registers.at(Registry::RegisterType::AntiStallEnabled).value) {
-			auto & antiStallValue = registry.registers.at(Registry::RegisterType::AntiStallValue).value;
+		if(antiStallEnabled) {
+			const auto antiStallDeadZone = getRegisterValue(Registry::RegisterType::AntiStallDeadZone);
+			const auto antiStallMinVelocity = getRegisterValue(Registry::RegisterType::AntiStallMinVelocity);
+			const auto antiStallAttack = getRegisterValue(Registry::RegisterType::AntiStallAttack);
+			const auto antiStallDecay = getRegisterValue(Registry::RegisterType::AntiStallDecay);
+			const auto antiStallScale = getRegisterValue(Registry::RegisterType::AntiStallScale);
+
+			auto antiStallValue = getRegisterValue(Registry::RegisterType::AntiStallValue);
 
 			// Check dead zone
-			if(abs(rawErrorOnPosition) <= registry.registers.at(Registry::RegisterType::AntiStallDeadZone).value) {
+			if(abs(rawErrorOnPosition) <= antiStallDeadZone) {
 				// Inside dead zone, zero the anti-stall and don't apply it
 				antiStallValue = 0;
 
@@ -71,24 +79,22 @@ namespace Control {
 				output = 0;
 			}
 			else {
-				const auto speed = abs(agentReads.velocity);
+				const auto speed = abs(derivative);
 
 				// Attack if speed too low
-				if(speed < registry.registers.at(Registry::RegisterType::AntiStallMinVelocity).value) {
-					const auto & attack = registry.registers.at(Registry::RegisterType::AntiStallAttack).value;
+				if(speed < antiStallMinVelocity) {
 					// Increase in direction of errorOnPosition
 					if(rawErrorOnPosition > 0) {
-						antiStallValue += attack;
+						antiStallValue += antiStallAttack;
 					}
 					else {
-						antiStallValue -= attack;
+						antiStallValue -= antiStallAttack;
 					}
 				}
 				else {
-					const auto & decay = registry.registers.at(Registry::RegisterType::AntiStallDecay).value;
 					// Decay if speed is above threshold
 					if(antiStallValue > 0) {
-						antiStallValue -= decay;
+						antiStallValue -= antiStallDecay;
 
 						// Clamp to 0
 						if(antiStallValue < 0) {
@@ -96,7 +102,7 @@ namespace Control {
 						}
 					}
 					else {
-						antiStallValue += decay;
+						antiStallValue += antiStallDecay;
 
 						// Clamp to 0
 						if(antiStallValue > 0) {
@@ -105,29 +111,37 @@ namespace Control {
 					}
 				}
 
+				// Kill anti-stall if it's in the wrong direction
+				if((rawErrorOnPosition > 0) != (antiStallValue > 0)) {
+					antiStallValue = 0;
+				}
+
 				// Apply anti-stall
-				output += antiStallValue >> registry.registers.at(Registry::RegisterType::AntiStallScale).value;
+				output += antiStallValue >> antiStallScale;
 			}
+
+			// Store anti-stall value
+			setRegisterValue(Registry::RegisterType::AntiStallValue, antiStallValue);
 		}
 
 		// Clamp output and cast down to int8_t
 		int8_t torque;
-		if(output > agentReads.maximumTorque) {
-			torque = agentReads.maximumTorque;
+		if(output > maximumTorque) {
+			torque = maximumTorque;
 		}
-		else if(output < -agentReads.maximumTorque) {
-			torque = -agentReads.maximumTorque;
+		else if(output < -maximumTorque) {
+			torque = -maximumTorque;
 		}
 		else {
 			torque = output;
 		}
 
 		// Apply soft limits
-		if(agentReads.multiTurnPosition > agentReads.softLimitMax) {
-			torque = -agentReads.maximumTorque;
+		if(multiTurnPosition > softLimitMax) {
+			torque = -maximumTorque;
 		}
-		else if(agentReads.multiTurnPosition < agentReads.softLimitMin) {
-			torque = agentReads.maximumTorque;
+		else if(multiTurnPosition < softLimitMin) {
+			torque = maximumTorque;
 		}
 
 		// Store priors
@@ -137,10 +151,10 @@ namespace Control {
 		}
 
 		// Write to registers (not using safe method for now)
-		registry.registers.at(Registry::RegisterType::Torque).value = torque;
-		registry.registers.at(Registry::RegisterType::AgentControlFrequency).value = this->frameTimer.getFrequency();
-		registry.registers.at(Registry::RegisterType::PIDResultP).value = scaledErrorOnPosition;
-		registry.registers.at(Registry::RegisterType::PIDResultI).value = integral;
-		registry.registers.at(Registry::RegisterType::PIDResultD).value = derivative;
+		setRegisterValue(Registry::RegisterType::Torque, torque);
+		setRegisterValue(Registry::RegisterType::AgentControlFrequency, this->frameTimer.getFrequency());
+		setRegisterValue(Registry::RegisterType::PIDResultP, scaledErrorOnPosition);
+		setRegisterValue(Registry::RegisterType::PIDResultI, integral);
+		setRegisterValue(Registry::RegisterType::PIDResultD, derivative);
 	}
 }

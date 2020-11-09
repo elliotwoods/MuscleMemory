@@ -150,6 +150,7 @@ void
 motorTask(void*)
 {
 	const auto & controlMode = Registry::X().registers.at(Registry::RegisterType::ControlMode).value;
+
 	while(true) {
 		// We need to clean this up later 
 		if(controlMode == 1) {
