@@ -15,6 +15,8 @@ const float markerRadiusMinor = 18;
 const float notchRadiusOuter = 32.0f;
 const float rotationRange = 100 * 72 / 14;
 
+#define MOD(a,b) ((((a)%(b))+(b))%(b))
+
 namespace GUI {
 	namespace Panels {
 		//----------
@@ -121,7 +123,7 @@ namespace GUI {
 			
 			// Single turn
 			{
-				int16_t SingleTurn = MultiTurnPosition.value % (1<<14);
+				int16_t SingleTurn = MOD(MultiTurnPosition.value, 1<<14);
 				float SinglePhase = float(SingleTurn) * TWO_PI / float(1<<14);
 				u8g2_uint_t single_x = centerCircle[0] + markerRadiusMinor * sinf(SinglePhase);
 				u8g2_uint_t single_y = centerCircle[1] - markerRadiusMinor * cosf(SinglePhase);
