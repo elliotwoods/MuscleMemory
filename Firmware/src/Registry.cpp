@@ -184,6 +184,14 @@ Registry::motorControlRead(MotorControlReads & motorControlReads)
 	
 	if(xSemaphoreTake(this->motorControlReadsMutex, waitTime)) {
 		motorControlReads = this->motorControlReads;
+
+		// Also take the freshest data from agent writes
+		if(xSemaphoreTake(this->agentWritesMutex, 1 / portTICK_PERIOD_MS)) {
+			if(this->agentWritesNew) {
+				motorControlReads.torque = this->agentWritesIncoming.torque;
+			}
+			xSemaphoreGive(this->agentWritesMutex);
+		}
 		xSemaphoreGive(this->motorControlReadsMutex);
 	}
 }
@@ -208,7 +216,7 @@ Registry::agentRead(AgentReads & agentReads)
 	if(xSemaphoreTake(this->agentReadsMutex, waitTime)) {
 		agentReads = this->agentReads;
 
-		// Also take the freshest data from agent writes
+		// Also take the freshest data from motor drive writes
 		if(xSemaphoreTake(this->motorControlWritesMutex, 1 / portTICK_PERIOD_MS)) {
 			if(this->motorControlWritesNew) {
 				// The data in motorControlWritesIncoming is fresher than the registry, so use it♦

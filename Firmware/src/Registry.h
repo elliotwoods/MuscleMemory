@@ -64,21 +64,27 @@ public:
 		PIDIntegral = 71,
 		PIDDifferential = 72,
 		PIDIntegralMax = 73,
-		AntiStallEnabled = 74,
-		AntiStallDeadZone = 75,
-		AntiStallMinVelocity = 76,
-		AntiStallAttack = 77,
-		AntiStallDecay = 78,
-		AntiStallValue = 79,
+		PIDResultP = 74,
+		PIDResultI = 75,
+		PIDResultD = 76,
+
+		// Anti-stall
+		AntiStallEnabled = 80,
+		AntiStallDeadZone = 81,
+		AntiStallMinVelocity = 82,
+		AntiStallAttack = 83,
+		AntiStallDecay = 84,
+		AntiStallValue = 85,
+		AntiStallScale = 86,
 
 		// CAN debug
-		CANRxThisFrame = 80,
-		CANTxThisFrame = 81,
-		CANErrorsThisFrame = 81,
+		CANRxThisFrame = 90,
+		CANTxThisFrame = 91,
+		CANErrorsThisFrame = 92,
 
 		// Boot
-		Reboot = 90,
-		ProvisioningEnabled = 91,
+		Reboot = 100,
+		ProvisioningEnabled = 101,
 	};
 
 	enum Operation : uint8_t {
