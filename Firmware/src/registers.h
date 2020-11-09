@@ -202,7 +202,7 @@ std::map<RegisterType, Register> registers {
 	
 	{ RegisterType::AntiStallEnabled, {
 		"AntiStallEnabled"
-		, 0
+		, 1
 		, Access::ReadWrite
 		, 0
 		, 1
@@ -242,7 +242,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::AntiStallScale, {
 		"AntiStallScale"
-		, 8
+		, 9
 		, Access::ReadWrite
 		, 0
 		, 32
