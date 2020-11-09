@@ -76,7 +76,7 @@ auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
 #define PRIORITY_AGENT_SERVER_COMMS 2
 
 // Core 1 tasks:
-#define PRIORITY_MOTOR 2
+#define PRIORITY_MOTOR 1
 #define PRIORITY_AGENT 1
 
 //----------
@@ -151,7 +151,9 @@ motorTask(void*)
 {
 	while(true) {
 		drive.update();
-		vTaskDelay(1);
+		for(uint16_t i=0; i<512; i++) {
+			NOP();
+		}
 	}
 }
 
@@ -199,7 +201,7 @@ agentTask(void*)
 			}
 			xSemaphoreGive(agentTaskResumeMutex);
 		}
-		vTaskDelay(10);
+		vTaskDelay(1);
 		//vTaskSuspend(agentTaskHandle);
 	}
 }
