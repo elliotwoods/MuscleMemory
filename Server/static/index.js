@@ -1,9 +1,11 @@
 import uPlot from "./node_modules/uplot/dist/uPlot.esm.js"
 import EditableValue from "./Utils/EditableValue.js"
 import RegisterGenerator from "./Utils/RegisterGenerator.js"
+import EncoderCalibration from "./Elements/EncoderCalibration.js"
 
 let deviceViews = {};
 let webSocket = new WebSocket(`ws://${window.location.host}/interface/`);
+let encoderCalibration = null;
 
 function printUs(seconds) {
 	let minutes = Math.floor(seconds / 60);
@@ -133,7 +135,6 @@ class Graph {
 		}
 
 		let options = {
-			title: "Test",
 			width: 600,
 			height: 600,
 			scales : {
@@ -374,6 +375,7 @@ class DeviceView {
 	constructor(hardwareID) {
 		this.registerViews = {}
 		this.hardwareID = hardwareID;
+		this.encoderCalibration = null;
 
 		this.view = $(`
 			<div class="device">
@@ -392,6 +394,8 @@ class DeviceView {
 				</thead>
 			</table>`);
 		this.view.append(this.table);
+
+		encoderCalibration.setDevice(this);
 	}
 
 	dispose() {
@@ -442,26 +446,38 @@ class DeviceView {
 				graph.updateData();
 			}
 		}
+		if('encoder_calibration' in message) {
+			this.encoderCalibration = message['encoder_calibration'];
+			if(encoderCalibration.device == this) {
+				encoderCalibration.update(message['encoder_calibration']);
+			}
+		}
 	}
 
 	pushRegisterValue(registerIndex, value) {
 		let registerValues = {};
 		registerValues[registerIndex] = value;
 
-		let request = [
+		this.sendRequest({
+			"register_values" : registerValues
+		});
+	}
+
+	sendRequest(request) {
+		let fullRequest = [
 			{
 				"hardware_id" : this.hardwareID, 
-				"content" : {
-					"register_values" : registerValues
-				}
+				"content" : request
 			}
 		];
 
-		webSocket.send(JSON.stringify(request));
+		webSocket.send(JSON.stringify(fullRequest));
 	}
 };
 
 $(document).ready(() => {
+	encoderCalibration = new EncoderCalibration();
+
 	webSocket.onmessage = (args) => {
 		let dataDeviceArray = JSON.parse(args.data);
 		for(let dataDevice of dataDeviceArray) {

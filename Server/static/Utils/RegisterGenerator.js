@@ -131,6 +131,6 @@ function updateAllRegisterGenerators() {
 		registerGenerators[i].update();
 	}
 }
-setInterval(updateAllRegisterGenerators, 100);
+setInterval(updateAllRegisterGenerators, 500);
 
 export default RegisterGenerator;

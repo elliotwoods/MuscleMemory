@@ -28,6 +28,13 @@ webSocketEvent(WStype_t eventType, uint8_t * payload, size_t length)
 
 namespace Control {
 	//----------
+	WebSockets::WebSockets(const EncoderCalibration & encoderCalibration)
+	: encoderCalibration(encoderCalibration)
+	{
+
+	}
+
+	//----------
 	void
 	WebSockets::init()
 	{
@@ -51,6 +58,9 @@ namespace Control {
 		if(webSocketsClient.isConnected()) {
 			if(this->needsSendRegisterInfo) {
 				this->sendRegisterInfo();
+			}
+			if(this->needsSendEncoderCalibration) {
+				this->sendEncoderCalibration();
 			}
 			this->sendRegisters();
 		}
@@ -139,6 +149,9 @@ namespace Control {
 		}
 		else if (strcmp(name, "request_register_info") == 0) {
 			this->needsSendRegisterInfo = true;
+		}
+		else if (strcmp(name, "request_encoder_calibration") == 0) {
+			this->needsSendEncoderCalibration = true;
 		}
 	}
 
@@ -267,5 +280,62 @@ namespace Control {
 		// Send and destroy the buffer
 		webSocketsClient.sendBIN((const uint8_t*) buffer.data, buffer.size);
 		msgpack_sbuffer_destroy(&buffer);
+	}
+
+	//-----------
+	void
+	WebSockets::sendEncoderCalibration()
+	{
+		printf("[WebSockets] : sendEncoderCalibration()\n");
+
+		// Initialise the buffer and packer
+		msgpack_sbuffer buffer;
+		msgpack_sbuffer_init(&buffer);
+		msgpack_packer packer;
+		msgpack_packer_init(&packer, &buffer, msgpack_sbuffer_write);
+
+		// Map
+		msgpack_pack_map(&packer, 1);
+		{
+			// Key
+			msgpack_pack_str_with_body(&packer, "encoder_calibration", 19);
+
+			// Value
+			if(!this->encoderCalibration.getHasCalibration()) {
+				msgpack_pack_nil(&packer);
+			}
+			else {
+				const auto & stepCycleCalibration = this->encoderCalibration.getStepCycleCalibration();
+
+				// Map
+				msgpack_pack_map(&packer, 4);
+				{
+					// Key, Value
+					msgpack_pack_str_with_body(&packer, "stepCycleOffset", 15);
+					msgpack_pack_uint8(&packer, stepCycleCalibration.stepCycleOffset);
+
+					// Key, Value
+					msgpack_pack_str_with_body(&packer, "stepCycleCount", 14);
+					msgpack_pack_uint16(&packer, stepCycleCalibration.stepCycleCount);
+
+					// Key, Value
+					msgpack_pack_str_with_body(&packer, "encoderPerStepCycle", 19);
+					msgpack_pack_uint16(&packer, stepCycleCalibration.encoderPerStepCycle);
+					
+					// Key, Value
+					msgpack_pack_str_with_body(&packer, "encoderValuePerStepCycle", 24);
+					msgpack_pack_array(&packer, stepCycleCalibration.stepCycleCount);
+					for(uint16_t i=0; i<stepCycleCalibration.stepCycleCount; i++) {
+						msgpack_pack_uint16(&packer, stepCycleCalibration.encoderValuePerStepCycle[i]);
+					}
+				}
+			}
+		}
+
+		// Send and destroy the buffer
+		webSocketsClient.sendBIN((const uint8_t*) buffer.data, buffer.size);
+		msgpack_sbuffer_destroy(&buffer);
+
+		this->needsSendEncoderCalibration = false;
 	}
 }
