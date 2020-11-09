@@ -50,6 +50,8 @@ namespace Control
 	, as5047(as5047)
 	, encoderCalibration(encoderCalibration)
 	{
+		// This will happen later also, but we need it now for the "Has calibration" status
+		encoderCalibration.load();
 	}
 
 	//----------
@@ -108,6 +110,22 @@ namespace Control
 			},
 			{
 				[&](char * text) {
+					sprintf(text, "Step Forward");
+				},
+				[&]() {
+					this->motorDriver.step(mod(++this->stepIndex, 4), this->settings.current);
+				}
+			},
+			{
+				[&](char * text) {
+					sprintf(text, "Step Backward");
+				},
+				[&]() {
+					this->motorDriver.step(mod(--this->stepIndex, 4), this->settings.current);
+				}
+			},
+			{
+				[&](char * text) {
 					sprintf(text, "Has calibration : %s"
 						, this->encoderCalibration.getHasCalibration()
 						? "TRUE"
@@ -120,8 +138,9 @@ namespace Control
 					sprintf(text, "Calibrate encoder");
 				},
 				[&]() {
-					this->encoderCalibration.calibrate(this->as5047, this->motorDriver);
-					this->encoderCalibration.save();
+					if(this->encoderCalibration.calibrate(this->as5047, this->motorDriver)) {
+						this->encoderCalibration.save();
+					}
 				}
 			},
 			{
