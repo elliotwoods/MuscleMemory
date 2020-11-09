@@ -10,8 +10,6 @@ class Connection:
 	def __init__(self, hardware_id : str, websocket : WebSocket):
 		self.hardware_id : str = hardware_id
 		self.websocket : WebSocket = websocket
-		self.register_info = {}
-		self.register_values = {}
 		self.connection_manager = None
 	
 	async def on_data(self, data):

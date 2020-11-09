@@ -6,6 +6,7 @@ class EditableValue {
 		this.parent.append(this.valueDisplay);
 		this.valueDisplay.click(() => {
 			this.openEditor();
+			return false;
 		});
 
 		this.valueDisplayNonInteractive = $(`<span class="liveValue"></span>`);
