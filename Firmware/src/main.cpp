@@ -60,7 +60,7 @@ Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
 #ifdef WEBSOCKETS_ENABLED
-Control::WebSockets webSockets;
+Control::WebSockets webSockets(encoderCalibration);
 #endif
 
 Interface::SystemInfo systemInfo(ina219);
