@@ -72,14 +72,25 @@ namespace Devices {
 		int8_t coil_A;
 		int8_t coil_B;
 
+		const uint8_t offset = 64; // 64 is 90 degree offset, i.e. one step
+
 		if(positiveDirection) {
-			coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 64];
-			coil_B = this->cosTableFull[positionWithinStepCycle];
+			coil_A = this->cosTableFull[positionWithinStepCycle + offset];
+			coil_B = this->cosTableFull[positionWithinStepCycle - (uint8_t)64 + offset];
 		}
 		else {
-			coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 64];
-			coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
+			coil_A = this->cosTableFull[positionWithinStepCycle - offset];
+			coil_B = this->cosTableFull[positionWithinStepCycle - (uint8_t)64 - offset];
 		}
+		// if(positiveDirection) {
+		// 	coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 64];
+		// 	coil_B = this->cosTableFull[positionWithinStepCycle];
+		// }
+		// else {
+		// 	coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 64];
+		// 	coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
+		// }
+
 
 		//printf("\t Torque: \t %d", torque);
 		//printf("\t Coils: \t %d, %d\n", coil_A, coil_B);
