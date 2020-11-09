@@ -130,6 +130,13 @@ namespace Control {
 	}
 
 	//----------
+	const EncoderCalibration::StepCycleCalibration &
+	EncoderCalibration::getStepCycleCalibration() const
+	{
+		return this->stepCycleCalibration;
+	}
+
+	//----------
 	bool
 	EncoderCalibration::calibrate(Devices::AS5047 & encoder
 		, Devices::MotorDriver & motorDriver
