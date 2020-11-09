@@ -23,7 +23,7 @@ namespace GUI {
 		void
 		ShowID::draw(U8G2& u8g2)
 		{
-			const auto & value = Registry::X().registers.at(Registry::RegisterType::DeviceID).value;
+			const auto & value = getRegisterValue(Registry::RegisterType::DeviceID);
 			
 			char message[100];
 			
@@ -64,15 +64,17 @@ namespace GUI {
 		ShowID::dial(int8_t movements)
 		{
 			if(this->editing) {
-				auto & reg = Registry::X().registers.at(Registry::RegisterType::DeviceID);
-				auto & deviceID = reg.value;
+				auto deviceID = getRegisterValue(Registry::RegisterType::DeviceID);
+				const auto & range = getRegisterRange(Registry::RegisterType::DeviceID);
+
 				deviceID += movements;
-				if(deviceID < reg.range.min) {
-					deviceID = reg.range.max;
+				if(deviceID < range.min) {
+					deviceID = range.max;
 				}
-				else if(deviceID > reg.range.max) {
-					deviceID = reg.range.min;
+				else if(deviceID > range.max) {
+					deviceID = range.min;
 				}
+				setRegisterValue(Registry::RegisterType::DeviceID, deviceID);
 			}
 		}
 	}
