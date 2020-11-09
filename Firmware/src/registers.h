@@ -68,7 +68,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::EncoderPositionFilterSize, {
 		"EncoderPositionFilterSize"
-		, 1
+		, 4
 		, Access::ReadWrite
 		, 1
 		, 255
@@ -166,7 +166,7 @@ std::map<RegisterType, Register> registers {
 
 	{ RegisterType::PIDProportional, {
 		"PIDProportional"
-		, 16
+		, 12000
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDIntegral, {
@@ -176,7 +176,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::PIDDifferential, {
 		"PIDDifferential"
-		, 524288
+		, 128
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDIntegralMax, {
@@ -184,9 +184,25 @@ std::map<RegisterType, Register> registers {
 		, 2097152
 		, Access::ReadWrite
 	}},
+	{ RegisterType::PIDResultP, {
+		"PIDResultP"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::PIDResultI, {
+		"PIDResultI"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::PIDResultD, {
+		"PIDResultD"
+		, 0
+		, Access::ReadOnly
+	}},
+	
 	{ RegisterType::AntiStallEnabled, {
 		"AntiStallEnabled"
-		, 1
+		, 0
 		, Access::ReadWrite
 		, 0
 		, 1
@@ -224,6 +240,13 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
+	{ RegisterType::AntiStallScale, {
+		"AntiStallScale"
+		, 8
+		, Access::ReadWrite
+		, 0
+		, 32
+	}},
 
 	{ RegisterType::CANRxThisFrame, {
 		"CANRxThisFrame"
@@ -235,7 +258,7 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
-	{ RegisterType::CANTxThisFrame, {
+	{ RegisterType::CANErrorsThisFrame, {
 		"CANErrorsThisFrame"
 		, 0
 		, Access::ReadOnly

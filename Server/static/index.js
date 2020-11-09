@@ -101,8 +101,13 @@ class Graph {
 	constructor() {
 		this.registerViews = {};
 		this.uPlot = null;
+		this.parent = $("#graph");
 
 		this.rebuildGraph();
+
+		this.parent.resize(() => {
+			this.uPlot.resize(this.parent.width(), 600);
+		});
 	}
 
 	onSelectedRegistersChange() {
@@ -135,7 +140,7 @@ class Graph {
 		}
 
 		let options = {
-			width: 600,
+			width: this.parent.width(),
 			height: 600,
 			scales : {
 				x : {
@@ -173,11 +178,11 @@ class Graph {
 			};
 			options.series.push(series);
 
-			let axis = {
+			let axes = {
 				scale: "",
 				values: (u, vals, space) => vals.map(v => +v.toFixed())
-			};
-			options.axes.push(axis);
+			}
+			options.axes.push(axes);
 
 			data.push([0]);
 		}
@@ -227,6 +232,7 @@ class Graph {
 }
 
 let graph = new Graph();
+window.graph = graph;
 
 function notifySelectedRegistersChange() {
 	graph.onSelectedRegistersChange();	
@@ -251,8 +257,6 @@ class SelectorColor {
 function indexToColor(index) {
 	
 }
-
-let pushes = 0;
 
 class RegisterView {
 	constructor(parentTable, registerIndex, deviceView) {
@@ -321,12 +325,18 @@ class RegisterView {
 		this.actionsCell = $(`<td></td>`);
 		this.tableRow.append(this.actionsCell);
 
+		this.hideButton = $('<button class="btn btn-secondary" title="Hide"/>');
+		this.actionsCell.append(this.hideButton);
+		this.hideButton.append(`<i class="fas fa-eye-slash"></i>`);
+		this.hideButton.click(() => {
+			this.tableRow.hide();
+		});
+
 		this.registerGenerator = new RegisterGenerator(this.actionsCell, this);
 	}
 
 	pushValue(value) {
 		this.deviceView.pushRegisterValue(this.registerIndex, value);
-		console.log(pushes++);
 	}
 
 	setInfo(registerInfo) {
