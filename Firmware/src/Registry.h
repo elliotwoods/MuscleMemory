@@ -63,7 +63,13 @@ public:
 		PIDProportional = 70,
 		PIDIntegral = 71,
 		PIDDifferential = 72,
-		PIDIntegralMax = 75,
+		PIDIntegralMax = 73,
+		AntiStallEnabled = 74,
+		AntiStallDeadZone = 75,
+		AntiStallMinVelocity = 76,
+		AntiStallAttack = 77,
+		AntiStallDecay = 78,
+		AntiStallValue = 79,
 
 		// CAN debug
 		CANRxThisFrame = 80,
