@@ -171,7 +171,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::PIDIntegral, {
 		"PIDIntegral"
-		, 16384
+		, 0
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDDifferential, {

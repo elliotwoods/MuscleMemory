@@ -53,6 +53,7 @@ namespace Control {
 	{
 		loadItem(file, this->stepCycleCalibration.stepCycleCount);
 		loadItem(file, this->stepCycleCalibration.encoderPerStepCycle);
+		loadItem(file, this->stepCycleCalibration.stepCycleOffset);
 		loadArray(file, this->stepCycleCalibration.encoderValuePerStepCycle);
 	}
 
@@ -103,6 +104,7 @@ namespace Control {
 	{
 		saveItem(file, this->stepCycleCalibration.stepCycleCount);
 		saveItem(file, this->stepCycleCalibration.encoderPerStepCycle);
+		saveItem(file, this->stepCycleCalibration.stepCycleOffset);
 		saveArray(file, this->stepCycleCalibration.encoderValuePerStepCycle, this->stepCycleCalibration.stepCycleCount);
 	}
 
@@ -182,11 +184,6 @@ namespace Control {
 				u8g2.drawStr(5, 10, guiStatus);
 
 				char message[100];
-
-				if(this->skippedSteps > 0) {
-					sprintf(message, "SKIPPED STEPS : %d", this->skippedSteps);
-					u8g2.drawStr(5, 34, message);
-				}
 
 				{
 					sprintf(message, "Enc AGC %.2f %s%s%s%s"
@@ -418,7 +415,7 @@ namespace Control {
 					(uint32_t) encoderReadingWithinCycle
 					* (uint32_t) 255
 					/ this->stepCycleCalibration.encoderPerStepCycle
-				);
+				) + this->stepCycleCalibration.stepCycleOffset;
 			}
 		}
 		return 0;
@@ -477,10 +474,10 @@ namespace Control {
 			// Check skipped steps by change from prior readings
 			if(visitsPerStepCycle[stepCycle] > 0) {
 				const auto priorMean = accumulatedEncoderValue[stepCycle] / visitsPerStepCycle[stepCycle];
-				const auto delta = abs(priorMean - position);
+				const auto delta = (int32_t) abs(priorMean - position);
 				const auto allowableDeviation = 8;
 				if(delta > allowableDeviation) {
-					this->skippedSteps++;
+					throw(Exception("Deviation over (%d/%d) at %d", delta, allowableDeviation, stepIndex));
 				}
 			}
 
