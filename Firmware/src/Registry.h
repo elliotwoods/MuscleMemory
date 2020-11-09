@@ -10,9 +10,12 @@
 #include <set>
 #include <string>
 #include <limits>
+#include <atomic>
 
 #include "DataTypes.h"
 #include "Utils/FrameTimer.h"
+
+#define ATOMIC_REGISTERS
 
 class Registry {
 public:
@@ -108,6 +111,7 @@ public:
 	
 	class Register {
 	public:
+		Register(const Register &);
 		Register(const std::string & name
 			, int32_t value
 			, Access);
@@ -127,7 +131,11 @@ public:
 		*/
 	
 		const std::string name;
+#ifdef ATOMIC_REGISTERS
+		std::atomic<int32_t> value;
+#else
 		int32_t value;
+#endif
 		const Access access;
 		const Range range;
 	};
@@ -175,30 +183,21 @@ private:
 	~Registry();
 public:
 	void update();
-	void motorControlWrite(MotorControlWrites &&);
-	void motorControlRead(MotorControlReads &);
-
-	void agentWrite(AgentWrites &&);
-	void agentRead(AgentReads &);
 
 	void loadDefaults();
 	void saveDefault(const RegisterType & );
 private:
 	MotorControlReads motorControlReads;
 	SemaphoreHandle_t motorControlReadsMutex;
-
-	AgentReads agentReads;
-	SemaphoreHandle_t agentReadsMutex;
-
-	MotorControlWrites motorControlWritesIncoming, motorControlWritesBack;
-	SemaphoreHandle_t motorControlWritesMutex;
-	bool motorControlWritesNew = false;
-
-	AgentWrites agentWritesIncoming, agentWritesBack;
-	SemaphoreHandle_t agentWritesMutex;
-	bool agentWritesNew = false;
-
 	Utils::FrameTimer frameTimer;
 
 	std::set<RegisterType> defaultsToSave;
 };
+
+#ifdef ATOMIC_REGISTERS
+int32_t getRegisterValue(const Registry::RegisterType &);
+#else
+const int32_t & getRegisterValue(const Registry::RegisterType &);
+#endif
+const Registry::Range & getRegisterRange(const Registry::RegisterType &);
+void setRegisterValue(const Registry::RegisterType &, int32_t value);
