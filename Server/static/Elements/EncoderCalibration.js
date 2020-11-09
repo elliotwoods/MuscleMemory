@@ -21,6 +21,19 @@ class EncoderCalibration {
 		else {
 			this.updateGraph();
 		}
+
+		$("#encoderCalibrationInfo").empty();
+		{
+			let infoList = $(`<ul></ul>`);
+			$("#encoderCalibrationInfo").append(infoList);
+
+			for(let key in data) {
+				if(key != 'encoderValuePerStepCycle') {
+					infoList.append(`<li><b>${key} : </b>${data[key]}`);
+				}
+			}
+		}
+		
 	}
 
 	buildGraph() {
