@@ -149,11 +149,13 @@ initDevices()
 void
 motorTask(void*)
 {
+	const auto & controlMode = Registry::X().registers.at(Registry::RegisterType::ControlMode).value;
 	while(true) {
-		drive.update();
-		for(uint16_t i=0; i<512; i++) {
-			NOP();
+		// We need to clean this up later 
+		if(controlMode == 1) {
+			pid.update();
 		}
+		drive.update();
 	}
 }
 
@@ -189,7 +191,7 @@ agentTask(void*)
 		if(xSemaphoreTake(agentTaskResumeMutex, portMAX_DELAY)) {
 			switch(controlMode) {
 				case 1:
-					pid.update();
+					//pid.update();
 					break;
 #ifdef AGENT_ENABLED
 				case 2:
@@ -306,6 +308,8 @@ updateInterface()
 	webSockets.update();
 #endif
 	GUI::Controller::X().update();
+	const auto & delay = Registry::X().registers.at(Registry::RegisterType::MainLoopDelay).value;
+	vTaskDelay(delay / portTICK_PERIOD_MS);
 }
 
 //----------
@@ -313,8 +317,6 @@ void
 interfaceTask(void*)
 {
 	while(true) {
-		const auto & delay = Registry::X().registers.at(Registry::RegisterType::MainLoopDelay).value;
-		vTaskDelay(delay / portTICK_PERIOD_MS);
 		updateInterface();
 	}
 }

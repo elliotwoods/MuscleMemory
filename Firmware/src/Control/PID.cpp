@@ -24,13 +24,20 @@ namespace Control {
 		this->frameTimer.update();
 		auto dt = this->frameTimer.getPeriod();
 
-		// Get error on position
-		auto errorOnPosition = agentReads.targetPosition - agentReads.multiTurnPosition;
+		// Get error on position (we scale down to get it closer to torque values)
+		int32_t errorOnPosition = (agentReads.targetPosition - agentReads.multiTurnPosition);
+		errorOnPosition /= 1 << 4;
 
-		auto integral = this->priorIntegral + errorOnPosition * dt;
-		auto derivative = (errorOnPosition - this->priorError) / dt;
+		// These values aren't semaphored! but they do change slowly so should be fine
+		const auto & kP = registry.registers.at(Registry::RegisterType::PIDProportional).value;
+		const auto & kD = registry.registers.at(Registry::RegisterType::PIDDifferential).value;
+		const auto & kI = registry.registers.at(Registry::RegisterType::PIDIntegral).value;
 
-		// Calculate integral
+		// Calculate ID 
+		auto integral = this->priorIntegral + errorOnPosition * dt / 1000000; // normalise for seconds
+		auto derivative =  (errorOnPosition - this->priorError) * 1000000 / dt; // derivative in seconds, reduce scale
+
+		// clamp integral
 		{
 			const auto & maxIntegral = registry.registers.at(Registry::RegisterType::PIDIntegralMax).value;
 			if(integral > maxIntegral) {
@@ -44,18 +51,12 @@ namespace Control {
 			}
 		}
 
-		// These values aren't semaphored! but they do change slowly so should be fine
-		const auto & kP = registry.registers.at(Registry::RegisterType::PIDProportional).value;
-		const auto & kD = registry.registers.at(Registry::RegisterType::PIDDifferential).value;
-		const auto & kI = registry.registers.at(Registry::RegisterType::PIDIntegral).value;
-
 		auto output = kP * errorOnPosition
 			+ kD * derivative
 			+ kI * integral / 1000000; // Normalise for seconds
 
 		// Scale output
-		output = output >> 12;
-		int8_t torque;
+		output = output >> 20;
 
 		// Apply anti-stall
 		if(registry.registers.at(Registry::RegisterType::AntiStallEnabled).value) {
@@ -65,6 +66,9 @@ namespace Control {
 			if(abs(errorOnPosition) <= registry.registers.at(Registry::RegisterType::AntiStallDeadZone).value) {
 				// Inside dead zone, zero the anti-stall and don't apply it
 				antiStallValue = 0;
+
+				// Also turn off torque
+				output = 0;
 			}
 			else {
 				const auto speed = abs(agentReads.velocity);
@@ -102,11 +106,12 @@ namespace Control {
 				}
 
 				// Apply anti-stall
-				torque += antiStallValue >> 4;
+				output += antiStallValue >> registry.registers.at(Registry::RegisterType::AntiStallScale).value;
 			}
 		}
 
-		// Clamp output
+		// Clamp output and cast down to int8_t
+		int8_t torque;
 		if(output > agentReads.maximumTorque) {
 			torque = agentReads.maximumTorque;
 		}
@@ -134,6 +139,8 @@ namespace Control {
 		// Write to registers (not using safe method for now)
 		registry.registers.at(Registry::RegisterType::Torque).value = torque;
 		registry.registers.at(Registry::RegisterType::AgentControlFrequency).value = this->frameTimer.getFrequency();
-		registry.registers.at(Registry::RegisterType::AgentAddConstant).value = this->priorIntegral;
+		registry.registers.at(Registry::RegisterType::PIDResultP).value = errorOnPosition;
+		registry.registers.at(Registry::RegisterType::PIDResultI).value = integral;
+		registry.registers.at(Registry::RegisterType::PIDResultD).value = derivative;
 	}
 }
