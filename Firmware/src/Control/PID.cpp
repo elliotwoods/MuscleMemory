@@ -25,8 +25,8 @@ namespace Control {
 		auto dt = this->frameTimer.getPeriod();
 
 		// Get error on position (we scale down to get it closer to torque values)
-		int32_t errorOnPosition = (agentReads.targetPosition - agentReads.multiTurnPosition);
-		errorOnPosition /= 1 << 4;
+		int32_t rawErrorOnPosition = (agentReads.targetPosition - agentReads.multiTurnPosition);
+		auto scaledErrorOnPosition = rawErrorOnPosition >> 4;
 
 		// These values aren't semaphored! but they do change slowly so should be fine
 		const auto & kP = registry.registers.at(Registry::RegisterType::PIDProportional).value;
@@ -34,8 +34,8 @@ namespace Control {
 		const auto & kI = registry.registers.at(Registry::RegisterType::PIDIntegral).value;
 
 		// Calculate ID 
-		auto integral = this->priorIntegral + errorOnPosition * dt / 1000000; // normalise for seconds
-		auto derivative =  (errorOnPosition - this->priorError) * 1000000 / dt; // derivative in seconds, reduce scale
+		auto integral = this->priorIntegral + scaledErrorOnPosition * dt / 1000000; // normalise for seconds
+		auto derivative =  (scaledErrorOnPosition - this->priorError) * 1000000 / dt; // derivative in seconds, reduce scale
 
 		// clamp integral
 		{
@@ -51,7 +51,7 @@ namespace Control {
 			}
 		}
 
-		auto output = kP * errorOnPosition
+		auto output = kP * scaledErrorOnPosition
 			+ kD * derivative
 			+ kI * integral / 1000000; // Normalise for seconds
 
@@ -63,7 +63,7 @@ namespace Control {
 			auto & antiStallValue = registry.registers.at(Registry::RegisterType::AntiStallValue).value;
 
 			// Check dead zone
-			if(abs(errorOnPosition) <= registry.registers.at(Registry::RegisterType::AntiStallDeadZone).value) {
+			if(abs(rawErrorOnPosition) <= registry.registers.at(Registry::RegisterType::AntiStallDeadZone).value) {
 				// Inside dead zone, zero the anti-stall and don't apply it
 				antiStallValue = 0;
 
@@ -77,7 +77,7 @@ namespace Control {
 				if(speed < registry.registers.at(Registry::RegisterType::AntiStallMinVelocity).value) {
 					const auto & attack = registry.registers.at(Registry::RegisterType::AntiStallAttack).value;
 					// Increase in direction of errorOnPosition
-					if(errorOnPosition > 0) {
+					if(rawErrorOnPosition > 0) {
 						antiStallValue += attack;
 					}
 					else {
@@ -132,14 +132,14 @@ namespace Control {
 
 		// Store priors
 		{
-			this->priorError = errorOnPosition;
+			this->priorError = scaledErrorOnPosition;
 			this->priorIntegral = integral;
 		}
 
 		// Write to registers (not using safe method for now)
 		registry.registers.at(Registry::RegisterType::Torque).value = torque;
 		registry.registers.at(Registry::RegisterType::AgentControlFrequency).value = this->frameTimer.getFrequency();
-		registry.registers.at(Registry::RegisterType::PIDResultP).value = errorOnPosition;
+		registry.registers.at(Registry::RegisterType::PIDResultP).value = scaledErrorOnPosition;
 		registry.registers.at(Registry::RegisterType::PIDResultI).value = integral;
 		registry.registers.at(Registry::RegisterType::PIDResultD).value = derivative;
 	}
