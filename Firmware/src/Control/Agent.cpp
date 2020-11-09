@@ -97,24 +97,25 @@ namespace Control {
 	void
 	Agent::update()
 	{
-		static auto & registry = Registry::X();
 		this->frameTimer.update();
 
 		// Read the state from registry
-		Registry::AgentReads agentReads;
-		{
-			registry.agentRead(agentReads);
-		}
+		const auto & multiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
+		const auto & targetPosition = getRegisterValue(Registry::RegisterType::TargetPosition);
+		const auto & velocity = getRegisterValue(Registry::RegisterType::Velocity);
+		const auto & motorControlFrequency = getRegisterValue(Registry::RegisterType::MotorControlFrequency);
+		const auto & current = getRegisterValue(Registry::RegisterType::Current);
+		const auto & maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
 
 		// Prepare the state
 		Agent::State state;
 		{
-			state.position = float(agentReads.multiTurnPosition) / float(1 << 14);
-			state.targetMinusPosition = float(agentReads.targetPosition - agentReads.multiTurnPosition) / float(1 << 14);
-			state.velocity = float(agentReads.velocity) / float(1 << 14);
+			state.position = float(multiTurnPosition) / float(1 << 14);
+			state.targetMinusPosition = float(targetPosition - multiTurnPosition) / float(1 << 14);
+			state.velocity = float(velocity) / float(1 << 14);
 			state.agentFrequency = float(this->frameTimer.getFrequency()) / 1000.0f;
-			state.motorControlFrequency = float(agentReads.motorControlFrequency) / 1000.0f;
-			state.current = float(agentReads.current) / 1000.0f;
+			state.motorControlFrequency = float(motorControlFrequency) / 1000.0f;
+			state.current = float(current) / 1000.0f;
 		}
 
 		// Record trajectory if we have a prior state
@@ -133,19 +134,17 @@ namespace Control {
 		// Get the action. Scale to binary values and clamp
 		auto action = this->selectAction(state);
 		int8_t torque = (int8_t)(action * 127.0f);
-		torque = max(min(torque, agentReads.maximumTorque), -agentReads.maximumTorque);
+		torque = max(min(torque, maximumTorque), -maximumTorque);
 
-		// Send information to main loop
+		// Registry writes
 		{
-			registry.agentWrite({
-				torque
-				, (int16_t) this->frameTimer.getFrequency()
-				, (int16_t) this->historyWrites->writePosition
-				, this->runtimeParameters.isTraining
-				, (int16_t) (this->runtimeParameters.noiseAmplitude * 1000.0f)
-				, (int16_t) (this->runtimeParameters.addProportional * 1000.0f)
-				, (int16_t) (this->runtimeParameters.addConstant * 1000.0f)
-			});
+			setRegisterValue(Registry::RegisterType::Torque, torque);
+			setRegisterValue(Registry::RegisterType::AgentControlFrequency, this->frameTimer.getFrequency());
+			setRegisterValue(Registry::RegisterType::AgentLocalHistorySize, this->historyWrites->writePosition);
+			setRegisterValue(Registry::RegisterType::AgentTraining, this->runtimeParameters.isTraining);
+			setRegisterValue(Registry::RegisterType::AgentNoiseAmplitude, this->runtimeParameters.noiseAmplitude * 1000.0f);
+			setRegisterValue(Registry::RegisterType::AgentAddProportional, this->runtimeParameters.addProportional * 1000.0f);
+			setRegisterValue(Registry::RegisterType::AgentAddConstant, this->runtimeParameters.addConstant * 1000.0f);
 		}
 
 		// Remember trajectory variables

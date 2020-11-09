@@ -28,19 +28,15 @@ namespace Control {
 	void
 	Drive::update()
 	{
-		static auto & registry = Registry::X();
-
 		this->frameTimer.update();
 
 		// read from registry
-		Registry::MotorControlReads motorControlReads;
-		{
-			registry.motorControlRead(motorControlReads);
-		}
+		const auto encoderPositionFilterSize = getRegisterValue(Registry::RegisterType::EncoderPositionFilterSize);
+		const auto torque = getRegisterValue(Registry::RegisterType::Torque);
 
 		// Get the encoder reading (using averaging if enabled)
-		auto encoderReading = motorControlReads.encoderPositionFilterSize > 1
-			? this->as5047.getPositionFiltered(motorControlReads.encoderPositionFilterSize)
+		auto encoderReading = encoderPositionFilterSize > 1
+			? this->as5047.getPositionFiltered(encoderPositionFilterSize)
 			: this->as5047.getPosition();
 		
 		this->multiTurn.driveLoopUpdate(encoderReading);
@@ -52,15 +48,15 @@ namespace Control {
 		this->priorPosition = multiTurnPosition;
 
 		// apply torque
-		this->motorDriver.setTorque(motorControlReads.torque, positionWithinStepCycle);
+		this->motorDriver.setTorque(torque, positionWithinStepCycle);
 
 		// write to registry
-		registry.motorControlWrite({
-			encoderReading
-			, this->as5047.getErrors()
-			, multiTurnPosition
-			, velocity
-			, this->frameTimer.getFrequency()
-		});
+		{
+			setRegisterValue(Registry::RegisterType::EncoderReading, encoderReading);
+			setRegisterValue(Registry::RegisterType::EncoderErrors, this->as5047.getErrors());
+			setRegisterValue(Registry::RegisterType::MultiTurnPosition, multiTurnPosition);
+			setRegisterValue(Registry::RegisterType::Velocity, velocity);
+			setRegisterValue(Registry::RegisterType::MotorControlFrequency, this->frameTimer.getFrequency());
+		}
 	}
 }
