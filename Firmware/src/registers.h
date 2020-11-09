@@ -184,6 +184,46 @@ std::map<RegisterType, Register> registers {
 		, 2097152
 		, Access::ReadWrite
 	}},
+	{ RegisterType::AntiStallEnabled, {
+		"AntiStallEnabled"
+		, 1
+		, Access::ReadWrite
+		, 0
+		, 1
+	}},
+	{ RegisterType::AntiStallDeadZone, {
+		"AntiStallDeadZone"
+		, 200
+		, Access::ReadWrite
+		, 0
+		, 1 << 16
+	}},
+	{ RegisterType::AntiStallMinVelocity, {
+		"AntiStallMinVelocity"
+		, 20000
+		, Access::ReadWrite
+		, 0
+		, 1 << 20
+	}},
+	{ RegisterType::AntiStallAttack, {
+		"AntiStallAttack"
+		, 1
+		, Access::ReadWrite
+		, 0
+		, 128
+	}},
+	{ RegisterType::AntiStallDecay, {
+		"AntiStallDecay"
+		, 2
+		, Access::ReadWrite
+		, 0
+		, 128
+	}},
+	{ RegisterType::AntiStallValue, {
+		"AntiStallValue"
+		, 0
+		, Access::ReadOnly
+	}},
 
 	{ RegisterType::CANRxThisFrame, {
 		"CANRxThisFrame"
