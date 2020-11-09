@@ -65,6 +65,5 @@ namespace Control {
 		StepCycleCalibration stepCycleCalibration;
 
 		bool hasCalibration = false;
-		uint16_t skippedSteps = 0;
 	};
 }
