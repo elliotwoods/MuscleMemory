@@ -236,11 +236,8 @@ initController()
 	else {
 		// Perform encoder calibration
 		showSplashMessage("Calibrating encoder");
-		if(encoderCalibration.calibrate(as5047, motorDriver)) {
-			if(!encoderCalibration.save()) {
-				abort();
-			}
-			printf("Motor calibration saved\n");
+		if(!encoderCalibration.calibrate(as5047, motorDriver)) {
+			abort();
 		}
 	}
 

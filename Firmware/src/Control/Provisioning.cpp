@@ -138,9 +138,7 @@ namespace Control
 					sprintf(text, "Calibrate encoder");
 				},
 				[&]() {
-					if(this->encoderCalibration.calibrate(this->as5047, this->motorDriver)) {
-						this->encoderCalibration.save();
-					}
+					this->encoderCalibration.calibrate(this->as5047, this->motorDriver);
 				}
 			},
 			{
