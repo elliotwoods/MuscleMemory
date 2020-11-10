@@ -61,6 +61,7 @@ namespace Devices {
 		}
 	}
 
+#define MOD(a,b) ((((a)%(b))+(b))%(b))
 	//----------
 	void
 	MotorDriver::setTorque(Torque torque, PositionWithinStepCycle positionWithinStepCycle)
@@ -72,28 +73,48 @@ namespace Devices {
 		int8_t coil_A;
 		int8_t coil_B;
 
-		const uint8_t offset = 64; // 64 is 90 degree offset, i.e. one step
 
-		if(positiveDirection) {
-			coil_A = this->cosTableFull[positionWithinStepCycle + offset];
-			coil_B = this->cosTableFull[positionWithinStepCycle - (uint8_t)64 + offset];
-		}
-		else {
-			coil_A = this->cosTableFull[positionWithinStepCycle - offset];
-			coil_B = this->cosTableFull[positionWithinStepCycle - (uint8_t)64 - offset];
-		}
+		// Full math version
+		//
+		// const int16_t offset = 64; // 64 is 90 degree offset, i.e. one step
 		// if(positiveDirection) {
-		// 	coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 64];
-		// 	coil_B = this->cosTableFull[positionWithinStepCycle];
+		// 	coil_A = this->cosTableFull[MOD((int16_t) positionWithinStepCycle + offset, 255)];
+		// 	coil_B = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - (int16_t)64 + offset, 255)];
 		// }
 		// else {
-		// 	coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 64];
-		// 	coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
+		// 	coil_A = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - offset, 255)];
+		// 	coil_B = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - (int16_t)64 - offset, 255)];
 		// }
 
+		// NOTE : The overflow doesn't happen cleanly, we need to manually overflow
+		// Quick version (unsigned fixed point math, avoid up/down casting)
+		if(positiveDirection) {
+			if(positionWithinStepCycle < 192) {
+				coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 64];
+			}
+			else {
+				coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 192];
+			}
+			coil_B = this->cosTableFull[positionWithinStepCycle];
+		}
+		else {
+			if(positionWithinStepCycle < 64) {
+				coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 192];
+			}
+			else {
+				coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 64];
+			}
 
-		//printf("\t Torque: \t %d", torque);
-		//printf("\t Coils: \t %d, %d\n", coil_A, coil_B);
+			if(positionWithinStepCycle < 128) {
+				coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
+			}
+			else {
+				coil_B = this->cosTableFull[positionWithinStepCycle - (uint8_t) 128];
+			}
+		}
+
+
+		printf("%d, %d, %d, %d\n", torque, positionWithinStepCycle, coil_A, coil_B);
 
 		// Coil A
 		{
