@@ -344,6 +344,9 @@ namespace Control {
 			// Store the stepCycleOffset
 			this->stepCycleCalibration.stepCycleOffset = (uint8_t) stepIndexOffset * 64;
 
+			// Save the calibration
+			this->save();
+
 			// Notify success
 			printf("Calibration complete\n");
 			panel->onDraw = [](U8G2 & u8g2) {
@@ -352,6 +355,9 @@ namespace Control {
 				u8g2.setFont(u8g2_font_nerhoe_tr);
 			};
 			this->hasCalibration = true;
+
+			gui.update();
+			vTaskDelay(5000 / portTICK_PERIOD_MS);
 		}
 		catch(const Exception & e) {
 			this->hasCalibration = false;
@@ -370,9 +376,15 @@ namespace Control {
 				u8g2.drawBox(0, 0, 128, 64);
 				u8g2.setDrawColor(1);
 			};
+
+			bool buttonPressed = false;
+			panel->onButtonPressed = [&buttonPressed] {
+				buttonPressed = true;
+			};
+			while(!buttonPressed) {
+				gui.update();
+			}
 		}
-		gui.update();
-		vTaskDelay(5000 / portTICK_PERIOD_MS);
 
 		// Clean up data
 		delete[] accumulatedEncoderValue;
