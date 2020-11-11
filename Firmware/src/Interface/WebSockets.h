@@ -7,10 +7,10 @@
 #include <cstring>
 #include <msgpack.h>
 
-namespace Control {
+namespace Interface {
 	class WebSockets {
 	public:
-		WebSockets(const EncoderCalibration & encoderCalibration);
+		WebSockets(const Control::EncoderCalibration & encoderCalibration);
 		void init();
 		void update();
 		void processIncomingRequests(uint8_t *, size_t);
@@ -24,6 +24,6 @@ namespace Control {
 		bool needsSendRegisterInfo = true;
 		bool needsSendEncoderCalibration = false;
 
-		const EncoderCalibration & encoderCalibration;
+		const Control::EncoderCalibration & encoderCalibration;
 	};
 }

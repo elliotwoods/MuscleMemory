@@ -10,7 +10,6 @@
 #include "Control/Agent.h"
 #include "Control/Drive.h"
 #include "Control/PID.h"
-#include "Control/WebSockets.h"
 #include "Control/Provisioning.h"
 
 #include "GUI/Controller.h"
@@ -21,6 +20,7 @@
 
 #include "Interface/SystemInfo.h"
 #include "Interface/CANResponder.h"
+#include "Interface/WebSockets.h"
 
 #include "Utils/Scheduler.h"
 
@@ -38,7 +38,7 @@
 #include "driver/can.h"
 
 //#define AGENT_ENABLED
-//#define WEBSOCKETS_ENABLED
+#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
@@ -60,7 +60,7 @@ Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
 #ifdef WEBSOCKETS_ENABLED
-Control::WebSockets webSockets(encoderCalibration);
+Interface::WebSockets webSockets(encoderCalibration);
 #endif
 
 Interface::SystemInfo systemInfo(ina219);
