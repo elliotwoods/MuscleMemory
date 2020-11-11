@@ -5,7 +5,7 @@
 #include "Devices/WiFi.h"
 #include "WifiConfig.h"
 
-//#define WEBSOCKETS_DEBUG
+#define WEBSOCKETS_DEBUG
 
 //WebSocketsClient library conflicts with tensorflow
 // Since Wifi is a singleton, this is safe to keep it here
@@ -108,6 +108,8 @@ namespace Interface {
 	void
 	WebSockets::processIncomingAction(const char * name, const msgpack_object & value)
 	{
+		static auto & registry = Registry::X();
+
 #ifdef WEBSOCKETS_DEBUG
 		msgpack_object_print(stdout, value);
 		printf("[WebSockets] Performing action %s\n", name);
@@ -150,8 +152,47 @@ namespace Interface {
 		else if (strcmp(name, "request_register_info") == 0) {
 			this->needsSendRegisterInfo = true;
 		}
-		else if (strcmp(name, "request_encoder_calibration") == 0) {
+		else if (strcmp(name, "request_encoder_calibration_data") == 0) {
 			this->needsSendEncoderCalibration = true;
+		}
+		else if (strcmp(name, "register_save_default") == 0) {
+			// should be an array
+			if(value.type == msgpack_object_type::MSGPACK_OBJECT_ARRAY) {
+#ifdef WEBSOCKETS_DEBUG
+				printf("SaveDefault : Is Array\n");
+#endif
+				for(size_t i=0; i<value.via.array.size; i++) {
+					const auto & it = value.via.array.ptr[i];
+					// register name
+					if(it.type == msgpack_object_type::MSGPACK_OBJECT_STR) {
+						// find the register by name
+#ifdef WEBSOCKETS_DEBUG
+						bool foundRegister = false;
+#endif
+						for(const auto & itRegister : registry.registers) {
+							if(strcmp(it.via.str.ptr, itRegister.second.name.c_str()) == 0) {
+								registry.saveDefault(itRegister.first);
+#ifdef WEBSOCKETS_DEBUG
+								foundRegister = true;
+#endif
+								break;
+							}
+						}
+#ifdef WEBSOCKETS_DEBUG
+						if(!foundRegister) {
+							printf("[WebSockets] register_save_default : Failed to find register named '%s'z\n");
+						}
+#endif
+					}
+					else if(it.type == msgpack_object_type::MSGPACK_OBJECT_POSITIVE_INTEGER) {
+						// by value
+						registry.saveDefault((Registry::RegisterType) it.via.i64);
+					}
+				}
+			}
+
+			// This information has changed, so update the server (ideally we want to only update specific info)
+			this->needsSendRegisterInfo = true;
 		}
 	}
 
@@ -211,7 +252,7 @@ namespace Interface {
 				msgpack_pack_uint16(&packer, (uint16_t) it.first);
 
 				// Value
-				msgpack_pack_map(&packer, 3);
+				msgpack_pack_map(&packer, 4);
 				{
 					// Key
 					msgpack_pack_str_with_body(&packer, "name", 4);
@@ -237,6 +278,11 @@ namespace Interface {
 					msgpack_pack_str_with_body(&packer, "access", 6);
 					// Value
 					msgpack_pack_uint8(&packer, (uint8_t) it.second.access);
+
+					// Key
+					msgpack_pack_str_with_body(&packer, "defaultValue", 12);
+					// Value
+					msgpack_pack_int32(&packer, it.second.defaultValue);
 				}
 			}
 		}
