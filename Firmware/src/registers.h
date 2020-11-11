@@ -290,4 +290,11 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, 1
 	}},
+	{ RegisterType::FastBoot, {
+		"FastBoot"
+		, 0
+		, Access::ReadWrite
+		, 0
+		, 1
+	}},
 };

@@ -90,6 +90,7 @@ public:
 		// Boot
 		Reboot = 100,
 		ProvisioningEnabled = 101,
+		FastBoot = 102,
 	};
 
 	enum Operation : uint8_t {
