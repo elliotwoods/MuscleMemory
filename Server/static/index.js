@@ -1,6 +1,6 @@
 import uPlot from "./node_modules/uplot/dist/uPlot.esm.js"
 import EditableValue from "./Utils/EditableValue.js"
-import RegisterGenerator from "./Utils/RegisterGenerator.js"
+import RegisterGenerator from "./RegisterActions/RegisterGenerator.js"
 import EncoderCalibration from "./Elements/EncoderCalibration.js"
 
 let deviceViews = {};
@@ -263,6 +263,7 @@ class RegisterView {
 		this.registerIndex = registerIndex;
 		this.registerInfo = null;
 		this.selected = false;
+		this.editable = false;
 		this.recordSamples = [];
 
 		this.deviceView = deviceView;
@@ -321,12 +322,22 @@ class RegisterView {
 						}
 					}
 				});
+
+			this.defaultView = $(`<span class="defaultValue" />`);
+			this.valueCell.append(this.defaultView);
+			this.defaultView.hide();
 		}
 
 		this.actionsCell = $(`<td></td>`);
 		this.tableRow.append(this.actionsCell);
 
-		this.hideButton = $('<button class="btn btn-secondary" title="Hide"/>');
+		this.storeDefaultButton = $(`<button class="btn btn-secondary btn-sm" title="Store default"><i class="fas fa-save" /></button>`);
+		this.actionsCell.append(this.storeDefaultButton);
+		this.storeDefaultButton.click(() => {
+			this.storeDefault();
+		});
+
+		this.hideButton = $('<button class="btn btn-secondary btn-sm" title="Hide"/>');
 		this.actionsCell.append(this.hideButton);
 		this.hideButton.append(`<i class="fas fa-eye-slash"></i>`);
 		this.hideButton.click(() => {
@@ -346,19 +357,27 @@ class RegisterView {
 			this.nameCell.text(registerInfo['name']);
 		}
 		if('access' in registerInfo) {
-			let editable = registerInfo['access'] == 1;
-			this.editableValue.setEditEnabled(editable);
-			if(editable) {
-				this.registerGenerator.show();
-			}
-			else {
-				this.registerGenerator.hide();
+			this.editable = registerInfo['access'] == 1;
+			this.editableValue.setEditEnabled(this.editable);
+		}
+		if('defaultValue' in registerInfo) {
+			this.defaultView.text(this.registerInfo['defaultValue']);
+			if(this.editable) {
+				this.defaultView.show();
 			}
 		}
+
+		this.refreshActions();
 	}
 
 	setValue(value) {
 		this.editableValue.setValue(value);
+	}
+
+	storeDefault() {
+		this.deviceView.sendRequest({
+			'register_save_default' : [this.registerIndex]
+		});
 	}
 
 	recordSample(time, value) {
@@ -379,6 +398,17 @@ class RegisterView {
 			this.selector.css("background", "");
 		}
 		notifySelectedRegistersChange();
+	}
+
+	refreshActions() {
+		if(this.editable) {
+			this.registerGenerator.show();
+			this.storeDefaultButton.show();
+		}
+		else {
+			this.registerGenerator.hide();
+			this.storeDefaultButton.hide();
+		}
 	}
 };
 
@@ -414,9 +444,10 @@ class DeviceView {
 	}
 
 	getOrMakeRegister(registerIndex) {
-		if(!(registerIndex in this.registerViews)) {
+		let key = String(registerIndex);
+		if(!(key in this.registerViews)) {
 			let registerView = new RegisterView(this.table, registerIndex, this);
-			this.registerViews[registerIndex] = registerView;
+			this.registerViews[key] = registerView;
 			return registerView;
 		}
 		else {
@@ -426,9 +457,10 @@ class DeviceView {
 
 	onMessage(message) {
 		if('register_info' in message) {
-			for(let registerIndex in message['register_info']) {
+			for(let key in message['register_info']) {
+				let registerIndex = parseInt(key);
 				let registerView = this.getOrMakeRegister(registerIndex);
-				registerView.setInfo(message['register_info'][registerIndex]);
+				registerView.setInfo(message['register_info'][key]);
 			}
 		}
 		if('register_values' in message) {
@@ -440,9 +472,10 @@ class DeviceView {
 			}
 
 			// push the data into the RegisterView objects
-			for(let registerIndex in message['register_values']) {
+			for(let key in message['register_values']) {
+				let registerIndex = parseInt(key);
 				let registerView = this.getOrMakeRegister(registerIndex);
-				let value = message['register_values'][registerIndex];
+				let value = message['register_values'][key];
 
 				registerView.setValue(value);
 
