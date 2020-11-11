@@ -38,7 +38,7 @@
 #include "driver/can.h"
 
 //#define AGENT_ENABLED
-#define WEBSOCKETS_ENABLED
+//#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
