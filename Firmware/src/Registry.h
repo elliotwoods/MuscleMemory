@@ -15,7 +15,7 @@
 #include "DataTypes.h"
 #include "Utils/FrameTimer.h"
 
-#define ATOMIC_REGISTERS
+//#define ATOMIC_REGISTERS
 
 class Registry {
 public:
@@ -32,6 +32,7 @@ public:
 		MaximumTorque = 14,
 		SoftLimitMin = 15,
 		SoftLimitMax = 16,
+		DriveOffset = 17,
 
 		// Encoder
 		EncoderReading = 21,
