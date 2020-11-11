@@ -44,11 +44,15 @@ namespace Control
 	Provisioning::Provisioning(Devices::MotorDriver &motorDriver
 		, Devices::INA219 &ina219
 		, Devices::AS5047 &as5047
-		, EncoderCalibration &encoderCalibration)
+		, EncoderCalibration &encoderCalibration
+		, Interface::CANResponder &canResponder
+		, Interface::WebSockets &webSockets)
 	: motorDriver(motorDriver)
 	, ina219(ina219)
 	, as5047(as5047)
 	, encoderCalibration(encoderCalibration)
+	, canResponder(canResponder)
+	, webSockets(webSockets)
 	{
 		// This will happen later also, but we need it now for the "Has calibration" status
 		encoderCalibration.load();
@@ -174,6 +178,14 @@ namespace Control
 			this->status.voltage = this->ina219.getBusVoltage();
 			this->status.encoderReading = this->as5047.getPositionFiltered(8);
 			this->status.encoderReadingNormalised = (float) this->status.encoderReading / (float) (1 << 14);
+
+			this->canResponder.update();
+			this->webSockets.update();
+
+			if(getRegisterValue(Registry::RegisterType::ProvisioningEnabled) == 0) {
+				this->shouldExit = true;
+			}
+
 			gui.update();
 		}
 
