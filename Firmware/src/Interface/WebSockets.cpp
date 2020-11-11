@@ -11,7 +11,7 @@
 // Since Wifi is a singleton, this is safe to keep it here
 WebSocketsClient webSocketsClient;
 
-Control::WebSockets * webSocketsInstance = nullptr;
+Interface::WebSockets * webSocketsInstance = nullptr;
 
 //----------
 void
@@ -26,9 +26,9 @@ webSocketEvent(WStype_t eventType, uint8_t * payload, size_t length)
 	}
 }
 
-namespace Control {
+namespace Interface {
 	//----------
-	WebSockets::WebSockets(const EncoderCalibration & encoderCalibration)
+	WebSockets::WebSockets(const Control::EncoderCalibration & encoderCalibration)
 	: encoderCalibration(encoderCalibration)
 	{
 
