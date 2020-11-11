@@ -59,9 +59,7 @@ Control::Agent agent;
 Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
-#ifdef WEBSOCKETS_ENABLED
 Interface::WebSockets webSockets(encoderCalibration);
-#endif
 
 Interface::SystemInfo systemInfo(ina219);
 Interface::CANResponder canResponder;
@@ -218,9 +216,17 @@ agentServerCommunicateTask(void*)
 void
 initController()
 {
+	showSplashMessage("Initialising CAN");
+	canResponder.init();
+
+#ifdef WEBSOCKETS_ENABLED
+	showSplashMessage("Initialising websockets");
+	webSockets.init();
+#endif
+
 #ifdef PROVISIONING_ENABLED
 	if(Registry::X().registers.at(Registry::RegisterType::ProvisioningEnabled).value) {
-		Control::Provisioning provisioning(motorDriver, ina219, as5047, encoderCalibration);
+		Control::Provisioning provisioning(motorDriver, ina219, as5047, encoderCalibration, canResponder, webSockets);
 		provisioning.perform();
 	}
 #endif
@@ -253,11 +259,6 @@ initController()
 
 	showSplashMessage("Initialise PID");
 	pid.init();
-
-#ifdef WEBSOCKETS_ENABLED
-	showSplashMessage("Initialising websockets");
-	webSockets.init();
-#endif
 
 	showSplashMessage("Starting system tasks");
 
@@ -323,7 +324,6 @@ void
 initInterface()
 {
 	systemInfo.init();
-	canResponder.init();
 
 	xTaskCreatePinnedToCore(interfaceTask
 		, "Interface"
