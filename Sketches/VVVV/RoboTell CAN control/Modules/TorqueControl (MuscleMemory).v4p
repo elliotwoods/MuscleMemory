@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta33.7.dtd" >
-   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\TorqueControl (MuscleMemory).v4p" scrollx="0" scrolly="0" systemname="TorqueControl (MuscleMemory)" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\TorqueControl (MuscleMemory).v4p">
-   <BOUNDS type="Window" left="8064" top="9060" width="12828" height="6264">
+   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\modules\TorqueControl (MuscleMemory).v4p" scrollx="0" scrolly="0" systemname="TorqueControl (MuscleMemory)" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\TorqueControl (MuscleMemory).v4p">
+   <BOUNDS type="Window" left="11184" top="8892" width="10200" height="6264">
    </BOUNDS>
    <PACK Name="addonpack" Version="33.7.0">
    </PACK>
@@ -43,9 +43,9 @@
    <LINK srcnodeid="2" srcpinname="Y Output Value" dstnodeid="1" dstpinname="ID">
    </LINK>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="4">
-   <BOUNDS type="Node" left="2736" top="636" width="100" height="100">
+   <BOUNDS type="Node" left="2700" top="636" width="100" height="100">
    </BOUNDS>
-   <BOUNDS type="Box" left="2736" top="636" width="792" height="240">
+   <BOUNDS type="Box" left="2700" top="636" width="792" height="240">
    </BOUNDS>
    <PIN pinname="Value Type" slicecount="1" values="Integer">
    </PIN>
