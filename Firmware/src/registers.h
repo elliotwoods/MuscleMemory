@@ -270,6 +270,11 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
+	{ RegisterType::CANErrorsTotal, {
+		"CANErrorsTotal"
+		, 0
+		, Access::ReadOnly
+	}},
 
 	{ RegisterType::Reboot, {
 		"Reboot"
