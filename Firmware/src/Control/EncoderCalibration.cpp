@@ -79,7 +79,6 @@ namespace Control {
 		}
 		
 		this->hasCalibration = true;
-
 		return true;
 	}
 
@@ -346,7 +345,9 @@ namespace Control {
 
 			// Save the calibration
 			this->hasCalibration = true;
-			this->save();
+			if(!this->save()) {
+				throw(Exception("Save failed"));
+			}
 
 			// Notify success
 			printf("Calibration complete\n");
