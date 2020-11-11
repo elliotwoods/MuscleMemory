@@ -1,4 +1,4 @@
-import showModal from "./Modal.js"
+import showModal from "../Utils/Modal.js"
 
 let registerGenerators = [];
 let timeStart = new Date();
@@ -11,7 +11,7 @@ class RegisterGenerator {
 		this.register = register;
 		this.enabled = false;
 
-		this.button = $(`<button id="clearButton" class="btn btn-secondary" title="Animate" />`);
+		this.button = $(`<button class="btn btn-secondary btn-sm" title="Animate" />`);
 		parent.append(this.button);
 
 		this.icon = $(`<i class="fas fa-running" />`);
