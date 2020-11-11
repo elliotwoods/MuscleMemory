@@ -79,6 +79,8 @@ auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
 #define PRIORITY_MOTOR 1
 #define PRIORITY_AGENT 1
 
+bool fastBoot = false;
+
 //----------
 void showSplashMessage(const std::string & message)
 {
@@ -87,7 +89,9 @@ void showSplashMessage(const std::string & message)
 
 	uint16_t _minDisplayTime = 300;
 	splashScreen->setMessage(message);
-	vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
+	if(!fastBoot) {
+		vTaskDelay(_minDisplayTime / portTICK_PERIOD_MS);
+	}
 	GUI::Controller::X().update();
 }
 
@@ -102,21 +106,12 @@ initDevices()
 	}
 
 	// Initialise I2C
-	{
-		auto & i2c = Devices::I2C::X();
-		i2c.init();
-		auto foundDevices = i2c.scan();
-		printf("Found I2C devices : ");
-		for(const auto & device : foundDevices) {
-			printf("%#02x ", device);
-		}
-		printf("\n");
-	}
+	Devices::I2C::X().init();
 
-	// Initilaise the GUI here!
+	// Initilaise the GUI
 	GUI::Controller::X().init(splashScreen);
 
-	// Print IDF version
+	// Show ESP-IDF version
 	{
 		char message[100];
 		sprintf(message, "ESP-IDF : %s", esp_get_idf_version());
@@ -129,6 +124,7 @@ initDevices()
 
 	showSplashMessage("Load registry defaults...");	
 	Registry::X().loadDefaults();
+	fastBoot = getRegisterValue(Registry::RegisterType::FastBoot) == 1;
 
 	showSplashMessage("Initialise AS5047...");
 	as5047.init();
@@ -315,6 +311,9 @@ void
 interfaceTask(void*)
 {
 	while(true) {
+		if(getRegisterValue(Registry::RegisterType::Reboot) == 1) {
+			esp_restart();
+		}
 		updateInterface();
 	}
 }
