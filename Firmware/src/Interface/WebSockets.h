@@ -21,6 +21,7 @@ namespace Interface {
 		void sendRegisters();
 		void sendEncoderCalibration();
 
+		bool initialised = false;
 		bool needsSendRegisterInfo = true;
 		bool needsSendEncoderCalibration = false;
 
