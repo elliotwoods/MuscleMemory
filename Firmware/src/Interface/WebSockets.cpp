@@ -159,7 +159,7 @@ namespace Interface {
 			// should be an array
 			if(value.type == msgpack_object_type::MSGPACK_OBJECT_ARRAY) {
 #ifdef WEBSOCKETS_DEBUG
-				printf("SaveDefault : Is Array\n");
+				printf("[WebSockets] SaveDefault : Is Array\n");
 #endif
 				for(size_t i=0; i<value.via.array.size; i++) {
 					const auto & it = value.via.array.ptr[i];

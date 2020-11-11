@@ -181,7 +181,7 @@ namespace Control {
 			panel->onDraw = [&](U8G2 & u8g2) {
 				u8g2.setFont(u8g2_font_nerhoe_tr);
 		
-				u8g2.drawStr(5, 10, guiStatus);
+				u8g2.drawStr(5, 11, guiStatus);
 
 				char message[100];
 
@@ -230,7 +230,7 @@ namespace Control {
 				auto startValue = encoder.getPositionFiltered(settings.encoderFilterSize);
 
 				//check if we're already at the start
-				if(startValue < encoderTicksPerStep * 3 / 2) {
+				if(startValue < encoderTicksPerStep) {
 					printf("Already at first step (start value = %d)\n", startValue);
 				}
 				else {
@@ -345,6 +345,7 @@ namespace Control {
 			this->stepCycleCalibration.stepCycleOffset = (uint8_t) stepIndexOffset * 64;
 
 			// Save the calibration
+			this->hasCalibration = true;
 			this->save();
 
 			// Notify success
@@ -354,7 +355,6 @@ namespace Control {
 				u8g2.drawStr(0, 32, "CALIBRATE OK");
 				u8g2.setFont(u8g2_font_nerhoe_tr);
 			};
-			this->hasCalibration = true;
 
 			gui.update();
 			vTaskDelay(5000 / portTICK_PERIOD_MS);
