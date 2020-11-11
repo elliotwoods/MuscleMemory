@@ -180,7 +180,10 @@ namespace Interface {
 						}
 #ifdef WEBSOCKETS_DEBUG
 						if(!foundRegister) {
-							printf("[WebSockets] register_save_default : Failed to find register named '%s'z\n");
+							char buffer[it.via.str.size + 1];
+							memcpy(buffer, it.via.str.ptr, it.via.str.size);
+							buffer[it.via.str.size] = '\0';
+							printf("[WebSockets] register_save_default : Failed to find register named '%s'z\n", buffer);
 						}
 #endif
 					}
