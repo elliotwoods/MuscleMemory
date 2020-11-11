@@ -5,13 +5,18 @@
 #include "../Devices/INA219.h"
 #include "../Devices/AS5047.h"
 
+#include "Interface/CANResponder.h"
+#include "Interface/WebSockets.h"
+
 namespace Control {
 	class Provisioning {
 	public:
 		Provisioning(Devices::MotorDriver &
 			, Devices::INA219 &
 			, Devices::AS5047 &
-			, EncoderCalibration &);
+			, EncoderCalibration &
+			, Interface::CANResponder &
+			, Interface::WebSockets &);
 		void perform();
 	
 		struct Settings {
@@ -31,7 +36,11 @@ namespace Control {
 		Devices::MotorDriver & motorDriver;
 		Devices::INA219 & ina219;
 		Devices::AS5047 & as5047;
+		
 		EncoderCalibration & encoderCalibration;
+
+		Interface::CANResponder & canResponder;
+		Interface::WebSockets & webSockets;
 
 		Settings settings;
 		Status status;
