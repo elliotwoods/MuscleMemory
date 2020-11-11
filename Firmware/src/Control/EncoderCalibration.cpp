@@ -244,7 +244,7 @@ namespace Control {
 						motorDriver.step(++step % 4, settings.current);
 
 						// Move fast until we get close to the end
-						auto period = position > (1 << 14) - 5
+						auto period = position > (1 << 14) * (stepCycleCount - 1) / stepCycleCount
 							? settings.stepHoldTimeMS
 							: settings.stepToStartPeriodMS;
 
@@ -381,8 +381,10 @@ namespace Control {
 			panel->onButtonPressed = [&buttonPressed] {
 				buttonPressed = true;
 			};
-			while(!buttonPressed) {
+			auto startTime = esp_timer_get_time();
+			while(!buttonPressed && esp_timer_get_time() - startTime < 10 * 1000000) {
 				gui.update();
+				vTaskDelay(50 / portTICK_PERIOD_MS);
 			}
 		}
 
