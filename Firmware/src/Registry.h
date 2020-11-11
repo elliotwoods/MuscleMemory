@@ -85,6 +85,7 @@ public:
 		CANRxThisFrame = 90,
 		CANTxThisFrame = 91,
 		CANErrorsThisFrame = 92,
+		CANErrorsTotal = 93,
 
 		// Boot
 		Reboot = 100,
