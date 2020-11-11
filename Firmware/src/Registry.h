@@ -137,6 +137,7 @@ public:
 #else
 		int32_t value;
 #endif
+		int32_t defaultValue;
 		const Access access;
 		const Range range;
 	};
