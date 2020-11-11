@@ -31,6 +31,7 @@ Registry::Register::Register(const Register & other)
 #else
 , value(other.value)
 #endif
+, defaultValue(other.defaultValue)
 , access(other.access)
 , range(other.range)
 {
@@ -41,6 +42,7 @@ Registry::Register::Register(const Register & other)
 Registry::Register::Register(const std::string & name, int32_t value, Access access)
 : name(name)
 , value(value)
+, defaultValue(value)
 , access(access)
 , range({false})
 {
@@ -51,6 +53,7 @@ Registry::Register::Register(const std::string & name, int32_t value, Access acc
 Registry::Register::Register(const std::string & name, int32_t value, Access access, int32_t min, int32_t max)
 : name(name)
 , value(value)
+, defaultValue(value)
 , access(access)
 , range({true, min, max})
 {
@@ -105,7 +108,11 @@ Registry::loadDefaults()
 	RegisterType registerType;
 	for(int i=0; i<count; i++) {
 		fread(&registerType, sizeof(RegisterType), 1, file);
-		fread(&registers.at(registerType).value, sizeof(int32_t), 1, file);
+		fread(&registers.at(registerType).defaultValue, sizeof(int32_t), 1, file);
+		setRegisterValue(registerType, registers.at(registerType).defaultValue);
+
+		// Remember that this register default needs saving
+		this->defaultsToSave.insert(registerType);
 	}
 
 	fclose(file);
@@ -115,8 +122,13 @@ Registry::loadDefaults()
 void
 Registry::saveDefault(const RegisterType & registerType)
 {
+	// Set the cached default value
+	registers.at(registerType).defaultValue = getRegisterValue(registerType);
+
+	// Remember to save this default value
 	this->defaultsToSave.insert(registerType);
 
+	// Save all default values (not just this one)
 	auto file = fopen(registerDefaultsFilename, "wb");
 	if(!file) {
 		printf("[Registry] Cannot open file for saving (%s)", registerDefaultsFilename);
@@ -125,7 +137,7 @@ Registry::saveDefault(const RegisterType & registerType)
 
 	for(const auto & regsiterTypeToSave : this->defaultsToSave) {
 		fwrite(&regsiterTypeToSave, sizeof(RegisterType), 1, file);
-		fwrite(&registers.at(regsiterTypeToSave).value, sizeof(int32_t), 1, file);
+		fwrite(&registers.at(regsiterTypeToSave).defaultValue, sizeof(int32_t), 1, file);
 	}
 
 	fclose(file);

@@ -9,7 +9,7 @@ class EncoderCalibration {
 	setDevice(device) {
 		this.device = device;
 		this.device.sendRequest({
-			"request_encoder_calibration" : null
+			"request_encoder_calibration_data" : null
 		});
 	}
 

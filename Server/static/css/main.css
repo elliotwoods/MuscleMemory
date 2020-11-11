@@ -35,3 +35,9 @@ a.editableValue:visited
 	font-weight: 900;
 	font-size: 24px;
 }
+
+.defaultValue
+{
+	display: block;
+	color: lightgray;
+}
