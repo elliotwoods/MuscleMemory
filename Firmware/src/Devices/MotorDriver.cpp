@@ -1,4 +1,5 @@
 #include "MotorDriver.h"
+#include "Registry.h"
 
 #ifdef ARDUINO
 	#define DAC_A DAC_GPIO25_CHANNEL
@@ -66,6 +67,8 @@ namespace Devices {
 	void
 	MotorDriver::setTorque(Torque torque, PositionWithinStepCycle positionWithinStepCycle)
 	{
+		const auto driveOffset = getRegisterValue(Registry::RegisterType::DriveOffset);
+
 		bool positiveDirection = torque >= 0;
 
 		//presume position is 0 to start and we're moving positive
@@ -74,61 +77,57 @@ namespace Devices {
 		int8_t coil_B;
 
 
-		// Full math version
-		//
-		// const int16_t offset = 64; // 64 is 90 degree offset, i.e. one step
-		// if(positiveDirection) {
-		// 	coil_A = this->cosTableFull[MOD((int16_t) positionWithinStepCycle + offset, 255)];
-		// 	coil_B = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - (int16_t)64 + offset, 255)];
-		// }
-		// else {
-		// 	coil_A = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - offset, 255)];
-		// 	coil_B = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - (int16_t)64 - offset, 255)];
-		// }
-
-		// NOTE : The overflow doesn't happen cleanly, we need to manually overflow
-		// Quick version (unsigned fixed point math, avoid up/down casting)
-		if(positiveDirection) {
-			if(positionWithinStepCycle < 192) {
-				coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 64];
+		if(driveOffset != 64) {
+			// Full math version
+			const auto offset = (int16_t) driveOffset; // 64 is 90 degree offset, i.e. one step
+			if(positiveDirection) {
+				coil_A = this->cosTableFull[MOD((int16_t) positionWithinStepCycle + offset, 255)];
+				coil_B = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - (int16_t)64 + offset, 255)];
 			}
 			else {
-				coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 192];
+				coil_A = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - offset, 255)];
+				coil_B = this->cosTableFull[MOD((int16_t) positionWithinStepCycle - (int16_t)64 - offset, 255)];
 			}
-			coil_B = this->cosTableFull[positionWithinStepCycle];
 		}
 		else {
-			if(positionWithinStepCycle < 64) {
-				coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 192];
+			// NOTE : The overflow doesn't happen cleanly, we need to manually overflow
+			// Quick version (unsigned fixed point math, avoid up/down casting)
+			if(positiveDirection) {
+				if(positionWithinStepCycle < 192) {
+					coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 64];
+				}
+				else {
+					coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 192];
+				}
+				coil_B = this->cosTableFull[positionWithinStepCycle];
 			}
 			else {
-				coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 64];
-			}
+				if(positionWithinStepCycle < 64) {
+					coil_A = this->cosTableFull[positionWithinStepCycle + (uint8_t) 192];
+				}
+				else {
+					coil_A = this->cosTableFull[positionWithinStepCycle - (uint8_t) 64];
+				}
 
-			if(positionWithinStepCycle < 128) {
-				coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
-			}
-			else {
-				coil_B = this->cosTableFull[positionWithinStepCycle - (uint8_t) 128];
+				if(positionWithinStepCycle < 128) {
+					coil_B = this->cosTableFull[positionWithinStepCycle + (uint8_t) 128];
+				}
+				else {
+					coil_B = this->cosTableFull[positionWithinStepCycle - (uint8_t) 128];
+				}
 			}
 		}
+		
 
-
-		printf("%d, %d, %d, %d\n", torque, positionWithinStepCycle, coil_A, coil_B);
+		
 
 		// Coil A
-		{
-			uint8_t referenceVoltage = uint8_t (((uint16_t) abs(coil_A) * (uint16_t) abs(torque)) / (uint16_t) (64));
-			dac_output_voltage(this->configuration.vrefDacs.A, referenceVoltage);
-			//printf("Coil A reference voltage: %d\n", referenceVoltage);
-		}
+		uint8_t referenceVoltageA = uint8_t (((uint16_t) abs(coil_A) * (uint16_t) abs(torque)) / (uint16_t) (64));
+		dac_output_voltage(this->configuration.vrefDacs.A, referenceVoltageA);
 
 		// Coil B
-		{
-			uint8_t referenceVoltage = uint8_t (((uint16_t) abs(coil_B) * (uint16_t) abs(torque)) / (uint16_t) (64));
-			dac_output_voltage(this->configuration.vrefDacs.B, referenceVoltage);
-			//printf("Coil B reference voltage: %d\n", referenceVoltage);
-		}
+		uint8_t referenceVoltageB = uint8_t (((uint16_t) abs(coil_B) * (uint16_t) abs(torque)) / (uint16_t) (64));
+		dac_output_voltage(this->configuration.vrefDacs.B, referenceVoltageB);
 
 		gpio_set_level(this->configuration.coilPins.coil_A_positive, coil_A > 0);
 		gpio_set_level(this->configuration.coilPins.coil_A_negative, coil_A < 0);
