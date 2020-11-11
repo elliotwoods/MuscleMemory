@@ -54,6 +54,13 @@ std::map<RegisterType, Register> registers {
 		, 64 * (1 << 14)
 		, Access::ReadWrite
 	}},
+	{ RegisterType::DriveOffset, {
+		"DriveOffset"
+		, 64
+		, Access::ReadWrite
+		, -255
+		, 255
+	}},
 
 
 	{ RegisterType::EncoderReading, {
@@ -223,14 +230,14 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::AntiStallAttack, {
 		"AntiStallAttack"
-		, 1
+		, 4
 		, Access::ReadWrite
 		, 0
 		, 128
 	}},
 	{ RegisterType::AntiStallDecay, {
 		"AntiStallDecay"
-		, 2
+		, 8
 		, Access::ReadWrite
 		, 0
 		, 128
@@ -242,7 +249,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::AntiStallScale, {
 		"AntiStallScale"
-		, 9
+		, 7
 		, Access::ReadWrite
 		, 0
 		, 32
