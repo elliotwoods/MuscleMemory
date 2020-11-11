@@ -12,6 +12,8 @@
 #include <set>
 
 #define CAN_PRINT_PREVIEW_ENABLED false
+#define CAN_ENABLE_LIVE_DEVICE_ID_SWITCH false
+
 #define ERR_DELAY_US                    (800 * 500/25)     //Approximate time for arbitration phase at 500KBPS
 #define ERR_PERIOD_US                   (80 * 500/25)      //Approximate time for two bits at 500KBPS
 
@@ -45,23 +47,65 @@ namespace Interface {
 		// NOTE : this will fail to compile
 		// We change line 108 of can.h to define CAN_IO_UNUSED to be GPIO_NUM_MAX
 		can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(TX_GPIO_NUM, RX_GPIO_NUM, CAN_MODE_NORMAL);
+		{
+			g_config.rx_queue_len = 64;
+		}
+
 		can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
-		can_filter_config_t f_config = CAN_FILTER_CONFIG_ACCEPT_ALL();
+
+		can_filter_config_t f_config;
+		{
+			this->deviceIDMask = (uint16_t) getRegisterValue(Registry::RegisterType::DeviceID);
+			f_config.acceptance_code = this->deviceIDMask << 3;
+			f_config.acceptance_mask = 0xFFFFFFFF - ((1024 - 1) << 3);
+			f_config.single_filter = true;
+		}
 
 		//Install & Start CAN driver
 		ESP_ERROR_CHECK(can_driver_install(&g_config, &t_config, &f_config));
 		ESP_ERROR_CHECK(can_start());
 
 		//Setup bus alerts
-		can_reconfigure_alerts(CAN_ALERT_ABOVE_ERR_WARN | CAN_ALERT_ERR_PASS | CAN_ALERT_BUS_OFF, NULL);
+		ESP_ERROR_CHECK(can_reconfigure_alerts(CAN_ALERT_ABOVE_ERR_WARN | CAN_ALERT_ERR_PASS | CAN_ALERT_BUS_OFF, NULL));
+	}
+
+	//----------
+	void
+	CANResponder::deinit()
+	{
+		ESP_ERROR_CHECK(can_stop());
+		
+		// Clear the Rx queue
+		{
+			can_message_t message;
+			while(can_receive(&message, 0) == ESP_OK) {
+
+			}
+		}
+
+		ESP_ERROR_CHECK(can_driver_uninstall());
 	}
 
 	//----------
 	void
 	CANResponder::update()
 	{
+		// For reads and writes we use more complex manner than simple get/set functions
 		static auto & registry = Registry::X();
-		auto & ourDeviceID = registry.registers.at(Registry::RegisterType::DeviceID).value;
+
+		// Check if Device ID changed
+		{
+			auto deviceIDMask = (uint16_t) getRegisterValue(Registry::RegisterType::DeviceID);
+			if(deviceIDMask != this->deviceIDMask) {
+				if(CAN_ENABLE_LIVE_DEVICE_ID_SWITCH) {
+					this->deinit();
+					this->init();
+				}
+				else {
+					printf("Device ID has changed, reboot required after saving default\n");
+				}
+			}
+		}
 
 		std::set<Registry::RegisterType> readRequests;
 
@@ -74,10 +118,6 @@ namespace Interface {
 			can_message_t message;
 			while(can_receive(&message, 0) == ESP_OK)
 			{
-				auto messageDeviceID = message.identifier;
-				if(messageDeviceID != ourDeviceID) {
-					continue;
-				}
 				rxCount++;
 
 				auto dataMover = message.data;
@@ -198,11 +238,14 @@ namespace Interface {
 		}
 
 		// Save info to registry
-		registry.registers.at(Registry::RegisterType::CANRxThisFrame).value = (int32_t) rxCount;
-		registry.registers.at(Registry::RegisterType::CANTxThisFrame).value = (int32_t) txCount;
-		registry.registers.at(Registry::RegisterType::CANErrorsThisFrame).value = (int32_t) errorCount;
-		if(rxCount > 0 || txCount > 0 || errorCount > 0) {
-			printf("[CAN] Rx : (%u), Tx : (%u), Errors : (%u)\n", rxCount, txCount, errorCount);
+		setRegisterValue(Registry::RegisterType::CANRxThisFrame, (int32_t) rxCount);
+		setRegisterValue(Registry::RegisterType::CANTxThisFrame, (int32_t) txCount);
+		setRegisterValue(Registry::RegisterType::CANErrorsThisFrame, (int32_t) errorCount);
+
+		if (CAN_PRINT_PREVIEW_ENABLED) {
+			if(rxCount > 0 || txCount > 0 || errorCount > 0) {
+				printf("[CAN] Rx : (%u), Tx : (%u), Errors : (%u)\n", rxCount, txCount, errorCount);
+			}
 		}
 	}
 }
