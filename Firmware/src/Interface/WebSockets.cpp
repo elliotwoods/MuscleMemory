@@ -46,6 +46,8 @@ namespace Interface {
 		webSocketsClient.onEvent(webSocketEvent);
 		webSocketsClient.setReconnectInterval(5000);
 
+		this->initialised = true;
+
 		this->update();
 	}
 
@@ -53,6 +55,11 @@ namespace Interface {
 	void
 	WebSockets::update()
 	{
+		if(!this->initialised) {
+			// e.g. the provisioning scren might call update on us, but websockets might not be active
+			return;
+		}
+
 		webSocketsClient.loop();
 
 		if(webSocketsClient.isConnected()) {
