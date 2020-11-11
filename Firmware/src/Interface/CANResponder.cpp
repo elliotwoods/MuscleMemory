@@ -241,6 +241,11 @@ namespace Interface {
 		setRegisterValue(Registry::RegisterType::CANRxThisFrame, (int32_t) rxCount);
 		setRegisterValue(Registry::RegisterType::CANTxThisFrame, (int32_t) txCount);
 		setRegisterValue(Registry::RegisterType::CANErrorsThisFrame, (int32_t) errorCount);
+		if(errorCount > 0) {
+			auto canErrorsTotal = getRegisterValue(Registry::RegisterType::CANErrorsTotal);
+			canErrorsTotal += errorCount;
+			setRegisterValue(Registry::RegisterType::CANErrorsTotal, canErrorsTotal);
+		}
 
 		if (CAN_PRINT_PREVIEW_ENABLED) {
 			if(rxCount > 0 || txCount > 0 || errorCount > 0) {
