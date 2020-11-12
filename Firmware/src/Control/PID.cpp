@@ -24,30 +24,31 @@ namespace Control {
 	PID::update()
 	{
 		// Registry reads
-		const auto & multiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
-		const auto & kP = getRegisterValue(Registry::RegisterType::PIDProportional);
-		const auto & kD = getRegisterValue(Registry::RegisterType::PIDDifferential);
-		const auto & kI = getRegisterValue(Registry::RegisterType::PIDIntegral);
-		const auto & integralMax = getRegisterValue(Registry::RegisterType::PIDIntegralMax);
-		const auto & antiStallEnabled = getRegisterValue(Registry::RegisterType::AntiStallEnabled);
-		const auto & softLimitMax = getRegisterValue(Registry::RegisterType::SoftLimitMax);
-		const auto & softLimitMin = getRegisterValue(Registry::RegisterType::SoftLimitMin);
-		const auto & maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
+		const auto multiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
+		const auto kP = (int64_t) getRegisterValue(Registry::RegisterType::PIDProportional);
+		const auto kD = (int64_t) getRegisterValue(Registry::RegisterType::PIDDifferential);
+		const auto kI = (int64_t) getRegisterValue(Registry::RegisterType::PIDIntegral);
+		const auto integralMax = (int64_t) getRegisterValue(Registry::RegisterType::PIDIntegralMax);
+		const auto antiStallEnabled = getRegisterValue(Registry::RegisterType::AntiStallEnabled) == 1;
+		const auto softLimitMax = getRegisterValue(Registry::RegisterType::SoftLimitMax);
+		const auto softLimitMin = getRegisterValue(Registry::RegisterType::SoftLimitMin);
+		const auto maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
 
 		// Get the filtered target position
 		const auto targetPosition = this->filteredTarget.getTargetFiltered();
 
 		// Get frame time
 		this->frameTimer.update();
-		auto dt = this->frameTimer.getPeriod();
+		auto dt = (int64_t) this->frameTimer.getPeriod();
 
 		// Get error on position (we scale down to get it closer to torque values)
-		int32_t rawErrorOnPosition = (targetPosition - multiTurnPosition);
-		auto scaledErrorOnPosition = rawErrorOnPosition >> 4;
+		const int64_t pidPositionScale = 1 << 4;
+		auto rawErrorOnPosition = (int64_t) targetPosition - (int64_t) multiTurnPosition;
+		auto scaledErrorOnPosition = rawErrorOnPosition / pidPositionScale;
 
 		// Calculate ID 
-		auto integral = this->priorIntegral + scaledErrorOnPosition * dt / 1000000; // normalise for seconds
-		auto derivative =  (scaledErrorOnPosition - this->priorError) * 1000000 / dt; // derivative in seconds, reduce scale
+		auto integral = this->priorIntegral + scaledErrorOnPosition * dt / 1000000LL; // normalise for seconds
+		auto derivative =  (scaledErrorOnPosition - this->priorError) * 1000000LL / dt; // derivative in seconds, reduce scale
 
 		// clamp integral
 		{
@@ -64,10 +65,10 @@ namespace Control {
 
 		auto output = kP * scaledErrorOnPosition
 			+ kD * derivative
-			+ kI * integral / 1000000; // Normalise for seconds
+			+ kI * integral / 1000000LL; // Normalise for seconds
 
 		// Scale output
-		output = output >> 20;
+		auto torque = (int32_t) (output / (1 << 20));
 
 		// Apply anti-stall
 		if(antiStallEnabled) {
@@ -85,10 +86,10 @@ namespace Control {
 				antiStallValue = 0;
 
 				// Also turn off torque
-				output = 0;
+				torque = 0;
 			}
 			else {
-				const auto speed = abs(derivative);
+				const auto speed = (int32_t) abs(derivative);
 
 				// Attack if speed too low
 				if(speed < antiStallMinVelocity) {
@@ -126,7 +127,7 @@ namespace Control {
 				}
 
 				// Apply anti-stall
-				output += antiStallValue >> antiStallScale;
+				torque += antiStallValue / (1 << antiStallScale);
 			}
 
 			// Store anti-stall value
@@ -134,15 +135,11 @@ namespace Control {
 		}
 
 		// Clamp output and cast down to int8_t
-		int8_t torque;
-		if(output > maximumTorque) {
+		if(torque > maximumTorque) {
 			torque = maximumTorque;
 		}
-		else if(output < -maximumTorque) {
+		else if(torque < -maximumTorque) {
 			torque = -maximumTorque;
-		}
-		else {
-			torque = output;
 		}
 
 		// Apply soft limits
@@ -159,11 +156,23 @@ namespace Control {
 			this->priorIntegral = integral;
 		}
 
+		// Set the offset
+		int32_t offset;
+		{
+			const auto offsetFactor = getRegisterValue(Registry::RegisterType::OffsetFactor);
+			const auto offsetMaximum = getRegisterValue(Registry::RegisterType::OffsetMaximum);
+			offset = (int32_t) abs(rawErrorOnPosition / (int64_t) offsetFactor);
+			if(offset > offsetMaximum) {
+				offset = offsetMaximum;
+			}
+		}
+
 		// Write to registers (not using safe method for now)
 		setRegisterValue(Registry::RegisterType::Torque, torque);
 		setRegisterValue(Registry::RegisterType::AgentControlFrequency, this->frameTimer.getFrequency());
 		setRegisterValue(Registry::RegisterType::PIDResultP, scaledErrorOnPosition);
 		setRegisterValue(Registry::RegisterType::PIDResultI, integral);
 		setRegisterValue(Registry::RegisterType::PIDResultD, derivative);
+		setRegisterValue(Registry::RegisterType::DriveOffset, offset);
 	}
 }
