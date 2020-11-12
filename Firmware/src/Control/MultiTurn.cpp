@@ -1,9 +1,10 @@
 #include "MultiTurn.h"
+#include "GUI/Controller.h"
 
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 #define HALF_WAY (1 << 13)
 
-#define DEBUG_MULTITURN false
+#define DEBUG_MULTITURN true
 
 namespace Control {
 	//-----------
@@ -40,8 +41,22 @@ namespace Control {
 		this->position = this->priorSingleTurnPosition;
 		this->turns = 0;
 
-		// Load the multiturn session
-		this->loadSession(singleTurnPosition);
+		// 'Mount' the partition
+		this->partition = esp_partition_find_first( (esp_partition_type_t) 0x40,  (esp_partition_subtype_t) 0x00, "multiturn");
+		if(!this->partition) {
+			printf("[MultiTurn] Cannot mount MultiTurn partition");
+			abort();
+		}
+
+		if(!GUI::Controller::X().isDialButtonPressed()) {
+			// Load the multiturn session
+			this->loadSession(singleTurnPosition);
+		}
+		else {
+			if(DEBUG_MULTITURN) {
+				printf("[MultiTurn] Ignoring saved data on load\n");
+			}
+		}
 
 		this->driveLoopUpdate(singleTurnPosition);
 	}
@@ -82,7 +97,7 @@ namespace Control {
 				}
 
 				// Then save the session
-				//this->saveSession();
+				this->saveSession();
 			}
 		}
 	}
@@ -98,33 +113,43 @@ namespace Control {
 	void
 	MultiTurn::saveSession()
 	{
-		this->saveData.fileIndex++;
 		this->saveData.multiTurnPosition = position;
 		this->saveData.saveSequenceIndex++;
-
-		if(DEBUG_MULTITURN) {
-			printf("[MultiTurn] Saving multiturn (%d)\n", this->saveData.multiTurnPosition);
-		}
 
 		// Create the checksum
 		this->saveData.storedCRC = saveData.getCRC();
 
-		// Open the file for saving
-		char filename[100];
-		MultiTurn::renderFileName(filename, saveData.fileIndex);
-		if(DEBUG_MULTITURN) {
-			printf("[MultiTurn] Opening file for save (%s)\n", filename);
+		// Align the size to 16 bytes
+		size_t saveDataSize = sizeof(SaveData);
+		if(saveDataSize % 16 != 0) {
+			saveDataSize = (saveDataSize / 16) * 16 + 16;
 		}
-		auto file = fopen(filename, "wb");
 
-		if(file) {
-			printf("Saving %s\n", filename);
-			fwrite(&this->saveData, sizeof(SaveData), 1, file);
-			fclose(file);
+		auto writePosition = this->saveIndex * saveDataSize;
+
+		// Format the sector if needed
+		if(writePosition % 0x1000 == 0) {
+			// We're at the beginning of this sector, let's erase this range
+			if(DEBUG_MULTITURN) {
+				printf("[MultiTurn] Erasing sector at (%" PRIu32 ")\n", writePosition);
+			}
+			esp_partition_erase_range(this->partition
+				, writePosition
+				, 0x1000);
 		}
-		else {
-			printf("[MultiTurn] Couldn't open file for saving %s\n", filename);
+
+
+		// Write the data
+		if(DEBUG_MULTITURN) {
+			printf("[MultiTurn] Saving multiturn (%d) at writePosition (%d)\n", this->saveData.multiTurnPosition, writePosition);
 		}
+		ESP_ERROR_CHECK(esp_partition_write(this->partition
+			, writePosition
+			, &this->saveData
+			, saveDataSize));
+
+		this->saveIndex++;
+		this->saveIndex %= this->partition->size / saveDataSize;
 	}
 
 	//-----------
@@ -134,30 +159,103 @@ namespace Control {
 		// We keep 2 files in case one becomes corrupted
 
 		SaveData freshestData;
+		size_t freshestReadPosition;
+
 		bool anyLoaded = false;
-		for(uint8_t fileIndex=0; fileIndex<255; fileIndex++) {
-			char filename[100];
-			MultiTurn::renderFileName(filename, fileIndex);
+
+		// Align the size to 16 bytes
+		size_t saveDataSize = sizeof(SaveData);
+		if(saveDataSize % 16 != 0) {
+			saveDataSize = (saveDataSize / 16) * 16 + 16;
+		}
+
+		// Read first position, and if that fails, read last position
+		{
+			SaveData loadedData;
+			esp_partition_read(this->partition
+				, 0
+				, &loadedData
+				, saveDataSize);
 			
-			SaveData saveData;
-			if(MultiTurn::loadSessionFile(filename, saveData)) {
-				if(saveData.saveSequenceIndex > freshestData.saveSequenceIndex || !anyLoaded)
-				{
+			if(loadedData.getCRC() == loadedData.storedCRC) {
+				if(DEBUG_MULTITURN) {
+					printf("[MultiTurn] First entry is valid\n");
+				}
+				freshestData = loadedData;
+				freshestReadPosition = 0;
+				anyLoaded = true;
+			}
+			else {
+				if(DEBUG_MULTITURN) {
+					printf("[MultiTurn] First entry is not valid. Trying last one\n");
+				}
+				auto readPosition = ((this->partition->size - 1) % saveDataSize) * saveDataSize;
+				esp_partition_read(this->partition
+					, readPosition
+					, &loadedData
+					, saveDataSize);
+
+				if(loadedData.getCRC() == loadedData.storedCRC) {
+					if(DEBUG_MULTITURN) {
+						printf("[MultiTurn] Last entry is valid\n");
+					}
+					freshestData = loadedData;
+					freshestReadPosition = readPosition;
 					anyLoaded = true;
-					freshestData = saveData;
+				}
+				else {
+					// Looks like we need to format
+					printf("[MultiTurn] First and last entries are not valid\n");
 				}
 			}
 		}
 
-		if(!anyLoaded) {
+		// Read remaining positions if we got any data so far
+		if(anyLoaded) {
+			for(size_t readPosition=saveDataSize; readPosition<this->partition->size; readPosition += saveDataSize) {
+				SaveData loadedData;
+				esp_partition_read(this->partition
+					, readPosition
+					, &loadedData
+					, saveDataSize);
+
+				if(loadedData.getCRC() == loadedData.storedCRC) {
+					if(DEBUG_MULTITURN) {
+						printf("[MultiTurn] Entry %" PRIu32 " at readPosition (%" PRIu32 ") with saveSequenceIndex (%" PRIu64 ") and saved MultiTurn position (%" PRIi32 ") is valid\n"
+							, readPosition / saveDataSize
+							, readPosition
+							, loadedData.saveSequenceIndex
+							, loadedData.multiTurnPosition);
+					}
+					if(loadedData.saveSequenceIndex > freshestData.saveSequenceIndex) {
+						freshestData = loadedData;
+						freshestReadPosition = readPosition;
+					}
+					else {
+						break;
+					}
+				}
+				else {
+					break;
+				}
+			}
+		}
+
+		if(anyLoaded) {
+			this->saveData = freshestData;
+			this->saveIndex = freshestReadPosition / saveDataSize + 1;
+			this->turns = this->implyTurns(freshestData.multiTurnPosition, currentSingleTurn);
+
+			if(DEBUG_MULTITURN) {
+				printf("[MultiTurn] Loaded multiturn data (%d)\n", turns);
+			}
+			return true;
+		}
+		else {
+				printf("[MultiTurn] Failed to load any data\n");
 			return false;
 		}
 		
-		this->saveData = freshestData;
-		this->turns = this->implyTurns(freshestData.multiTurnPosition, currentSingleTurn);
-
-		printf("[MultiTurn] Loaded multiturn data (%d)\n", turns);
-		return true;
 	}
 
 	//-----------
@@ -178,57 +276,5 @@ namespace Control {
 			turns++;
 		}
 		return turns;
-	}
-
-	//-----------
-	void
-	MultiTurn::renderFileName(char * filename, uint8_t index)
-	{
-		sprintf(filename, "/appdata/MultiTurn%d.dat", index);
-	}
-
-	//-----------
-	bool
-	MultiTurn::loadSessionFile(const char * filename, SaveData & loadedSaveData)
-	{
-		// Load the file
-		auto file = fopen(filename, "rb");
-		if(!file) {
-			return false;
-		}
-
-		// Get file size and check
-		fseek(file, 0L, SEEK_END);
-		auto size = ftell(file);
-		rewind(file);
-		if(size != sizeof(SaveData)) {
-			return false;
-		}
-
-		fread(&loadedSaveData, sizeof(SaveData), 1, file);
-		fclose(file);
-
-		printf("[MultiTurn] File (%s), fileIndex (%d), saveSequenceIndex (%lld), multiTurnPosition (%d), crc (%d)\n"
-			, filename
-			, (int) loadedSaveData.fileIndex
-			, loadedSaveData.saveSequenceIndex
-			, loadedSaveData.multiTurnPosition
-			, (int) loadedSaveData.storedCRC);
-
-		// Check checksum
-		{
-			auto crc = loadedSaveData.getCRC();
-			if(loadedSaveData.storedCRC != crc) {
-				printf("[MultiTurn] Saved checksum (%d) doesn't match calculated checksum (%d). Failed loading %s\n"
-					, loadedSaveData.storedCRC
-					, crc
-					, filename);
-				printf("[MultiTurn] Position in save (%d)\n"
-					, loadedSaveData.multiTurnPosition);
-				return false;
-			}
-		}
-
-		return true;
 	}
 }
