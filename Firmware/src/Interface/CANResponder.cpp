@@ -152,6 +152,7 @@ namespace Interface {
 			// Wait up to 100 ms on first read
 			while(can_receive(&message, firstRead ? 100 / portTICK_PERIOD_MS : 0) == ESP_OK)
 			{
+				firstRead = false;
 				this->rxCount++;
 
 				auto dataMover = message.data;
@@ -213,6 +214,20 @@ namespace Interface {
 							this->filteredTarget.notifyTargetChange();
 						}
 					}
+				}
+				else if(operation == Registry::Operation::WriteDefault) {
+					// Perform write default requests
+					auto findRegister = registry.registers.find(registerID);
+					if(findRegister == registry.registers.end()) {
+						printf("[CAN] : Error on write default request. Register (%d) not found", (uint16_t) registerID);
+					}
+					else {
+						if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::Operation) + sizeof(int32_t)) {
+							// If the message contains a value also, then write that value
+							findRegister->second.value = value;
+						}
+						registry.saveDefault(registerID);
+					}	
 				}
 			}
 		}
