@@ -47,7 +47,7 @@ namespace Control {
 		auto scaledErrorOnPosition = rawErrorOnPosition / pidPositionScale;
 
 		// Calculate ID 
-		auto integral = this->priorIntegral + scaledErrorOnPosition * dt / 1000000LL; // normalise for seconds
+		auto integral = this->priorIntegral + rawErrorOnPosition * dt / 1000000LL; // normalise for seconds
 		auto derivative =  (scaledErrorOnPosition - this->priorError) * 1000000LL / dt; // derivative in seconds, reduce scale
 
 		// clamp integral
