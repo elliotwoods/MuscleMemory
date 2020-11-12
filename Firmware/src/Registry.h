@@ -101,7 +101,8 @@ public:
 	enum Operation : uint8_t {
 		ReadRequest = 0,
 		WriteRequest = 1,
-		ReadResponse = 2
+		ReadResponse = 2,
+		WriteDefault = 3
 	};
 
 	static const std::set<RegisterType> defaultRegisterReads;
