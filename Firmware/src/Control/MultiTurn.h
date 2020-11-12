@@ -1,6 +1,7 @@
 #pragma once
 #include "EncoderCalibration.h"
 #include "../DataTypes.h"
+#include "esp_partition.h"
 
 namespace Control {
 	class MultiTurn {
@@ -8,7 +9,6 @@ namespace Control {
 		struct SaveData {
 			uint8_t getCRC() const;
 
-			uint8_t fileIndex = 0;
 			uint64_t saveSequenceIndex = 0;
 			MultiTurnPosition multiTurnPosition = 0;
 			uint8_t storedCRC = 0;
@@ -26,8 +26,6 @@ namespace Control {
 		bool loadSession(SingleTurnPosition currentSingleTurn);
 	private:
 		Turns implyTurns(MultiTurnPosition priorMultiTurnPosition, SingleTurnPosition currentSingleTurnPosition) const;
-		static void renderFileName(char * filename, uint8_t index);
-		static bool loadSessionFile(const char * filename, SaveData &);
 
 		EncoderCalibration & encoderCalibration;
 		SingleTurnPosition priorSingleTurnPosition = 0;
@@ -35,5 +33,7 @@ namespace Control {
 		volatile MultiTurnPosition position = 0;
 		
 		SaveData saveData;
+		const esp_partition_t * partition;
+		uint16_t saveIndex = 0;
 	};
 }
