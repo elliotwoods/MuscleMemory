@@ -97,8 +97,11 @@ namespace Interface {
 	void
 	CANResponder::update()
 	{
-		// For reads and writes we use more complex manner than simple get/set functions
-		static auto & registry = Registry::X();
+		if (CAN_PRINT_PREVIEW_ENABLED) {
+			if(this->rxCount > 0 || this->txCount > 0 || this->errorCount > 0) {
+				printf("[CAN] Rx : (%u), Tx : (%u), Errors : (%u)\n", this->rxCount, this->txCount, this->errorCount);
+			}
+		}
 
 		// Check if Device ID changed
 		{
@@ -109,23 +112,47 @@ namespace Interface {
 					this->init();
 				}
 				else {
-					printf("Device ID has changed, reboot required after saving default\n");
+					printf("Device ID has changed. Make sure default is saved and then reboot\n");
 				}
 			}
 		}
 
-		std::set<Registry::RegisterType> readRequests;
+		// Increment total errors
+		if(this->errorCount > 0) {
+			auto canErrorsTotal = getRegisterValue(Registry::RegisterType::CANErrorsTotal);
+			canErrorsTotal += this->errorCount;
+			setRegisterValue(Registry::RegisterType::CANErrorsTotal, canErrorsTotal);
+		}
 
-		uint16_t rxCount = 0;
-		uint16_t txCount = 0;
-		uint16_t errorCount = 0;
+		// Save registers
+		setRegisterValue(Registry::RegisterType::CANRxThisFrame, this->rxCount);
+		setRegisterValue(Registry::RegisterType::CANTxThisFrame, this->txCount);
+		setRegisterValue(Registry::RegisterType::CANErrorsThisFrame, this->errorCount);
+
+		// Blank for next frame
+		this->rxCount = 0;
+		this->txCount = 0;
+		this->errorCount = 0;
+	}
+
+	//----------
+	void
+	CANResponder::updateTask()
+	{
+		// For reads and writes we use more complex manner than simple get/set functions
+		static auto & registry = Registry::X();
+
+		std::set<Registry::RegisterType> readRequests;
 
 		// handle incoming messages
 		{
 			can_message_t message;
-			while(can_receive(&message, 0) == ESP_OK)
+			bool firstRead = true;
+
+			// Wait up to 100 ms on first read
+			while(can_receive(&message, firstRead ? 100 / portTICK_PERIOD_MS : 0) == ESP_OK)
 			{
-				rxCount++;
+				this->rxCount++;
 
 				auto dataMover = message.data;
 				auto operation = valueAndMove<Registry::Operation>(dataMover);
@@ -208,9 +235,9 @@ namespace Interface {
 
 					if(can_transmit(&message, 1 / portTICK_PERIOD_MS) != ESP_OK) {
 						printf("[CAN] Transmit failed\n");
-						errorCount++;
+						this->errorCount++;
 					}
-					txCount++;
+					this->txCount++;
 				}
 			}
 		}
@@ -221,11 +248,11 @@ namespace Interface {
 			while(can_read_alerts(&alerts, 0) == ESP_OK) {
 				if (alerts & CAN_ALERT_ABOVE_ERR_WARN) {
 					ESP_LOGI(MOD_TAG, "Surpassed Error Warning Limit");
-					errorCount++;
+					this->errorCount++;
 				}
 				if (alerts & CAN_ALERT_ERR_PASS) {
 					ESP_LOGI(MOD_TAG, "Entered Error Passive state");
-					errorCount++;
+					this->errorCount++;
 				}
 				if (alerts & CAN_ALERT_BUS_ERROR) {
 					ESP_LOGI(MOD_TAG, "Bus Off state");
@@ -237,29 +264,13 @@ namespace Interface {
 					}
 					can_initiate_recovery();    //Needs 128 occurrences of bus free signal
 					ESP_LOGI(MOD_TAG, "Initiate bus recovery");
-					errorCount++;
+					this->errorCount++;
 				}
 				if (alerts & CAN_ALERT_BUS_RECOVERED) {
 					//Bus recovery was successful, exit control task to uninstall driver
 					ESP_LOGI(MOD_TAG, "Bus Recovered");
 					break;
 				}
-			}
-		}
-
-		// Save info to registry
-		setRegisterValue(Registry::RegisterType::CANRxThisFrame, (int32_t) rxCount);
-		setRegisterValue(Registry::RegisterType::CANTxThisFrame, (int32_t) txCount);
-		setRegisterValue(Registry::RegisterType::CANErrorsThisFrame, (int32_t) errorCount);
-		if(errorCount > 0) {
-			auto canErrorsTotal = getRegisterValue(Registry::RegisterType::CANErrorsTotal);
-			canErrorsTotal += errorCount;
-			setRegisterValue(Registry::RegisterType::CANErrorsTotal, canErrorsTotal);
-		}
-
-		if (CAN_PRINT_PREVIEW_ENABLED) {
-			if(rxCount > 0 || txCount > 0 || errorCount > 0) {
-				printf("[CAN] Rx : (%u), Tx : (%u), Errors : (%u)\n", rxCount, txCount, errorCount);
 			}
 		}
 	}
