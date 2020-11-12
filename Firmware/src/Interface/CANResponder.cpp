@@ -39,6 +39,13 @@ T & valueAndMove(uint8_t* & dataMover)
 
 namespace Interface {
 	//----------
+	CANResponder::CANResponder(Control::FilteredTarget & filteredTarget)
+	: filteredTarget(filteredTarget)
+	{
+
+	}
+
+	//----------
 	void
 	CANResponder::init()
 	{
@@ -175,6 +182,9 @@ namespace Interface {
 					}
 					else {
 						findRegister->second.value = value;
+						if(registerID == Registry::RegisterType::TargetPosition) {
+							this->filteredTarget.notifyTargetChange();
+						}
 					}
 				}
 			}

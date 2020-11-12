@@ -61,6 +61,11 @@ std::map<RegisterType, Register> registers {
 		, -255
 		, 255
 	}},
+	{ RegisterType::TargetPositionFiltered, {
+		"TargetPositionFiltered"
+		, 0
+		, Access::ReadOnly
+	}},
 
 
 	{ RegisterType::EncoderReading, {
