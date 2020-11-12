@@ -36,6 +36,7 @@ namespace GUI {
 		void
 		Dashboard::draw(U8G2& u8g2)
 		{
+			const auto ControlMode = getRegisterValue(Registry::RegisterType::ControlMode);
 			const auto DeviceID = getRegisterValue(Registry::RegisterType::DeviceID); 
 			const auto MultiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition); 
 			const auto TargetPosition = getRegisterValue(Registry::RegisterType::TargetPosition); 
@@ -44,6 +45,9 @@ namespace GUI {
 			const auto CanErrorsThisFrame = getRegisterValue(Registry::RegisterType::CANErrorsThisFrame); 
 			const auto BusVoltage = getRegisterValue(Registry::RegisterType::BusVoltage);
 			const auto Current = getRegisterValue(Registry::RegisterType::Current);
+			const auto Torque = getRegisterValue(Registry::RegisterType::Torque);
+
+			const auto centerDiscDiameter = 12;
 
 			// Outer circle
 			u8g2.drawCircle(centerCircle[0], centerCircle[1], notchRadiusOuter, U8G2_DRAW_ALL);
@@ -64,7 +68,8 @@ namespace GUI {
 					auto registerValue = getRegisterValue(Registry::RegisterType::SoftLimitMin);
 					float phase = float(registerValue / (1 << 14)) / rotationRange * TWO_PI;
 
-					u8g2.drawLine(centerCircle[0], centerCircle[1]
+					u8g2.drawLine(centerCircle[0] + centerDiscDiameter * sinf(phase)
+						, centerCircle[1] - centerDiscDiameter * cosf(phase)
 						, centerCircle[0] + markerRadiusMajor * sinf(phase)
 						, centerCircle[0] - markerRadiusMajor * cosf(phase));
 				}
@@ -72,26 +77,35 @@ namespace GUI {
 				{
 					auto registerValue = getRegisterValue(Registry::RegisterType::SoftLimitMax);
 					float phase = float(registerValue / (1 << 14)) / rotationRange * TWO_PI;
-					u8g2.drawLine(centerCircle[0], centerCircle[1]
+					u8g2.drawLine(centerCircle[0] + centerDiscDiameter * sinf(phase)
+						, centerCircle[1] - centerDiscDiameter * cosf(phase)
 						, centerCircle[0] + markerRadiusMajor * sinf(phase)
 						, centerCircle[0] - markerRadiusMajor * cosf(phase));
 				}
 			}
 
-			// Inner solid circle
-			{
-				u8g2.drawDisc(centerCircle[0], centerCircle[1], 12);
-			}
-
 			char message[200];
 
-			// Device ID
+			// Device ID and inner circle
 			{
-				u8g2.setFont(u8g2_font_t0_18_mn);
-				u8g2.setDrawColor(0);
-				sprintf(message, "%d", DeviceID);
-				u8g2.drawStr(centerCircle[0] - strlen(message) * 4, centerCircle[1] + 7, message);
-				u8g2.setDrawColor(1);
+				if(ControlMode == 0) {
+					u8g2.setFont(u8g2_font_t0_18_mn);
+					sprintf(message, "%d", DeviceID);
+					u8g2.drawStr(centerCircle[0] - strlen(message) * 4, centerCircle[1] + 7, message);
+					u8g2.drawCircle(centerCircle[0], centerCircle[1], 12);
+				}
+				else {
+					u8g2.drawDisc(centerCircle[0], centerCircle[1], 12);
+					u8g2.setFont(u8g2_font_t0_18_mn);
+					u8g2.setDrawColor(0);
+					sprintf(message, "%d", DeviceID);
+					u8g2.drawStr(centerCircle[0] - strlen(message) * 4, centerCircle[1] + 7, message);
+					u8g2.setDrawColor(1);
+				}
+
+				if(ControlMode > 1) {
+					u8g2.drawCircle(centerCircle[0], centerCircle[1], 18);
+				}
 			}
 
 			// MultiTurnPosition - actual
@@ -134,29 +148,25 @@ namespace GUI {
 			{
 				u8g2.setFont(u8g2_font_nerhoe_tr);
 
-				sprintf(message, "%.2f", (float)BusVoltage / 1000);			
-				u8g2.drawStr(75, 15, message);
-				sprintf(message, "V.");			
-				u8g2.drawStr(105, 15, message);
+				sprintf(message, "%.1f V  %.2f A", (float)BusVoltage / 1000, (float)Current / 1000.0f);			
+				u8g2.drawStr(67, 11, message);
 
-				sprintf(message, "%.2f", (float)Current / 1000.0f);			
-				u8g2.drawStr(75, 27, message);
-				sprintf(message, "A.");			
-				u8g2.drawStr(105, 27, message);
-				
-				// show Current Position , Target Position	
-				{
-					if(CanRxThisFrame > 0) {
-						u8g2.drawStr(0, 10, "Rx");
-					}
+				sprintf(message, "Torque : %d", Torque);
+				u8g2.drawStr(67, 22, message);
+			}
 
-					if(CanTxThisFrame > 0) {
-						u8g2.drawStr(0, 64, "Tx");
-					}
+			// Network
+			{
+				if(CanRxThisFrame > 0) {
+					u8g2.drawStr(0, 10, "Rx");
+				}
 
-					if(CanErrorsThisFrame > 0) {
-						u8g2.drawStr(0, 10, "ERR");
-					}
+				if(CanTxThisFrame > 0) {
+					u8g2.drawStr(0, 64, "Tx");
+				}
+
+				if(CanErrorsThisFrame > 0) {
+					u8g2.drawStr(0, 10, "ERR");
 				}
 			}
 		}
