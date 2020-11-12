@@ -28,8 +28,9 @@ webSocketEvent(WStype_t eventType, uint8_t * payload, size_t length)
 
 namespace Interface {
 	//----------
-	WebSockets::WebSockets(const Control::EncoderCalibration & encoderCalibration)
+	WebSockets::WebSockets(const Control::EncoderCalibration & encoderCalibration, Control::FilteredTarget & filteredTarget)
 	: encoderCalibration(encoderCalibration)
+	, filteredTarget(filteredTarget)
 	{
 
 	}
@@ -233,6 +234,10 @@ namespace Interface {
 
 			default:
 			break;
+		}
+
+		if(registerType == Registry::RegisterType::TargetPosition) {
+			this->filteredTarget.notifyTargetChange();
 		}
 	}
 

@@ -2,11 +2,14 @@
 
 #include "MultiTurn.h"
 #include "Agent.h"
+#include "EncoderCalibration.h"
+
 #include "Devices/MotorDriver.h"
 #include "Devices/AS5047.h"
-#include "EncoderCalibration.h"
-#include "DataTypes.h"
+
 #include "Utils/FrameTimer.h"
+
+#include "DataTypes.h"
 
 namespace Control {
 	class Drive {
