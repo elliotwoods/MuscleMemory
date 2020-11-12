@@ -39,6 +39,7 @@
 #include "driver/can.h"
 
 //#define AGENT_ENABLED
+#define PID_INSIDE_DRIVE_LOOP
 #define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
@@ -64,9 +65,6 @@ Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 Interface::SystemInfo systemInfo(ina219);
 Interface::CANResponder canResponder(filteredTarget);
 Interface::WebSockets webSockets(encoderCalibration, filteredTarget);
-
-TaskHandle_t agentTaskHandle;
-SemaphoreHandle_t agentTaskResumeMutex;
 
 auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
 
@@ -144,25 +142,13 @@ initDevices()
 void
 motorTask(void*)
 {
-	const auto & controlMode = Registry::X().registers.at(Registry::RegisterType::ControlMode).value;
-
 	while(true) {
-		// We need to clean this up later 
-		if(controlMode == 1) {
+#ifdef PID_INSIDE_DRIVE_LOOP
+		if(getRegisterValue(Registry::RegisterType::ControlMode) == 1) {
 			pid.update();
 		}
+#endif
 		drive.update();
-	}
-}
-
-//----------
-void
-wakeAgent()
-{
-	BaseType_t taskWoken;
-	if(xSemaphoreTakeFromISR(agentTaskResumeMutex, &taskWoken)) {
-		vTaskResume(agentTaskHandle);
-		xSemaphoreGiveFromISR(agentTaskResumeMutex, &taskWoken);
 	}
 }
 
@@ -170,37 +156,23 @@ wakeAgent()
 void
 agentTask(void*)
 {
-	// Scheduler isn't working
-	//Utils::Scheduler::X().schedule(0.01f, wakeAgent);
-
-	agentTaskResumeMutex = xSemaphoreCreateMutex();
-
-	// Use an Arduino ESP32 timer
-	auto timer = timerBegin(0, 16, true);
-	timerAttachInterrupt(timer, wakeAgent, true);
-	timerAlarmWrite(timer, 5000, true);
-	//timerAlarmEnable(timer);
-
-	const auto & controlMode = Registry::X().registers.at(Registry::RegisterType::ControlMode).value;
-
 	while(true) {
-		if(xSemaphoreTake(agentTaskResumeMutex, portMAX_DELAY)) {
-			switch(controlMode) {
-				case 1:
-					//pid.update();
-					break;
-#ifdef AGENT_ENABLED
-				case 2:
-					agent.update();
-					break;
+		switch(getRegisterValue(Registry::RegisterType::ControlMode)) {
+			case 1:
+#ifndef PID_INSIDE_DRIVE_LOOP
+				// This needs cleaning up
+				pid.update();
 #endif
-				default:
-					break;
-			}
-			xSemaphoreGive(agentTaskResumeMutex);
+				break;
+#ifdef AGENT_ENABLED
+			case 2:
+				agent.update();
+				break;
+#endif
+			default:
+				break;
 		}
-		vTaskDelay(1);
-		//vTaskSuspend(agentTaskHandle);
+		vTaskDelay(1 / portTICK_PERIOD_MS);
 	}
 }
 
@@ -271,13 +243,15 @@ initController()
 		, NULL
 		, 1);
 
+#if !defined(PID_INSIDE_DRIVE_LOOP) || defined(AGENT_ENABLED)
 	xTaskCreatePinnedToCore(agentTask
 		, "Agent"
 		, 1024 * 8
 		, NULL
 		, PRIORITY_AGENT
-		, &agentTaskHandle
-		, 1);
+		, NULL
+		, 0);
+#endif
 
 #ifdef AGENT_ENABLED
 	xTaskCreatePinnedToCore(agentServerCommunicateTask
