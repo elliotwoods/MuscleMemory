@@ -20,10 +20,12 @@ namespace Devices {
 	void
 	FileSystem::listPartitions()
 	{
-		printf("App partitions:");
+		printf("App partitions:\n");
 		partloop(ESP_PARTITION_TYPE_APP);
-		printf("Data partitions:");
+		printf("Data partitions:\n");
 		partloop(ESP_PARTITION_TYPE_DATA);
+		printf("Custom partitions:\n");
+		partloop((esp_partition_type_t) 0x40);
 	}
 	
 	//----------
@@ -36,6 +38,8 @@ namespace Devices {
 	bool
 	FileSystem::mount(const char * partitionLabel, const char * mountPoint, bool formatIfNeeded, uint8_t maxOpenFiles)
 	{
+		//this->listPartitions();
+
 		if(this->wl_handle != WL_INVALID_HANDLE) {
 			printf("Already mounted %s at %s\n", this->partitionLabel.c_str(), this->mountPoint.c_str());
 			return true;
