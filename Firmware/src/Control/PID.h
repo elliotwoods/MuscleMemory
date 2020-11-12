@@ -14,6 +14,6 @@ namespace Control {
 		FilteredTarget & filteredTarget;
 		Utils::FrameTimer frameTimer;
 		int64_t priorIntegral = 0;
-		int32_t priorError = 0;
+		int64_t priorError = 0;
 	};
 }
