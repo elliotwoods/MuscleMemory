@@ -4,6 +4,13 @@
 
 namespace Control {
 	//----------
+	PID::PID(FilteredTarget & filteredTarget)
+	: filteredTarget(filteredTarget)
+	{
+
+	}
+	
+	//----------
 	void
 	PID::init()
 	{
@@ -18,7 +25,6 @@ namespace Control {
 	{
 		// Registry reads
 		const auto & multiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
-		const auto & targetPosition = getRegisterValue(Registry::RegisterType::TargetPosition);
 		const auto & kP = getRegisterValue(Registry::RegisterType::PIDProportional);
 		const auto & kD = getRegisterValue(Registry::RegisterType::PIDDifferential);
 		const auto & kI = getRegisterValue(Registry::RegisterType::PIDIntegral);
@@ -27,6 +33,9 @@ namespace Control {
 		const auto & softLimitMax = getRegisterValue(Registry::RegisterType::SoftLimitMax);
 		const auto & softLimitMin = getRegisterValue(Registry::RegisterType::SoftLimitMin);
 		const auto & maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
+
+		// Get the filtered target position
+		const auto targetPosition = this->filteredTarget.getTargetFiltered();
 
 		// Get frame time
 		this->frameTimer.update();

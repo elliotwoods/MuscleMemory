@@ -33,6 +33,7 @@ public:
 		SoftLimitMin = 15,
 		SoftLimitMax = 16,
 		DriveOffset = 17,
+		TargetPositionFiltered = 18,
 
 		// Encoder
 		EncoderReading = 21,
