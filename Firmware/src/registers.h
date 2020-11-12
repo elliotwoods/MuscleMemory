@@ -213,7 +213,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::OffsetFactor, {
 		"OffsetFactor"
-		, 64
+		, 32
 		, Access::ReadWrite
 	}},
 	{ RegisterType::OffsetMaximum, {
