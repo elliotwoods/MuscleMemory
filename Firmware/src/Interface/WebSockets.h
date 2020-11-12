@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Control/EncoderCalibration.h"
+#include "Control/FilteredTarget.h"
 
 #include "Registry.h"
 #include <stdint.h>
@@ -10,7 +11,7 @@
 namespace Interface {
 	class WebSockets {
 	public:
-		WebSockets(const Control::EncoderCalibration & encoderCalibration);
+		WebSockets(const Control::EncoderCalibration &, Control::FilteredTarget &);
 		void init();
 		void update();
 		void processIncomingRequests(uint8_t *, size_t);
@@ -26,5 +27,6 @@ namespace Interface {
 		bool needsSendEncoderCalibration = false;
 
 		const Control::EncoderCalibration & encoderCalibration;
+		Control::FilteredTarget & filteredTarget;
 	};
 }

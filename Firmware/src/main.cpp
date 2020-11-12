@@ -11,6 +11,7 @@
 #include "Control/Drive.h"
 #include "Control/PID.h"
 #include "Control/Provisioning.h"
+#include "Control/FilteredTarget.h"
 
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
@@ -56,13 +57,13 @@ Control::MultiTurn multiTurn(encoderCalibration);
 #ifdef AGENT_ENABLED
 Control::Agent agent;
 #endif
-Control::PID pid;
+Control::FilteredTarget filteredTarget;
+Control::PID pid(filteredTarget);
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
-Interface::WebSockets webSockets(encoderCalibration);
-
 Interface::SystemInfo systemInfo(ina219);
-Interface::CANResponder canResponder;
+Interface::CANResponder canResponder(filteredTarget);
+Interface::WebSockets webSockets(encoderCalibration, filteredTarget);
 
 TaskHandle_t agentTaskHandle;
 SemaphoreHandle_t agentTaskResumeMutex;
@@ -299,6 +300,7 @@ updateInterface()
 	multiTurn.mainLoopUpdate();
 	systemInfo.update();
 	canResponder.update();
+	filteredTarget.update();
 #ifdef WEBSOCKETS_ENABLED
 	webSockets.update();
 #endif
