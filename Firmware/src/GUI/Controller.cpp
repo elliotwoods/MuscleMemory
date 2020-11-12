@@ -17,7 +17,7 @@ namespace GUI {
 	{
 		// Initialise the screen
 		{
-			u8g2_Setup_ssd1306_i2c_128x64_noname_1(this->u8g2.getU8g2()
+			u8g2_Setup_ssd1306_i2c_128x64_noname_f(this->u8g2.getU8g2()
 				, U8G2_R0
 				, u8g2_byte_hw_i2c_esp32
 				, u8g2_gpio_and_delay_esp32);
