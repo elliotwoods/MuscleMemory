@@ -71,6 +71,7 @@ auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
 // Core 0 tasks:
 #define PRIORITY_INTERFACE 1
 #define PRIORITY_AGENT_SERVER_COMMS 2
+#define PRIORITY_CAN_RESPONDER 3
 
 // Core 1 tasks:
 #define PRIORITY_MOTOR 1
@@ -176,6 +177,15 @@ agentTask(void*)
 	}
 }
 
+//----------
+void
+canResponderTask(void*)
+{
+	while(true) {
+		canResponder.updateTask();
+	}
+}
+
 #ifdef AGENT_ENABLED
 //----------
 void
@@ -262,6 +272,13 @@ initController()
 		, NULL 
 		, 0);
 #endif
+	xTaskCreatePinnedToCore(canResponderTask
+		, "CANResponder"
+		, 1024 * 4
+		, NULL
+		, PRIORITY_CAN_RESPONDER
+		, NULL
+		, 0);
 
 	showSplashMessage("Controller initialised");
 }
