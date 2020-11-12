@@ -39,7 +39,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::MaximumTorque, {
 		"MaximumTorque"
-		, 16
+		, 32
 		, Access::ReadWrite
 		, 0
 		, 128
@@ -80,7 +80,7 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::EncoderPositionFilterSize, {
 		"EncoderPositionFilterSize"
-		, 4
+		, 1
 		, Access::ReadWrite
 		, 1
 		, 255
@@ -178,7 +178,7 @@ std::map<RegisterType, Register> registers {
 
 	{ RegisterType::PIDProportional, {
 		"PIDProportional"
-		, 12000
+		, 100000
 		, Access::ReadWrite
 	}},
 	{ RegisterType::PIDIntegral, {
@@ -210,6 +210,18 @@ std::map<RegisterType, Register> registers {
 		"PIDResultD"
 		, 0
 		, Access::ReadOnly
+	}},
+	{ RegisterType::OffsetFactor, {
+		"OffsetFactor"
+		, 64
+		, Access::ReadWrite
+	}},
+	{ RegisterType::OffsetMaximum, {
+		"OffsetMaximum"
+		, 64
+		, Access::ReadWrite
+		, 0
+		, 255
 	}},
 	
 	{ RegisterType::AntiStallEnabled, {
