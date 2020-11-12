@@ -32,8 +32,7 @@ public:
 		MaximumTorque = 14,
 		SoftLimitMin = 15,
 		SoftLimitMax = 16,
-		DriveOffset = 17,
-		TargetPositionFiltered = 18,
+		TargetPositionFiltered = 17,
 
 		// Encoder
 		EncoderReading = 21,
@@ -73,25 +72,30 @@ public:
 		PIDResultI = 75,
 		PIDResultD = 76,
 
+		// Offest control
+		DriveOffset = 80,
+		OffsetFactor = 81,
+		OffsetMaximum = 82,
+
 		// Anti-stall
-		AntiStallEnabled = 80,
-		AntiStallDeadZone = 81,
-		AntiStallMinVelocity = 82,
-		AntiStallAttack = 83,
-		AntiStallDecay = 84,
-		AntiStallValue = 85,
-		AntiStallScale = 86,
+		AntiStallEnabled = 90,
+		AntiStallDeadZone = 91,
+		AntiStallMinVelocity = 92,
+		AntiStallAttack = 93,
+		AntiStallDecay = 94,
+		AntiStallValue = 95,
+		AntiStallScale = 96,
 
 		// CAN debug
-		CANRxThisFrame = 90,
-		CANTxThisFrame = 91,
-		CANErrorsThisFrame = 92,
-		CANErrorsTotal = 93,
+		CANRxThisFrame = 150,
+		CANTxThisFrame = 151,
+		CANErrorsThisFrame = 152,
+		CANErrorsTotal = 153,
 
 		// Boot
-		Reboot = 100,
-		ProvisioningEnabled = 101,
-		FastBoot = 102,
+		Reboot = 200,
+		ProvisioningEnabled = 201,
+		FastBoot = 202,
 	};
 
 	enum Operation : uint8_t {
