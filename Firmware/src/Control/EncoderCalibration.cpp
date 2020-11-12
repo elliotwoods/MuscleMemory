@@ -69,12 +69,12 @@ namespace Control {
 				fclose(file);
 			}
 			else {
-				printf("Failed to open file for reading : %s\n", filePath);
+				printf("[EncoderCalibration] Cannot open file for reading : %s\n", filePath);
 				return false;
 			}
 		}
 		else {
-			printf("Cannot load EncoderCalibration : the file %s does not exist\n", filePath);
+			printf("[EncoderCalibration] The file %s does not exist\n", filePath);
 			return false;
 		}
 		
