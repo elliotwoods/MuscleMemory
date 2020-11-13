@@ -1,7 +1,12 @@
 #pragma once
 
+//#define OTA_ENABLED
+
 #include "Control/FilteredTarget.h"
+
+#ifdef OTA_ENABLED
 #include "Interface/CAN/OTAFirmware.h"
+#endif
 
 #include <stdint.h>
 
@@ -14,8 +19,10 @@ namespace Interface {
 		void update(); // From main loop
 		void updateTask(); // From CAN task
 	private:
+#ifdef OTA_ENABLED
 		CAN::OTAFirmware otaFirmware;
-		
+#endif
+
 		Control::FilteredTarget & filteredTarget;
 		uint16_t deviceIDForMask;
 
