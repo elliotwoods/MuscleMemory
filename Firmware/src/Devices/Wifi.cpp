@@ -22,10 +22,18 @@ namespace Devices {
 	{
 		printf("Connecting to : %s\n", WIFI_SSID);
 		WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+		const uint16_t maxAttempts = 8;
+		uint16_t attempts = 0;
 		while(WiFi.status() != WL_CONNECTED) {
+			attempts++;
 			WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 			delay(1000);
-			printf("Attempting wifi connection\n");
+			printf("Attempting wifi connection (%d/%d)\n", attempts, maxAttempts);
+
+			if(attempts == maxAttempts) {
+				printf("Wifi could not connect\n");
+				return;
+			}
 		}
 
 		printf("Wifi connected. IP Address : %d.%d.%d.%d\n"

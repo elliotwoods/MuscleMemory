@@ -67,6 +67,14 @@ namespace Control
 		auto panel = std::make_shared<GUI::Panels::Options>("PROVISIONING", std::vector<GUI::Panels::Options::Option> {
 			{
 				[&](char * text) {
+					sprintf(text, "EXIT");
+				},
+				[&]() {
+					this->shouldExit = true;
+				}
+			},
+			{
+				[&](char * text) {
 					sprintf(text, "Voltage/Current : %.1fV/%.1fA", this->status.voltage, this->status.current);
 				},
 				NULL
@@ -155,14 +163,6 @@ namespace Control
 				[&]() {
 					registry.registers.at(Registry::RegisterType::ProvisioningEnabled).value ^= true;
 					registry.saveDefault(Registry::RegisterType::ProvisioningEnabled);
-				}
-			},
-			{
-				[&](char * text) {
-					sprintf(text, "EXIT");
-				},
-				[&]() {
-					this->shouldExit = true;
 				}
 			},
 		});
