@@ -6,7 +6,7 @@
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 #define HALF_WAY (1 << 13)
 
-#define DEBUG_MULTITURN true
+#define DEBUG_MULTITURN false
 
 namespace Control {
 	//-----------
