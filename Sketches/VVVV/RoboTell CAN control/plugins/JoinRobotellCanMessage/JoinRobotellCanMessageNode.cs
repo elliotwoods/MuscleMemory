@@ -65,10 +65,11 @@ namespace VVVV.Nodes.RoboTell
 					outputStream.WriteByte(0xAA);
 					
 					// TARGET ID
-					outputStream.WriteByte((byte) (FIDIn[i] & 255));
-					outputStream.WriteByte((byte) ((FIDIn[i] >> 8)& 255));
-					outputStream.WriteByte((byte) ((FIDIn[i] >> 16)& 255));
-					outputStream.WriteByte((byte) ((FIDIn[i] >> 24)& 255));
+					var fullID = FIDIn[i] << (29 - 10);
+					outputStream.WriteByte((byte) (fullID & 255));
+					outputStream.WriteByte((byte) ((fullID >> 8)& 255));
+					outputStream.WriteByte((byte) ((fullID >> 16)& 255));
+					outputStream.WriteByte((byte) ((fullID >> 24)& 255));
 					
 					// OPERATION
 					switch(FInOperation[i]) {

@@ -1,5 +1,5 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta33.7.dtd" >
-   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\MotorControl (MuscleMemory).v4p" scrollx="0" scrolly="0" systemname="MotorControl (MuscleMemory)" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\MotorControl (MuscleMemory).v4p">
+   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\modules\MotorControl (MuscleMemory).v4p" scrollx="0" scrolly="-360" systemname="MotorControl (MuscleMemory)" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\MotorControl (MuscleMemory).v4p">
    <BOUNDS type="Window" left="17292" top="9252" width="12828" height="6384">
    </BOUNDS>
    <PACK Name="addonpack" Version="33.7.0">
@@ -25,7 +25,7 @@
    </PIN>
    <PIN pinname="Output" visible="1">
    </PIN>
-   <PIN pinname="ID" visible="1">
+   <PIN pinname="ID" visible="1" slicecount="2" values="1,3">
    </PIN>
    </NODE>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="2">
@@ -40,8 +40,6 @@
    <PIN pinname="Descriptive Name" slicecount="1" values="ID">
    </PIN>
    </NODE>
-   <LINK srcnodeid="2" srcpinname="Y Output Value" dstnodeid="1" dstpinname="ID">
-   </LINK>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="4">
    <BOUNDS type="Node" left="2736" top="636" width="100" height="100">
    </BOUNDS>
@@ -215,5 +213,35 @@
    </LINKPOINT>
    <LINKPOINT x="1880" y="3912">
    </LINKPOINT>
+   </LINK>
+   <NODE systemname="Select (Value)" filename="%VVVV%\lib\nodes\plugins\VVVV.Nodes.dll" nodename="Select (Value)" componentmode="Hidden" id="24">
+   <BOUNDS type="Node" left="732" top="2424" width="100" height="100">
+   </BOUNDS>
+   <PIN pinname="Select" visible="1">
+   </PIN>
+   <PIN pinname="Input" visible="1">
+   </PIN>
+   <PIN pinname="Output" visible="1">
+   </PIN>
+   </NODE>
+   <NODE nodename="IOBox (Value Advanced)" componentmode="InABox" id="25" systemname="IOBox (Value Advanced)">
+   <BOUNDS type="Box" left="1224" top="1992" width="384" height="240">
+   </BOUNDS>
+   <BOUNDS type="Node" left="1224" top="1992" width="0" height="0">
+   </BOUNDS>
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="2">
+   </PIN>
+   <PIN pinname="Units" slicecount="1" values="||">
+   </PIN>
+   <PIN pinname="Precision" slicecount="1" values="4">
+   </PIN>
+   <PIN pinname="Value Type" slicecount="1" values="Integer">
+   </PIN>
+   </NODE>
+   <LINK srcnodeid="25" srcpinname="Y Output Value" dstnodeid="24" dstpinname="Select">
+   </LINK>
+   <LINK srcnodeid="2" srcpinname="Y Output Value" dstnodeid="24" dstpinname="Input">
+   </LINK>
+   <LINK srcnodeid="24" srcpinname="Output" dstnodeid="1" dstpinname="ID">
    </LINK>
    </PATCH>
