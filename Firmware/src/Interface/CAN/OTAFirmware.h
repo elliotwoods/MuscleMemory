@@ -6,13 +6,14 @@
 #include <freertos/FreeRTOS.h>
 #endif
 
+
 extern "C" {
 	#include "driver/gpio.h"
 	#include "driver/can.h"
 	#include "esp_ota_ops.h"
 }
 
-#define OTA_BLOCK_SIZE 8
+#define OTA_BUFFER_SIZE 0x1000
 
 namespace Interface {
 	namespace CAN {
@@ -23,16 +24,19 @@ namespace Interface {
 
 			void update();
 			void updateCANTask();
-			bool processMessage(const can_message_t &); // Returns true if message was an OTA messaeg
+			void processMessage(const can_message_t &); // Returns true if message was an OTA messaeg
 		private:
-			void checkBegin(const can_message_t & info);
+			void begin(size_t size);
 
 			bool needsSendRequestData = false;
 			bool needsSendRequestInfo = false;
-			size_t rxOffset; // The byte offset of the current written data
-			size_t totalSize;
 
-			bool isDownloading = false;
+			size_t writePosition = 0; // The byte offset of the current written data
+			size_t bufferPosition = 0;
+			size_t size = 0;
+
+			uint8_t * buffer = nullptr;
+
 			const esp_partition_t * otaPartition;
 			esp_ota_handle_t otaHandle;
 		};

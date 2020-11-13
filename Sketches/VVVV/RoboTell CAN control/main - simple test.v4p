@@ -632,7 +632,7 @@
    </NODE>
    <LINK srcnodeid="191" srcpinname="Output" dstnodeid="165" dstpinname="DeviceID Filter">
    </LINK>
-   <NODE systemname="MotorControl (MuscleMemory)" filename="Modules\MotorControl (MuscleMemory).v4p" nodename="MotorControl (MuscleMemory)" componentmode="InAWindow" id="200">
+   <NODE systemname="MotorControl (MuscleMemory)" filename="Modules\MotorControl (MuscleMemory).v4p" nodename="MotorControl (MuscleMemory)" componentmode="Hidden" id="200">
    <BOUNDS type="Node" left="3888" top="5652" width="3636" height="276">
    </BOUNDS>
    <PIN pinname="ID" visible="1" slicecount="1" values="0">
@@ -661,7 +661,7 @@
    </BOUNDS>
    <BOUNDS type="Node" left="3900" top="4488" width="0" height="0">
    </BOUNDS>
-   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="1">
+   <PIN pinname="Y Input Value" slicecount="1" visible="1" values="0">
    </PIN>
    <PIN pinname="Units" slicecount="1" values="||">
    </PIN>
@@ -1147,9 +1147,9 @@
    <LINK srcnodeid="218" srcpinname="Output" dstnodeid="71" dstpinname="Input 2">
    </LINK>
    <NODE systemname="IOBox (Value Advanced)" nodename="IOBox (Value Advanced)" componentmode="InABox" id="248">
-   <BOUNDS type="Node" left="4512" top="6564" width="100" height="100">
+   <BOUNDS type="Node" left="4308" top="6768" width="100" height="100">
    </BOUNDS>
-   <BOUNDS type="Box" left="4512" top="6564" width="792" height="240">
+   <BOUNDS type="Box" left="4308" top="6768" width="792" height="240">
    </BOUNDS>
    <PIN pinname="Value Type" slicecount="1" values="Integer">
    </PIN>
@@ -1394,8 +1394,8 @@
    </LINK>
    <LINK srcnodeid="222" srcpinname="Whole Part" dstnodeid="203" dstpinname="Y Input Value">
    </LINK>
-   <LINK srcnodeid="201" srcpinname="Y Output Value" dstnodeid="248" dstpinname="Y Input Value">
+   <LINK srcnodeid="71" srcpinname="Output" dstnodeid="86" dstpinname="Input">
    </LINK>
-   <LINK srcnodeid="200" srcpinname="Output" dstnodeid="86" dstpinname="Input">
+   <LINK srcnodeid="201" srcpinname="Y Output Value" dstnodeid="248" dstpinname="Y Input Value">
    </LINK>
    </PATCH>
