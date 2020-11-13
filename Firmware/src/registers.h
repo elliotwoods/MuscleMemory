@@ -309,9 +309,20 @@ std::map<RegisterType, Register> registers {
 	}},
 	{ RegisterType::FastBoot, {
 		"FastBoot"
-		, 0
+		, 1
 		, Access::ReadWrite
 		, 0
 		, 1
+	}},
+
+	{ RegisterType::OTADownloading, {
+		"OTADownloading"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::OTARxPosition, {
+		"OTARxPosition"
+		, 0
+		, Access::ReadOnly
 	}},
 };
