@@ -6,7 +6,7 @@
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 #define HALF_WAY (1 << 13)
 
-#define DEBUG_MULTITURN false
+#define DEBUG_MULTITURN true
 
 namespace Control {
 	//-----------
@@ -89,7 +89,7 @@ namespace Control {
 			auto closestTurn = this->implyTurns(this->saveData.multiTurnPosition, stPosition);
 			if(closestTurn != this->turns) {
 				if(DEBUG_MULTITURN) {
-					printf("[MultiTurn] Saving! SaveData implied turn (%d) from saved pos (%d) and current single turn pos (%d), Actual turns (%d)\n"
+					printf("[MultiTurn] Needs save! SaveData implied turn (%d) from saved multiturn (%d) and current single turn (%d), Actual turns (%d)\n"
 						, closestTurn
 						, this->saveData.multiTurnPosition
 						, stPosition
@@ -120,24 +120,15 @@ namespace Control {
 		this->saveData.storedCRC = saveData.getCRC();
 
 		// Align the size to 16 bytes
-		size_t saveDataSize = sizeof(SaveData);
-		if(saveDataSize % 16 != 0) {
-			saveDataSize = (saveDataSize / 16) * 16 + 16;
-		}
+		auto saveDataSize = this->getSaveDataSize();
 
 		auto writePosition = this->saveIndex * saveDataSize;
 
-		// // Format the sector if needed
-		// if(writePosition % 0x1000 == 0) {
-		// 	// We're at the beginning of this sector, let's erase this range
-		// 	if(DEBUG_MULTITURN) {
-		// 		printf("[MultiTurn] Erasing sector at (%" PRIu32 ")\n", writePosition);
-		// 	}
-		// 	esp_partition_erase_range(this->partition
-		// 		, writePosition
-		// 		, 0x1000);
-		// }
-
+		// Check if we need to loop
+		if(writePosition >= this->getWriteOffsetForLastEntry()) {
+			this->saveIndex = 0;
+			writePosition = 0;
+		}
 
 		// Write the data
 		if(DEBUG_MULTITURN) {
@@ -149,7 +140,6 @@ namespace Control {
 			, saveDataSize));
 
 		this->saveIndex++;
-		this->saveIndex %= this->partition->size / saveDataSize;
 	}
 
 	//-----------
@@ -164,10 +154,7 @@ namespace Control {
 		bool anyLoaded = false;
 
 		// Align the size to 16 bytes
-		size_t saveDataSize = sizeof(SaveData);
-		if(saveDataSize % 16 != 0) {
-			saveDataSize = (saveDataSize / 16) * 16 + 16;
-		}
+		size_t saveDataSize = this->getSaveDataSize();
 
 		// Read first position, and if that fails, read last position
 		{
@@ -189,7 +176,7 @@ namespace Control {
 				if(DEBUG_MULTITURN) {
 					printf("[MultiTurn] First entry is not valid. Trying last one\n");
 				}
-				auto readPosition = ((this->partition->size - 1) % saveDataSize) * saveDataSize;
+				auto readPosition = this->getWriteOffsetForLastEntry();
 				esp_partition_read(this->partition
 					, readPosition
 					, &loadedData
@@ -247,7 +234,7 @@ namespace Control {
 			this->turns = this->implyTurns(freshestData.multiTurnPosition, currentSingleTurn);
 
 			if(DEBUG_MULTITURN) {
-				printf("[MultiTurn] Loaded multiturn data (%d)\n", turns);
+				printf("[MultiTurn] Loaded multiturn data, turns (%d)\n", turns);
 			}
 			return true;
 		}
@@ -257,6 +244,25 @@ namespace Control {
 			return false;
 		}
 		
+	}
+
+	//-----------
+	size_t
+	MultiTurn::getSaveDataSize() const
+	{
+		auto saveDataSize = sizeof(SaveData);
+		if(saveDataSize % 16 != 0) {
+			saveDataSize = (saveDataSize / 16) * 16 + 16;
+		}
+		return saveDataSize;
+	}
+
+	//-----------
+	size_t
+	MultiTurn::getWriteOffsetForLastEntry() const
+	{
+		auto saveDataSize = this->getSaveDataSize();
+		return ((this->partition->size / saveDataSize) - 1) * saveDataSize;
 	}
 
 	//-----------
