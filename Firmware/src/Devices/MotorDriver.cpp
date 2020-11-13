@@ -64,7 +64,7 @@ namespace Devices {
 
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 	//----------
-	void
+	void IRAM_ATTR
 	MotorDriver::setTorque(Torque torque, PositionWithinStepCycle positionWithinStepCycle)
 	{
 		const auto driveOffset = getRegisterValue(Registry::RegisterType::DriveOffset);
