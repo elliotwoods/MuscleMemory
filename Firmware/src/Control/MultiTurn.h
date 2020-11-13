@@ -25,6 +25,7 @@ namespace Control {
 		void saveSession();
 		bool loadSession(SingleTurnPosition currentSingleTurn);
 	private:
+		void formatPartition();
 		Turns implyTurns(MultiTurnPosition priorMultiTurnPosition, SingleTurnPosition currentSingleTurnPosition) const;
 
 		EncoderCalibration & encoderCalibration;
