@@ -96,13 +96,20 @@ public:
 		Reboot = 200,
 		ProvisioningEnabled = 201,
 		FastBoot = 202,
+
+		// OTA
+		OTADownloading = 210,
+		OTARxPosition = 211
 	};
 
 	enum Operation : uint8_t {
 		ReadRequest = 0,
 		WriteRequest = 1,
 		ReadResponse = 2,
-		WriteDefault = 3
+		WriteDefault = 3,
+		
+		OTARequestInfo = 100,
+		OTARequestData = 101,
 	};
 
 	static const std::set<RegisterType> defaultRegisterReads;
