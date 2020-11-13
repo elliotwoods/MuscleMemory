@@ -69,7 +69,9 @@ Registry::X() {
 
 //----------
 Registry::Registry()
-{
+:registers(
+	#include "registers.h"
+){
 	this->frameTimer.init();
 }
 

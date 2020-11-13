@@ -29,5 +29,7 @@ namespace Interface {
 		uint16_t rxCount = 0;
 		uint16_t txCount = 0;
 		uint16_t errorCount = 0;
+
+		uint64_t timeOfLastCANRx = 0;
 	};
 }

@@ -1,4 +1,4 @@
-std::map<RegisterType, Register> registers {
+{
 	{ RegisterType::DeviceID, {
 		"DeviceID"
 		, 1
@@ -150,6 +150,7 @@ std::map<RegisterType, Register> registers {
 		, 1000
 	}},
 
+/*
 	{ RegisterType::AgentLocalHistorySize, {
 		"LocalHistorySize"
 		, 0
@@ -175,6 +176,7 @@ std::map<RegisterType, Register> registers {
 		, 0 // / 1000
 		, Access::ReadOnly
 	}},
+*/
 
 	{ RegisterType::PIDProportional, {
 		"PIDProportional"
@@ -314,6 +316,23 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, 1
 	}},
+	{ RegisterType::CANWatchdogEnabled, {
+		"CANWatchdogEnabled"
+		, 1
+		, Access::ReadWrite
+		, 0
+		, 1
+	}},
+	{ RegisterType::CANWatchdogTimeout, {
+		"CANWatchdogTimeout"
+		, 10 * 60 * 1000
+		, Access::ReadWrite
+	}},
+	{ RegisterType::CANWatchdogTimer, {
+		"CANWatchdogTimer"
+		, 0
+		, Access::ReadOnly
+	}},
 
 	{ RegisterType::OTADownloading, {
 		"OTADownloading"
@@ -330,4 +349,4 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
-};
+}
