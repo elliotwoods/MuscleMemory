@@ -1,6 +1,7 @@
 #include "FrameTimer.h"
 
 #include "esp_timer.h"
+#include "esp_attr.h"
 
 namespace Utils
 {
@@ -12,7 +13,7 @@ namespace Utils
 	}
 
 	//----------
-	void
+	void IRAM_ATTR
 	FrameTimer::update()
 	{
 		auto currentTime = esp_timer_get_time();
@@ -22,7 +23,7 @@ namespace Utils
 	}
 
 	//----------
-	Period
+	Period IRAM_ATTR
 	FrameTimer::getPeriod() const
 	{
 		return this->period;
