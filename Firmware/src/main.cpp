@@ -69,9 +69,9 @@ Interface::WebSockets webSockets(encoderCalibration, filteredTarget);
 auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
 
 // Core 0 tasks:
-#define PRIORITY_INTERFACE 1
-#define PRIORITY_AGENT_SERVER_COMMS 2
-#define PRIORITY_CAN_RESPONDER 3
+#define PRIORITY_INTERFACE 0
+#define PRIORITY_AGENT_SERVER_COMMS 0
+#define PRIORITY_CAN_RESPONDER 0
 
 // Core 1 tasks:
 #define PRIORITY_MOTOR 1
@@ -105,6 +105,9 @@ initDevices()
 
 	// Initialise I2C
 	Devices::I2C::X().init();
+
+	// Init the registry
+	Registry::X();
 
 	// Initilaise the GUI
 	GUI::Controller::X().init(splashScreen);

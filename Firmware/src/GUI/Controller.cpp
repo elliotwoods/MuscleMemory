@@ -53,6 +53,7 @@ namespace GUI {
 				if(this->isDialButtonPressed()) {
 					isEnabled = 1;
 				}
+				// EXIT EARLY
 				return;
 			}
 			else {
