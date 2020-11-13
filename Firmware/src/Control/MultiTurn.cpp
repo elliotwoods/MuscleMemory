@@ -97,7 +97,7 @@ namespace Control {
 				}
 
 				// Then save the session
-				this->saveSession();
+				//this->saveSession();
 			}
 		}
 	}
