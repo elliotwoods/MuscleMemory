@@ -1,10 +1,12 @@
 #include "MultiTurn.h"
 #include "GUI/Controller.h"
 
+#include "esp_task_wdt.h"
+
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 #define HALF_WAY (1 << 13)
 
-#define DEBUG_MULTITURN true
+#define DEBUG_MULTITURN false
 
 namespace Control {
 	//-----------
@@ -53,9 +55,7 @@ namespace Control {
 			this->loadSession(singleTurnPosition);
 		}
 		else {
-			if(DEBUG_MULTITURN) {
-				printf("[MultiTurn] Ignoring saved data on load\n");
-			}
+			this->formatPartition();
 		}
 
 		this->driveLoopUpdate(singleTurnPosition);
@@ -127,16 +127,16 @@ namespace Control {
 
 		auto writePosition = this->saveIndex * saveDataSize;
 
-		// Format the sector if needed
-		if(writePosition % 0x1000 == 0) {
-			// We're at the beginning of this sector, let's erase this range
-			if(DEBUG_MULTITURN) {
-				printf("[MultiTurn] Erasing sector at (%" PRIu32 ")\n", writePosition);
-			}
-			esp_partition_erase_range(this->partition
-				, writePosition
-				, 0x1000);
-		}
+		// // Format the sector if needed
+		// if(writePosition % 0x1000 == 0) {
+		// 	// We're at the beginning of this sector, let's erase this range
+		// 	if(DEBUG_MULTITURN) {
+		// 		printf("[MultiTurn] Erasing sector at (%" PRIu32 ")\n", writePosition);
+		// 	}
+		// 	esp_partition_erase_range(this->partition
+		// 		, writePosition
+		// 		, 0x1000);
+		// }
 
 
 		// Write the data
@@ -252,10 +252,50 @@ namespace Control {
 			return true;
 		}
 		else {
-				printf("[MultiTurn] Failed to load any data\n");
+			printf("[MultiTurn] Failed to load any data. Formatting\n");
+			this->formatPartition();
 			return false;
 		}
 		
+	}
+
+	//-----------
+	void
+	MultiTurn::formatPartition()
+	{
+		if(DEBUG_MULTITURN) {
+			printf("[MultiTurn] Formatting save data partition\n");
+		}
+
+		// We often get WDT reboots if we erase all at once, so try erasing in portions
+		
+		size_t offset = 0;
+		const size_t eraseRegionSize = 0x10000;
+
+		// Erase by portion
+		for(; offset < this->partition->size; offset += eraseRegionSize) {
+			if(DEBUG_MULTITURN) {
+				printf("[MultiTurn] Erasing (%" PRIu32 ") bytes at (%" PRIu32 ")\n", eraseRegionSize, offset);
+			}
+			esp_partition_erase_range(this->partition
+				, offset
+				, eraseRegionSize);
+			esp_task_wdt_reset();
+
+			// Allow some time for other tasks
+			vTaskDelay(1);
+		}
+
+		// Check if we ended exactly on the size
+		if(offset != this->partition->size) {
+			// Otherwise step backwards
+			offset -= eraseRegionSize;
+
+			// And erase the remaining region
+			esp_partition_erase_range(this->partition
+				, offset
+				, this->partition->size - offset);
+		}
 	}
 
 	//-----------
