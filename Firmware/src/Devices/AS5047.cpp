@@ -71,7 +71,7 @@ namespace Devices {
 	}
 
 	//----------
-	EncoderReading
+	EncoderReading IRAM_ATTR
 	AS5047::getPosition()
 	{
 		auto value = this->readRegister(Register::PositionCompensated);
@@ -79,7 +79,7 @@ namespace Devices {
 	}
 
 	//----------
-	EncoderReading
+	EncoderReading IRAM_ATTR
 	AS5047::getPositionFiltered(uint8_t windowSize)
 	{
 		const auto halfWay = (EncoderReading) (1 << 13);

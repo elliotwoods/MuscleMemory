@@ -145,7 +145,7 @@ Registry::saveDefault(const RegisterType & registerType)
 
 #ifdef ATOMIC_REGISTERS
 //----------
-int32_t
+int32_t IRAM_ATTR
 getRegisterValue(const Registry::RegisterType & registerType)
 {
 	static const auto & registry = Registry::X();
@@ -153,7 +153,7 @@ getRegisterValue(const Registry::RegisterType & registerType)
 }
 #else 
 //----------
-const int32_t &
+const int32_t & IRAM_ATTR
 getRegisterValue(const Registry::RegisterType & registerType)
 {
 	static const auto & registry = Registry::X();
@@ -162,7 +162,7 @@ getRegisterValue(const Registry::RegisterType & registerType)
 #endif
 
 //----------
-const Registry::Range &
+const Registry::Range & IRAM_ATTR
 getRegisterRange(const Registry::RegisterType & registerType)
 {
 	static const auto & registry = Registry::X();
@@ -171,7 +171,7 @@ getRegisterRange(const Registry::RegisterType & registerType)
 
 
 //----------
-void
+void IRAM_ATTR
 setRegisterValue(const Registry::RegisterType & registerType, int32_t value)
 {
 	static auto & registry = Registry::X();
