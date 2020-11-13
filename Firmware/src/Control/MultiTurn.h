@@ -25,6 +25,8 @@ namespace Control {
 		void saveSession();
 		bool loadSession(SingleTurnPosition currentSingleTurn);
 	private:
+		size_t getSaveDataSize() const;
+		size_t getWriteOffsetForLastEntry() const;
 		void formatPartition();
 		Turns implyTurns(MultiTurnPosition priorMultiTurnPosition, SingleTurnPosition currentSingleTurnPosition) const;
 
