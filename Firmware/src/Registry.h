@@ -96,6 +96,9 @@ public:
 		Reboot = 200,
 		ProvisioningEnabled = 201,
 		FastBoot = 202,
+		CANWatchdogEnabled = 203,
+		CANWatchdogTimeout = 204,
+		CANWatchdogTimer = 205,
 
 		// OTA
 		OTADownloading = 210,
@@ -161,7 +164,7 @@ public:
 		const Range range;
 	};
 
-	#include "registers.h"
+	std::map<RegisterType, Register> registers;
 
 	struct MotorControlWrites {
 		SingleTurnPosition encoderReading;
