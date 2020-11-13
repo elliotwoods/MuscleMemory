@@ -63,8 +63,9 @@ namespace Interface {
 		can_filter_config_t f_config;
 		{
 			this->deviceIDForMask = (uint16_t) getRegisterValue(Registry::RegisterType::DeviceID);
-			f_config.acceptance_code = this->deviceIDForMask << (29 - 10 - 13) | 0; // Mask is written from 13th bit. ID is stored in 29-10th bit
-			f_config.acceptance_mask = 0b00000000001111110000000000111111; // Accept 0 and our actual device ID
+			f_config.acceptance_code = this->deviceIDForMask << (29 - 10 - 13); // Mask is written from 13th bit. ID is stored in 29-10th bit
+			f_config.acceptance_code |= (1023 << (29 - 10 - 13)) << 16; // also accept 1023 
+			f_config.acceptance_mask = 0b00000000001111110000000000111111; // Accept 1023 and our actual device ID
 			f_config.single_filter = false;
 		}
 
@@ -74,6 +75,8 @@ namespace Interface {
 
 		//Setup bus alerts
 		ESP_ERROR_CHECK(can_reconfigure_alerts(CAN_ALERT_ABOVE_ERR_WARN | CAN_ALERT_ERR_PASS | CAN_ALERT_BUS_OFF, NULL));
+
+		this->timeOfLastCANRx = esp_timer_get_time();
 	}
 
 	//----------
@@ -104,6 +107,22 @@ namespace Interface {
 		if (CAN_PRINT_PREVIEW_ENABLED) {
 			if(this->rxCount > 0 || this->txCount > 0 || this->errorCount > 0) {
 				printf("[CAN] Rx : (%u), Tx : (%u), Errors : (%u)\n", this->rxCount, this->txCount, this->errorCount);
+			}
+		}
+
+		// Watchdog timer
+		{
+			auto now = esp_timer_get_time();
+			if(getRegisterValue(Registry::RegisterType::CANWatchdogEnabled) == 1) {
+				auto timeSinceLastMessage = (int) ((now - this->timeOfLastCANRx) / 1000);
+				if(timeSinceLastMessage > getRegisterValue(Registry::RegisterType::CANWatchdogTimeout)) {
+					printf("[CANResponder] Watchdog timeout on messages received. Rebooting.\n");
+					esp_restart();
+				}
+				setRegisterValue(Registry::RegisterType::CANWatchdogTimer, timeSinceLastMessage);
+			}
+			if(this->rxCount > 0) {
+				this->timeOfLastCANRx = now;
 			}
 		}
 

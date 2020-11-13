@@ -1,6 +1,6 @@
 <!DOCTYPE PATCH  SYSTEM "http://vvvv.org/versions/vvvv45beta33.7.dtd" >
-   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\modules\TorqueControl (MuscleMemory).v4p" scrollx="0" scrolly="0" systemname="TorqueControl (MuscleMemory)" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\TorqueControl (MuscleMemory).v4p">
-   <BOUNDS type="Window" left="11184" top="8892" width="10200" height="6264">
+   <PATCH nodename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\modules\TorqueControl (MuscleMemory).v4p" scrollx="0" scrolly="-360" systemname="TorqueControl (MuscleMemory)" filename="C:\dev\MuscleMemory\Sketches\VVVV\RoboTell CAN control\Modules\TorqueControl (MuscleMemory).v4p">
+   <BOUNDS type="Window" left="11184" top="8892" width="10200" height="6612">
    </BOUNDS>
    <PACK Name="addonpack" Version="33.7.0">
    </PACK>
