@@ -284,6 +284,8 @@ namespace Interface {
 				if (alerts & CAN_ALERT_BUS_RECOVERED) {
 					//Bus recovery was successful, exit control task to uninstall driver
 					ESP_LOGI(MOD_TAG, "Bus Recovered");
+					this->deinit();
+					this->init();
 					break;
 				}
 			}
