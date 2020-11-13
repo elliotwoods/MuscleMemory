@@ -97,6 +97,10 @@ namespace Interface {
 	void
 	CANResponder::update()
 	{
+#ifdef OTA_ENABLED
+		this->otaFirmware.update();
+#endif
+
 		if (CAN_PRINT_PREVIEW_ENABLED) {
 			if(this->rxCount > 0 || this->txCount > 0 || this->errorCount > 0) {
 				printf("[CAN] Rx : (%u), Tx : (%u), Errors : (%u)\n", this->rxCount, this->txCount, this->errorCount);
@@ -139,6 +143,10 @@ namespace Interface {
 	void
 	CANResponder::updateTask()
 	{
+#ifdef OTA_ENABLED
+		this->otaFirmware.updateCANTask();
+#endif
+
 		// For reads and writes we use more complex manner than simple get/set functions
 		static auto & registry = Registry::X();
 
@@ -155,91 +163,91 @@ namespace Interface {
 				firstRead = false;
 				this->rxCount++;
 
-				try {
-					if(this->otaFirmware.processMessage(message)) {
-						this->rxCount++;
-						continue;
-					}
-				}
-				catch (...) {
-					this->errorCount++;
-				}
-				
-
 				auto dataMover = message.data;
 				auto operation = valueAndMove<Registry::Operation>(dataMover);
-				auto registerID = valueAndMove<Registry::RegisterType>(dataMover);
-				auto value = valueAndMove<int32_t>(dataMover);
 
-				// Print message preview
-				if (CAN_PRINT_PREVIEW_ENABLED) {
-					printf("Can Rx. ID [%d], Flags [%d], Data [%X %X %X %X %X %X %X %X]\n"
-						, message.identifier
-						, message.flags
-						, message.data[0]
-						, message.data[1]
-						, message.data[2]
-						, message.data[3]
-						, message.data[4]
-						, message.data[5]
-						, message.data[6]
-						, message.data[7]
-						);
+				if(operation >= Registry::Operation::OTARequets) {
+#ifdef OTA_ENABLED
+					this->otaFirmware.processMessage(message);
+					this->rxCount++;
+#endif
+				}
+				else {
+					auto registerID = valueAndMove<Registry::RegisterType>(dataMover);
+					auto value = valueAndMove<int32_t>(dataMover);
 
-					char registerName[100];
-					{
+					// Print message preview
+					if (CAN_PRINT_PREVIEW_ENABLED) {
+						printf("Can Rx. ID [%d], Flags [%d], Data [%X %X %X %X %X %X %X %X]\n"
+							, message.identifier
+							, message.flags
+							, message.data[0]
+							, message.data[1]
+							, message.data[2]
+							, message.data[3]
+							, message.data[4]
+							, message.data[5]
+							, message.data[6]
+							, message.data[7]
+							);
+
+						char registerName[100];
+						{
+							auto findRegister = registry.registers.find(registerID);
+							if(findRegister == registry.registers.end()) {
+								sprintf(registerName, "Unknown (%d)", (uint16_t) registerID);
+							}
+							else {
+								sprintf(registerName, "%s", findRegister->second.name.c_str());
+							}
+						}
+						printf("Operation [%d], Register [%s], Value [%d]\n"
+							, (uint8_t) operation
+							, registerName
+							, value);
+					}
+
+					if(message.flags & CAN_MSG_FLAG_RTR) {
+						// Queue full read response
+						printf("RETR\n");
+						for(const auto & defaultRegisterID : Registry::defaultRegisterReads) {
+							readRequests.insert(defaultRegisterID);
+						}
+					}
+					else if(operation == Registry::Operation::ReadRequest) {
+						// Queue individual read response
+						readRequests.insert(registerID);
+					}
+					else if(operation == Registry::Operation::WriteRequest) {
+						// Perform write requests
 						auto findRegister = registry.registers.find(registerID);
 						if(findRegister == registry.registers.end()) {
-							sprintf(registerName, "Unknown (%d)", (uint16_t) registerID);
+							printf("[CAN] : Error on write request. Register (%d) not found", (uint16_t) registerID);
 						}
 						else {
-							sprintf(registerName, "%s", findRegister->second.name.c_str());
+							findRegister->second.value = value;
+							if(registerID == Registry::RegisterType::TargetPosition) {
+								this->filteredTarget.notifyTargetChange();
+							}
 						}
 					}
-					printf("Operation [%d], Register [%s], Value [%d]\n"
-						, (uint8_t) operation
-						, registerName
-						, value);
+					else if(operation == Registry::Operation::WriteDefault) {
+						// Perform write default requests
+						auto findRegister = registry.registers.find(registerID);
+						if(findRegister == registry.registers.end()) {
+							printf("[CAN] : Error on write default request. Register (%d) not found", (uint16_t) registerID);
+						}
+						else {
+							if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::Operation) + sizeof(int32_t)) {
+								// If the message contains a value also, then write that value
+								findRegister->second.value = value;
+							}
+							registry.saveDefault(registerID);
+						}	
+					}
 				}
 
-				if(message.flags & CAN_MSG_FLAG_RTR) {
-					// Queue full read response
-					printf("RETR\n");
-					for(const auto & defaultRegisterID : Registry::defaultRegisterReads) {
-						readRequests.insert(defaultRegisterID);
-					}
-				}
-				else if(operation == Registry::Operation::ReadRequest) {
-					// Queue individual read response
-					readRequests.insert(registerID);
-				}
-				else if(operation == Registry::Operation::WriteRequest) {
-					// Perform write requests
-					auto findRegister = registry.registers.find(registerID);
-					if(findRegister == registry.registers.end()) {
-						printf("[CAN] : Error on write request. Register (%d) not found", (uint16_t) registerID);
-					}
-					else {
-						findRegister->second.value = value;
-						if(registerID == Registry::RegisterType::TargetPosition) {
-							this->filteredTarget.notifyTargetChange();
-						}
-					}
-				}
-				else if(operation == Registry::Operation::WriteDefault) {
-					// Perform write default requests
-					auto findRegister = registry.registers.find(registerID);
-					if(findRegister == registry.registers.end()) {
-						printf("[CAN] : Error on write default request. Register (%d) not found", (uint16_t) registerID);
-					}
-					else {
-						if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::Operation) + sizeof(int32_t)) {
-							// If the message contains a value also, then write that value
-							findRegister->second.value = value;
-						}
-						registry.saveDefault(registerID);
-					}	
-				}
+				
 			}
 		}
 
