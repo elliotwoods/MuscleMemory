@@ -62,7 +62,7 @@ namespace Control {
 	}
 
 	//-----------
-	void
+	void IRAM_ATTR
 	MultiTurn::driveLoopUpdate(SingleTurnPosition currentSingleTurnPosition)
 	{
 		if(this->priorSingleTurnPosition > HALF_WAY / 2 * 3 && currentSingleTurnPosition < HALF_WAY / 2)
@@ -103,7 +103,7 @@ namespace Control {
 	}
 
 	//-----------
-	int32_t
+	int32_t IRAM_ATTR
 	MultiTurn::getMultiTurnPosition() const
 	{
 		return this->position;
@@ -129,6 +129,18 @@ namespace Control {
 			this->saveIndex = 0;
 			writePosition = 0;
 		}
+
+		// Format the sector if we're at the start of a sector. WARNING - REQUIRES ALL OTHER CORE FUNCTIONS TO BE IN IRAM OTHERWISE HALTS
+		if(writePosition % 0x1000 == 0) {
+			if(DEBUG_MULTITURN) {
+				printf("[MultiTurn] Formatting (%d) bytes at sector (%d)\n", 0x1000, writePosition);
+			}
+			esp_partition_erase_range(this->partition
+				, writePosition
+				, 0x1000);
+		}
+		
+
 
 		// Write the data
 		if(DEBUG_MULTITURN) {

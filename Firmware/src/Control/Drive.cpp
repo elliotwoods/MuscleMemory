@@ -25,7 +25,7 @@ namespace Control {
 	}
 
 	//----------
-	void
+	void IRAM_ATTR
 	Drive::update()
 	{
 		this->frameTimer.update();

@@ -401,7 +401,7 @@ namespace Control {
 	}
 
 	//----------
-	PositionWithinStepCycle
+	PositionWithinStepCycle IRAM_ATTR
 	EncoderCalibration::getPositionWithinStepCycle(EncoderReading encoderReading) const
 	{
 		if(!this->hasCalibration) {
