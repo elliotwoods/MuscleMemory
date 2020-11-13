@@ -99,7 +99,8 @@ public:
 
 		// OTA
 		OTADownloading = 210,
-		OTARxPosition = 211
+		OTAWritePosition = 211,
+		OTASize = 212,
 	};
 
 	enum Operation : uint8_t {
@@ -107,9 +108,12 @@ public:
 		WriteRequest = 1,
 		ReadResponse = 2,
 		WriteDefault = 3,
-		
-		OTARequestInfo = 100,
-		OTARequestData = 101,
+
+		OTARequets = 100, // mark the start of OTA requests in the enum
+		OTAInfo = 100,
+		OTAData = 101,
+		OTARequestInfo = 102,
+		OTARequestData = 103,
 	};
 
 	static const std::set<RegisterType> defaultRegisterReads;

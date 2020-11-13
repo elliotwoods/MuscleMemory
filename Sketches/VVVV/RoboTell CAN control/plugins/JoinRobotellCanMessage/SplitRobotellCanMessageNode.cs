@@ -243,11 +243,12 @@ namespace VVVV.Nodes.RoboTell
 					// VALUE
 					value = (int) binaryReader.ReadInt32();
 					
-					FOutID.Add(ID);
-					FOutOperation.Add(operation);
-					FOutRegisterID.Add(registerID);
-					FOutValue.Add(value);
-					
+					if(operation < 100) {
+						FOutID.Add(ID);
+						FOutOperation.Add(operation);
+						FOutRegisterID.Add(registerID);
+						FOutValue.Add(value);
+					}
 				}
 				this.FCompleteMessages.Clear();
 			}

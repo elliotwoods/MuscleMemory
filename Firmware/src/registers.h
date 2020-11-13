@@ -320,8 +320,13 @@ std::map<RegisterType, Register> registers {
 		, 0
 		, Access::ReadOnly
 	}},
-	{ RegisterType::OTARxPosition, {
-		"OTARxPosition"
+	{ RegisterType::OTAWritePosition, {
+		"OTAWritePosition"
+		, 0
+		, Access::ReadOnly
+	}},
+	{ RegisterType::OTASize, {
+		"OTASize"
 		, 0
 		, Access::ReadOnly
 	}},
