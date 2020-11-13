@@ -62,10 +62,10 @@ namespace Interface {
 
 		can_filter_config_t f_config;
 		{
-			this->deviceIDMask = (uint16_t) getRegisterValue(Registry::RegisterType::DeviceID);
-			f_config.acceptance_code = this->deviceIDMask << 3;
-			f_config.acceptance_mask = 0xFFFFFFFF - ((1024 - 1) << 3);
-			f_config.single_filter = true;
+			this->deviceIDForMask = (uint16_t) getRegisterValue(Registry::RegisterType::DeviceID);
+			f_config.acceptance_code = this->deviceIDForMask << (29 - 10 - 13) | 0; // Mask is written from 13th bit. ID is stored in 29-10th bit
+			f_config.acceptance_mask = 0b00000000001111110000000000111111; // Accept 0 and our actual device ID
+			f_config.single_filter = false;
 		}
 
 		//Install & Start CAN driver
@@ -82,7 +82,7 @@ namespace Interface {
 	{
 		ESP_ERROR_CHECK(can_stop());
 		
-		// Clear the Rx queue
+		// Flush the Rx queue
 		{
 			can_message_t message;
 			while(can_receive(&message, 0) == ESP_OK) {
@@ -105,8 +105,8 @@ namespace Interface {
 
 		// Check if Device ID changed
 		{
-			auto deviceIDMask = (uint16_t) getRegisterValue(Registry::RegisterType::DeviceID);
-			if(deviceIDMask != this->deviceIDMask) {
+			auto deviceIDForMask = (uint16_t) getRegisterValue(Registry::RegisterType::DeviceID);
+			if(deviceIDForMask != this->deviceIDForMask) {
 				if(CAN_ENABLE_LIVE_DEVICE_ID_SWITCH) {
 					this->deinit();
 					this->init();
@@ -154,6 +154,17 @@ namespace Interface {
 			{
 				firstRead = false;
 				this->rxCount++;
+
+				try {
+					if(this->otaFirmware.processMessage(message)) {
+						this->rxCount++;
+						continue;
+					}
+				}
+				catch (...) {
+					this->errorCount++;
+				}
+				
 
 				auto dataMover = message.data;
 				auto operation = valueAndMove<Registry::Operation>(dataMover);
@@ -237,7 +248,7 @@ namespace Interface {
 			for(const auto & registerID : readRequests) {
 				auto findRegister = registry.registers.find(registerID);
 				if(findRegister == registry.registers.end()) {
-					printf("[CAN] : Error on read request. Register (%d) not found", (uint16_t) registerID);
+					printf("[CAN] : Error on read request. Register (%d) not found\n", (uint16_t) registerID);
 				}
 				else {
 					can_message_t message;
