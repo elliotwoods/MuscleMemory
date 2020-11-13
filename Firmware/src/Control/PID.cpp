@@ -20,7 +20,7 @@ namespace Control {
 	//----------
 	// reference : http://robotsforroboticists.com/pid-control/
 	// Note this is a simple PID, more advanced one in the Mechaduino example
-	void
+	void IRAM_ATTR
 	PID::update()
 	{
 		// Registry reads
