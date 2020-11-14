@@ -28,9 +28,8 @@ webSocketEvent(WStype_t eventType, uint8_t * payload, size_t length)
 
 namespace Interface {
 	//----------
-	WebSockets::WebSockets(const Control::EncoderCalibration & encoderCalibration, Control::FilteredTarget & filteredTarget)
+	WebSockets::WebSockets(const Control::EncoderCalibration & encoderCalibration)
 	: encoderCalibration(encoderCalibration)
-	, filteredTarget(filteredTarget)
 	{
 
 	}
@@ -45,11 +44,17 @@ namespace Interface {
 				, ("/client/" + Devices::Wifi::X().getMacAddress()).c_str());
 			
 		webSocketsClient.onEvent(webSocketEvent);
-		webSocketsClient.setReconnectInterval(5000);
 
-		this->initialised = true;
-
-		this->update();
+		// If we fail to connect to websockets the first time, then don't try later
+		if(webSocketsClient.isConnected()) {
+			webSocketsClient.setReconnectInterval(5000);
+			this->initialised = true;
+			this->update();
+			printf("[WebSockets] Connected\n");
+		}
+		else {
+			printf("[WebSockets] Connection failed\n");
+		}
 	}
 
 	//----------
@@ -58,6 +63,7 @@ namespace Interface {
 	{
 		if(!this->initialised) {
 			// e.g. the provisioning scren might call update on us, but websockets might not be active
+			// Also if we failed on startup, we might choose not to perform any future updates
 			return;
 		}
 
@@ -237,7 +243,7 @@ namespace Interface {
 		}
 
 		if(registerType == Registry::RegisterType::TargetPosition) {
-			this->filteredTarget.notifyTargetChange();
+			Control::FilteredTarget::X().notifyTargetChange();
 		}
 	}
 

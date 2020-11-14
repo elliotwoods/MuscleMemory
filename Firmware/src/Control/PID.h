@@ -7,11 +7,10 @@
 namespace Control {
 	class PID {
 	public:
-		PID(FilteredTarget &);
+		PID();
 		void init();
 		void update();
 	private:
-		FilteredTarget & filteredTarget;
 		Utils::FrameTimer frameTimer;
 		int64_t priorIntegral = 0;
 		int64_t priorError = 0;
