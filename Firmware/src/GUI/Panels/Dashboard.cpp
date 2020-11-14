@@ -4,6 +4,8 @@
 #include "GUI/Controller.h"
 #include "RegisterList.h"
 
+#include "Control/FilteredTarget.h"
+
 #define OUTER_CIRCLE
 #define HAC_DRAW_TICKS
 #define MULTI_TURN
@@ -186,6 +188,7 @@ namespace GUI {
 		{
 			auto & targetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition).value;
 			targetPosition += 512 * (int32_t) movement;
+			Control::FilteredTarget::X().notifyTargetChange();
 		}
 	}
 }

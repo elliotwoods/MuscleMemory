@@ -1,7 +1,9 @@
 #include "MultiTurn.h"
 #include "GUI/Controller.h"
+#include "Registry.h"
 
 #include "esp_task_wdt.h"
+#include "Arduino.h"
 
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 #define HALF_WAY (1 << 13)
@@ -81,25 +83,28 @@ namespace Control {
 	void
 	MultiTurn::mainLoopUpdate()
 	{
-		// If our saveData implies a different number of turns than our actual number of turns
-		// (when loaded with our current encoder reading being active)
-		{
-			auto mtPosition = this->getMultiTurnPosition();
-			auto stPosition = MOD(mtPosition, 1 << 14);
-			auto closestTurn = this->implyTurns(this->saveData.multiTurnPosition, stPosition);
-			if(closestTurn != this->turns) {
-				if(DEBUG_MULTITURN) {
-					printf("[MultiTurn] Needs save! SaveData implied turn (%d) from saved multiturn (%d) and current single turn (%d), Actual turns (%d)\n"
-						, closestTurn
-						, this->saveData.multiTurnPosition
-						, stPosition
-						, this->turns);
-				}
+		if(getRegisterValue(Registry::RegisterType::MultiTurnSaveEnabled) == 1) {
+			// If our saveData implies a different number of turns than our actual number of turns
+			// (when loaded with our current encoder reading being active)
+			{
+				auto mtPosition = this->getMultiTurnPosition();
+				auto stPosition = MOD(mtPosition, 1 << 14);
+				auto closestTurn = this->implyTurns(this->saveData.multiTurnPosition, stPosition);
+				if(closestTurn != this->turns) {
+					if(DEBUG_MULTITURN) {
+						printf("[MultiTurn] Needs save! SaveData implied turn (%d) from saved multiturn (%d) and current single turn (%d), Actual turns (%d)\n"
+							, closestTurn
+							, this->saveData.multiTurnPosition
+							, stPosition
+							, this->turns);
+					}
 
-				// Then save the session
-				//this->saveSession();
+					// Then save the session
+					this->saveSession();
+				}
 			}
 		}
+		
 	}
 
 	//-----------
@@ -135,9 +140,9 @@ namespace Control {
 			if(DEBUG_MULTITURN) {
 				printf("[MultiTurn] Formatting (%d) bytes at sector (%d)\n", 0x1000, writePosition);
 			}
-			esp_partition_erase_range(this->partition
+			ESP_ERROR_CHECK(esp_partition_erase_range(this->partition
 				, writePosition
-				, 0x1000);
+				, 0x1000));
 		}
 		
 
@@ -212,11 +217,21 @@ namespace Control {
 		// Read remaining positions if we got any data so far
 		if(anyLoaded) {
 			for(size_t readPosition=saveDataSize; readPosition<this->partition->size; readPosition += saveDataSize) {
+				if(DEBUG_MULTITURN) {
+					printf("[MultiTurn] Checking entry at (%" PRIu32 ")\n", readPosition);
+				}
+
 				SaveData loadedData;
 				esp_partition_read(this->partition
 					, readPosition
 					, &loadedData
 					, saveDataSize);
+
+				if(DEBUG_MULTITURN) {
+					printf("[MultiTurn] MT pos (%d), save sequence index (%" PRIu64 ")\n"
+						, loadedData.multiTurnPosition
+						, loadedData.saveSequenceIndex);
+				}
 
 				if(loadedData.getCRC() == loadedData.storedCRC) {
 					if(DEBUG_MULTITURN) {
@@ -251,8 +266,10 @@ namespace Control {
 			return true;
 		}
 		else {
-			printf("[MultiTurn] Failed to load any data. Formatting\n");
-			this->formatPartition();
+			printf("[MultiTurn] Failed to load any data. Lazy formatting\n");
+
+			//printf("[MultiTurn] Failed to load any data. Full formatting\n");
+			//this->formatPartition();
 			return false;
 		}
 		
@@ -295,10 +312,10 @@ namespace Control {
 			if(DEBUG_MULTITURN) {
 				printf("[MultiTurn] Erasing (%" PRIu32 ") bytes at (%" PRIu32 ")\n", eraseRegionSize, offset);
 			}
-			esp_partition_erase_range(this->partition
+
+			ESP_ERROR_CHECK(esp_partition_erase_range(this->partition
 				, offset
-				, eraseRegionSize);
-			esp_task_wdt_reset();
+				, eraseRegionSize));
 
 			// Allow some time for other tasks
 			vTaskDelay(1);
@@ -310,9 +327,9 @@ namespace Control {
 			offset -= eraseRegionSize;
 
 			// And erase the remaining region
-			esp_partition_erase_range(this->partition
+			ESP_ERROR_CHECK(esp_partition_erase_range(this->partition
 				, offset
-				, this->partition->size - offset);
+				, this->partition->size - offset));
 		}
 	}
 

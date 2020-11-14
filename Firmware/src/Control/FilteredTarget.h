@@ -5,10 +5,12 @@
 namespace Control {
 	class FilteredTarget {
 	public:
+		static FilteredTarget & X();
 		void update(); // called from main loop
 		void notifyTargetChange();
 		MultiTurnPosition getTargetFiltered() const; // called from drive loop
 	private:
+		FilteredTarget();
 		bool targetChange = true;
 		Velocity filterVelocity = 0;
 		MultiTurnPosition priorTarget = 0;

@@ -5,7 +5,14 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+
+#include "GUI/Controller.h"
+#include "GUI/Panels/OTADownload.h"
+#include "Utils/OTAStream.h"
+
 // Reference : https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/WiFiClient/WiFiClient.ino
+
+HTTPClient httpClient;
 
 namespace Devices {
 	//----------
@@ -60,6 +67,8 @@ namespace Devices {
 		{
 			this->baseURI = "http://" MUSCLE_MEMORY_SERVER_HOST ":" MUSCLE_MEMORY_SERVER_PORT_STRING;
 		}
+
+		this->attemptOTA();
 	}
 
 	//----------
@@ -73,8 +82,6 @@ namespace Devices {
 	cJSON *
 	Wifi::post(const std::string & path, cJSON * content)
 	{
-		HTTPClient httpClient;
-
 		// Format the request
 		auto contentString = cJSON_PrintUnformatted(content);
 
@@ -83,7 +90,7 @@ namespace Devices {
 		if(httpClient.begin((this->baseURI + path).c_str())) {
 			httpClient.addHeader("Content-Type", "application/json");
 			auto result = httpClient.POST((uint8_t*) contentString, strlen(contentString));
-			if(result == 200) {
+			if(result == HTTP_CODE_OK) {
 				response = cJSON_Parse(httpClient.getString().c_str());
 				if(!response) {
 					printf("[Wifi] : Error parsing response : \n %s \n", httpClient.getString().c_str());
@@ -95,5 +102,30 @@ namespace Devices {
 		free(contentString);
 
 		return response;
+	}
+
+	//----------
+	void
+	Wifi::attemptOTA()
+	{
+		printf("[Wifi] Attempting OTA\n");
+		if(httpClient.begin((this->baseURI + "/static/app.bin").c_str())) {
+			auto result = httpClient.GET();
+			if(result == HTTP_CODE_OK) {
+				printf("[WiFi] Performing OTA update\n");
+				disableLoopWDT();
+				disableCore0WDT();
+				Utils::OTAStream otaStream;
+
+				otaStream.begin(httpClient.getSize());
+				
+				httpClient.writeToStream(&otaStream);
+				otaStream.end();
+			}
+			else {
+				printf("[Wifi] Couldn't load OTA (%d)\n", result);
+			}
+			httpClient.end();
+		}
 	}
 }
