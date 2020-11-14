@@ -4,8 +4,7 @@
 
 namespace Control {
 	//----------
-	PID::PID(FilteredTarget & filteredTarget)
-	: filteredTarget(filteredTarget)
+	PID::PID()
 	{
 
 	}
@@ -35,7 +34,7 @@ namespace Control {
 		const auto maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
 
 		// Get the filtered target position
-		const auto targetPosition = this->filteredTarget.getTargetFiltered();
+		const auto targetPosition = FilteredTarget::X().getTargetFiltered();
 
 		// Get frame time
 		this->frameTimer.update();

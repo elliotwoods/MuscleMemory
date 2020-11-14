@@ -13,7 +13,7 @@
 namespace Interface {
 	class CANResponder {
 	public:
-		CANResponder(Control::FilteredTarget &);
+		CANResponder();
 		void init();
 		void deinit();
 		void update(); // From main loop
@@ -23,7 +23,6 @@ namespace Interface {
 		CAN::OTAFirmware otaFirmware;
 #endif
 
-		Control::FilteredTarget & filteredTarget;
 		uint16_t deviceIDForMask;
 
 		uint16_t rxCount = 0;

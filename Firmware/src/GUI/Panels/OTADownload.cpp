@@ -24,24 +24,30 @@ namespace GUI {
 			const auto position = getRegisterValue(Registry::RegisterType::OTAWritePosition);
 			const auto size = getRegisterValue(Registry::RegisterType::OTASize);
 
-			// Draw content
-			{
+			if(!this->message.empty()) {
+				u8g2.drawStr(3, 38, this->message.c_str());
 				u8g2.setFont(u8g2_font_nerhoe_tr);
-				sprintf(message, "%d", position);
-				u8g2.drawStr(3, 26, message);
 			}
-
-			{
+			else {
 				u8g2.setFont(u8g2_font_nerhoe_tr);
-				sprintf(message, "(Total : %d) ", size);
-				u8g2.drawStr(3, 38, message);
-			}
 
-			// Progress bar
-			if(size > 0) {
-				u8g2.setDrawColor(2);
-				u8g2.drawBox(0, 0, 128 * position / size, 64);
-				u8g2.setDrawColor(1);
+				// Draw default content
+				{
+					sprintf(message, "%d", position);
+					u8g2.drawStr(3, 27, message);
+				}
+
+				{
+					sprintf(message, "(Total : %d) ", size);
+					u8g2.drawStr(3, 38, message);
+				}
+
+				// Progress bar
+				if(size > 0) {
+					u8g2.setDrawColor(2);
+					u8g2.drawBox(0, 0, 128 * position / size, 64);
+					u8g2.setDrawColor(1);
+				}
 			}
 		}
 
