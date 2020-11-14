@@ -66,7 +66,11 @@
 		, 0
 		, Access::ReadOnly
 	}},
-
+	{ RegisterType::MaxVelocity, {
+		"MaxVelocity"
+		, 100000
+		, Access::ReadWrite
+	}},
 
 	{ RegisterType::EncoderReading, {
 		"EncoderReading"
@@ -84,6 +88,13 @@
 		, Access::ReadWrite
 		, 1
 		, 255
+	}},
+	{ RegisterType::MultiTurnSaveEnabled, {
+		"MultiTurnSaveEnabled"
+		, 1
+		, Access::ReadWrite
+		, 0
+		, 1
 	}},
 
 

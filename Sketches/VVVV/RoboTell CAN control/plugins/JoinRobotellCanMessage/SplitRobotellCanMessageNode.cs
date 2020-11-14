@@ -218,7 +218,7 @@ namespace VVVV.Nodes.RoboTell
 						ID = (buffer[5] << 24) + (buffer[4] << 16) + (buffer[3] << 8) + buffer[2];
 					}
 					
-					if(!filter.Contains(ID)) {
+					if(!filter.Contains(ID) || filter.Contains(-1)) {
 						continue;
 					}
 					

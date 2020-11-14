@@ -11,7 +11,7 @@
 namespace Interface {
 	class WebSockets {
 	public:
-		WebSockets(const Control::EncoderCalibration &, Control::FilteredTarget &);
+		WebSockets(const Control::EncoderCalibration &);
 		void init();
 		void update();
 		void processIncomingRequests(uint8_t *, size_t);
@@ -27,6 +27,5 @@ namespace Interface {
 		bool needsSendEncoderCalibration = false;
 
 		const Control::EncoderCalibration & encoderCalibration;
-		Control::FilteredTarget & filteredTarget;
 	};
 }
