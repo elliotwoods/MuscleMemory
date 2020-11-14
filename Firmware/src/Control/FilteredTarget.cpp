@@ -1,9 +1,20 @@
 #include "FilteredTarget.h"
 #include "Registry.h"
 
-#include "esp_timer.h"
+extern "C" {
+	#include "esp_timer.h"
+	#include "esp_attr.h"
+}
 
 namespace Control {
+	//----------
+	FilteredTarget &
+	FilteredTarget::X()
+	{
+		static auto x = FilteredTarget();
+		return x;
+	}
+
 	//----------
 	void
 	FilteredTarget::update()
@@ -20,14 +31,14 @@ namespace Control {
 	}
 
 	//----------
-	void
+	void IRAM_ATTR
 	FilteredTarget::notifyTargetChange()
 	{
 		this->targetChange = true;
 	}
 
 	//----------
-	MultiTurnPosition
+	MultiTurnPosition IRAM_ATTR
 	FilteredTarget::getTargetFiltered() const
 	{
 		const auto now = esp_timer_get_time();
@@ -39,5 +50,11 @@ namespace Control {
 		else {
 			return this->filterVelocity * timeDelta / 1000 + this->priorTarget;
 		}
+	}
+
+	//-----------
+	FilteredTarget::FilteredTarget()
+	{
+
 	}
 }

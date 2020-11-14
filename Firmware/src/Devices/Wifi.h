@@ -15,6 +15,7 @@ namespace Devices {
 		const std::string & getMacAddress() const;
 		cJSON * post(const std::string & path, cJSON * content);
 	private:
+		void attemptOTA();
 		std::string baseURI;
 		std::string macAddress;
 	};
