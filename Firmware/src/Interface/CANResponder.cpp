@@ -8,6 +8,7 @@
 #endif
 
 #include "esp_log.h"
+#include "esp_attr.h"
 
 #include <set>
 
@@ -39,8 +40,7 @@ T & valueAndMove(uint8_t* & dataMover)
 
 namespace Interface {
 	//----------
-	CANResponder::CANResponder(Control::FilteredTarget & filteredTarget)
-	: filteredTarget(filteredTarget)
+	CANResponder::CANResponder()
 	{
 
 	}
@@ -159,7 +159,7 @@ namespace Interface {
 	}
 
 	//----------
-	void
+	void IRAM_ATTR
 	CANResponder::updateTask()
 	{
 #ifdef OTA_ENABLED
@@ -246,7 +246,7 @@ namespace Interface {
 						else {
 							findRegister->second.value = value;
 							if(registerID == Registry::RegisterType::TargetPosition) {
-								this->filteredTarget.notifyTargetChange();
+								Control::FilteredTarget::X().notifyTargetChange();
 							}
 						}
 					}

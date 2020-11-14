@@ -33,11 +33,13 @@ public:
 		SoftLimitMin = 15,
 		SoftLimitMax = 16,
 		TargetPositionFiltered = 17,
+		MaxVelocity = 18,
 
 		// Encoder
 		EncoderReading = 21,
 		EncoderErrors = 22,
 		EncoderPositionFilterSize = 23,
+		MultiTurnSaveEnabled = 27,
 
 		// Power
 		Current = 30,

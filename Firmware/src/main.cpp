@@ -47,6 +47,8 @@
 #define WIFI_ENABLED
 #endif
 
+#define MM_VERSION "2020-11-14 1340"
+
 
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047; // The magnetic encoder
@@ -58,20 +60,19 @@ Control::MultiTurn multiTurn(encoderCalibration);
 #ifdef AGENT_ENABLED
 Control::Agent agent;
 #endif
-Control::FilteredTarget filteredTarget;
-Control::PID pid(filteredTarget);
+Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
 Interface::SystemInfo systemInfo(ina219);
-Interface::CANResponder canResponder(filteredTarget);
-Interface::WebSockets webSockets(encoderCalibration, filteredTarget);
+Interface::CANResponder canResponder;
+Interface::WebSockets webSockets(encoderCalibration);
 
 auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
 
 // Core 0 tasks:
 #define PRIORITY_INTERFACE 0
 #define PRIORITY_AGENT_SERVER_COMMS 0
-#define PRIORITY_CAN_RESPONDER 0
+#define PRIORITY_CAN_RESPONDER 1
 
 // Core 1 tasks:
 #define PRIORITY_MOTOR 1
@@ -118,6 +119,9 @@ initDevices()
 		sprintf(message, "ESP-IDF : %s", esp_get_idf_version());
 		showSplashMessage(message);
 	}
+
+	// Show version
+	showSplashMessage(MM_VERSION);
 
 	// Initialise devices
 	showSplashMessage("Mount File System...");	
@@ -294,7 +298,7 @@ updateInterface()
 	multiTurn.mainLoopUpdate();
 	systemInfo.update();
 	canResponder.update();
-	filteredTarget.update();
+	Control::FilteredTarget::X().update();
 #ifdef WEBSOCKETS_ENABLED
 	webSockets.update();
 #endif
