@@ -185,7 +185,7 @@ namespace Interface {
 				auto dataMover = message.data;
 				auto operation = valueAndMove<Registry::Operation>(dataMover);
 
-				if(operation >= Registry::Operation::OTARequets) {
+				if(operation >= Registry::Operation::OTARequests) {
 #ifdef OTA_ENABLED
 					this->otaFirmware.processMessage(message);
 					this->rxCount++;
@@ -239,14 +239,16 @@ namespace Interface {
 					}
 					else if(operation == Registry::Operation::WriteRequest) {
 						// Perform write requests
-						auto findRegister = registry.registers.find(registerID);
-						if(findRegister == registry.registers.end()) {
-							printf("[CAN] : Error on write request. Register (%d) not found", (uint16_t) registerID);
-						}
-						else {
-							findRegister->second.value = value;
-							if(registerID == Registry::RegisterType::TargetPosition) {
-								Control::FilteredTarget::X().notifyTargetChange();
+						if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::Operation) + sizeof(int32_t)) {
+							auto findRegister = registry.registers.find(registerID);
+							if(findRegister == registry.registers.end()) {
+								printf("[CAN] : Error on write request. Register (%d) not found", (uint16_t) registerID);
+							}
+							else {
+								findRegister->second.value = value;
+								if(registerID == Registry::RegisterType::TargetPosition) {
+									Control::FilteredTarget::X().notifyTargetChange();
+								}
 							}
 						}
 					}
@@ -280,11 +282,13 @@ namespace Interface {
 				else {
 					can_message_t message;
 					message.flags = CAN_MSG_FLAG_EXTD;
-					
+
 					auto data = message.data;
 					valueAndMove<Registry::Operation>(data) = Registry::Operation::ReadResponse;
 					valueAndMove<Registry::RegisterType>(data) = registerID;
 					valueAndMove<int32_t>(data) = findRegister->second.value;
+
+					message.data_length_code = sizeof(Registry::Operation) + sizeof(Registry::RegisterType) + sizeof(int32_t);
 
 					if(can_transmit(&message, 1 / portTICK_PERIOD_MS) != ESP_OK) {
 						printf("[CAN] Transmit failed\n");

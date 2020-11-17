@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputPath>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <Platforms>x64</Platforms>
+    <RootNamespace>MuscleMemory</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Candle.NET\Candle.NET\Candle.NET.csproj" />
+  </ItemGroup>
+
+</Project>
