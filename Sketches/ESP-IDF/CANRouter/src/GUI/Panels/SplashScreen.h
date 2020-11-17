@@ -1,0 +1,21 @@
+#pragma once
+
+#include "../Panel.h"
+
+namespace GUI {
+	namespace Panels {
+		class SplashScreen : public Panel
+		{
+		public:
+			SplashScreen();
+			void update() override;
+			void draw(U8G2 &) override;
+			void buttonPressed() override;
+			void dial(int8_t) override;
+
+			void setMessage(const std::string&);
+		private:
+			std::string message;
+		};
+	}
+}
