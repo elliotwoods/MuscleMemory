@@ -6,11 +6,12 @@ namespace MuscleMemory
 {
 	public class BusGroup
 	{
+		int FBitrate;
 		List<Bus> FBuses;
 
-		public BusGroup()
+		public BusGroup(int bitrate = 500000)
 		{
-			this.Open();
+			this.Open(bitrate);
 		}
 
 		~BusGroup()
@@ -18,8 +19,9 @@ namespace MuscleMemory
 			this.Close();
 		}
 
-		public void Open()
+		public void Open(int bitrate)
 		{
+			this.FBitrate = bitrate;
 			this.Close();
 			var devices = Device.ListDevices();
 			var buses = new List<Bus>();
@@ -27,7 +29,7 @@ namespace MuscleMemory
 			{
 				try
 				{
-					buses.Add(new Bus(device));
+					buses.Add(new Bus(device, bitrate));
 				}
 				catch(Exception e)
 				{
@@ -59,7 +61,7 @@ namespace MuscleMemory
 
 		public void Restart()
 		{
-			this.Open();
+			this.Open(this.FBitrate);
 		}
 
 		public void Update()
@@ -75,6 +77,22 @@ namespace MuscleMemory
 			foreach(var bus in this.FBuses)
 			{
 				bus.Refresh();
+			}
+		}
+
+		public Dictionary<int, Motor> Motors
+		{
+			get
+			{
+				var motors = new Dictionary<int, Motor>();
+				foreach(var bus in this.FBuses)
+				{
+					foreach(var iterator in bus.Motors)
+					{
+						motors[iterator.Key] = iterator.Value;
+					}
+				}
+				return motors;
 			}
 		}
 	}
