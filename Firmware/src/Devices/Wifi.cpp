@@ -10,6 +10,8 @@
 #include "GUI/Panels/OTADownload.h"
 #include "Utils/OTAStream.h"
 
+#include "Version.h"
+
 // Reference : https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/WiFiClient/WiFiClient.ino
 
 HTTPClient httpClient;
@@ -108,24 +110,53 @@ namespace Devices {
 	void
 	Wifi::attemptOTA()
 	{
-		printf("[Wifi] Attempting OTA\n");
-		if(httpClient.begin((this->baseURI + "/static/app.bin").c_str())) {
-			auto result = httpClient.GET();
-			if(result == HTTP_CODE_OK) {
-				printf("[WiFi] Performing OTA update\n");
-				disableLoopWDT();
-				disableCore0WDT();
-				Utils::OTAStream otaStream;
+		bool newUpdateAvailable = false;
 
-				otaStream.begin(httpClient.getSize());
-				
-				httpClient.writeToStream(&otaStream);
-				otaStream.end();
+		printf("[Wifi] Checking for OTA\n");
+		{
+			if(httpClient.begin((this->baseURI + "/static/app_version.txt").c_str())) {
+				auto result = httpClient.GET();
+				if(result == HTTP_CODE_OK) {
+					auto text = httpClient.getString();
+					auto compare = strcmp(text.c_str(), MM_VERSION);
+					if(compare == 0) {
+						printf("[Wifi] Server firmware version is same as ours (%s). Ignoring\n", MM_VERSION);
+					}
+					else {
+						printf("[Wifi] Server firmware version (%s) is different (%d) than ours (%s)\n", text.c_str(), compare, MM_VERSION);
+						newUpdateAvailable = true;
+					}
+
+				}
+				else {
+					printf("[Wifi] Server firmware version is unknown. Ignoring\n", MM_VERSION);
+				}
+				httpClient.end();
 			}
-			else {
-				printf("[Wifi] Couldn't load OTA (%d)\n", result);
-			}
-			httpClient.end();
+
 		}
+		
+		if(newUpdateAvailable) {
+			printf("[Wifi] Attempting OTA\n");
+			if(httpClient.begin((this->baseURI + "/static/app.bin").c_str())) {
+				auto result = httpClient.GET();
+				if(result == HTTP_CODE_OK) {
+					printf("[WiFi] Performing OTA update\n");
+					disableLoopWDT();
+					disableCore0WDT();
+					Utils::OTAStream otaStream;
+
+					otaStream.begin(httpClient.getSize());
+
+					httpClient.writeToStream(&otaStream);
+					otaStream.end();
+				}
+				else {
+					printf("[Wifi] Couldn't load OTA (%d)\n", result);
+				}
+				httpClient.end();
+			}
+		}
+		
 	}
 }

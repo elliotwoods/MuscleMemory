@@ -25,6 +25,7 @@
 
 #include "Utils/Scheduler.h"
 
+#include "Version.h"
 #include "Registry.h"
 #include "WifiConfig.h"
 
@@ -36,7 +37,10 @@
 #include <freertos/FreeRTOS.h>
 #endif
 
-#include "driver/can.h"
+extern "C" {
+	#include "esp_ota_ops.h"
+	#include "driver/can.h"
+}
 
 //#define AGENT_ENABLED
 #define PID_INSIDE_DRIVE_LOOP
@@ -46,9 +50,6 @@
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
 #define WIFI_ENABLED
 #endif
-
-#define MM_VERSION "2020-11-14 1340"
-
 
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047; // The magnetic encoder
@@ -122,6 +123,15 @@ initDevices()
 
 	// Show version
 	showSplashMessage(MM_VERSION);
+
+
+	// Show boot partition
+	{
+		char message[100];
+		auto bootPartition = esp_ota_get_boot_partition();
+		sprintf(message, "Booting to %s", bootPartition->label);
+		showSplashMessage(message);
+	}
 
 	// Initialise devices
 	showSplashMessage("Mount File System...");	
