@@ -22,7 +22,7 @@ namespace Utils
 		
 
 		ESP_ERROR_CHECK(esp_ota_begin(this->otaPartition
-			, size
+			, OTA_SIZE_UNKNOWN
 			, &this->otaHandle));
 
 		setRegisterValue(Registry::RegisterType::OTADownloading, 1);
