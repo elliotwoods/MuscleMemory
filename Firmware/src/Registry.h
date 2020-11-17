@@ -114,7 +114,7 @@ public:
 		ReadResponse = 2,
 		WriteDefault = 3,
 
-		OTARequets = 100, // mark the start of OTA requests in the enum
+		OTARequests = 100, // mark the start of OTA requests in the enum
 		OTAInfo = 100,
 		OTAData = 101,
 		OTARequestInfo = 102,
