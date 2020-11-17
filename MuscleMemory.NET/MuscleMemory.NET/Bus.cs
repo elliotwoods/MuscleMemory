@@ -8,15 +8,18 @@ using Candle;
 
 namespace MuscleMemory
 {
-	class Bus
+	public class Bus
 	{
 		Device FDevice;
+		int FBitrate;
 		Channel FChannel;
+		UInt32 FTimestamp = 0;
+		Dictionary<int, Motor> FMotors = new Dictionary<int, Motor>();
 
-		public Bus(Device device)
+		public Bus(Device device, int bitrate)
 		{
 			this.FDevice = device;
-			this.Open();
+			this.Open(bitrate);
 		}
 
 		~Bus()
@@ -26,11 +29,19 @@ namespace MuscleMemory
 
 		public void Update()
 		{
-
+			if (this.IsOpen)
+			{
+				this.FDevice.Perform(() =>
+				{
+					this.FTimestamp = this.FDevice.Timestamp;
+				});
+				this.FDevice.Update();
+			}
 		}
 
-		public void Open()
+		public void Open(int bitrate)
 		{
+			this.FBitrate = bitrate;
 			this.FDevice.Open();
 
 			var channels = this.FDevice.Channels;
@@ -39,7 +50,7 @@ namespace MuscleMemory
 				throw (new Exception("This library currently only supports devices with exactly 1 channel"));
 			}
 			this.FChannel = channels.Values.ToList()[0];
-			this.FChannel.Start(500000);
+			this.FChannel.Start(bitrate);
 
 			this.Refresh();
 		}
@@ -75,17 +86,73 @@ namespace MuscleMemory
 
 			// Wait for responses
 			Thread.Sleep(timeout);
-
 			var replies = this.FChannel.Receive();
+
+			// Rebuild our dictionary of motors
+			var priorData = this.FMotors;
+			var newData = new Dictionary<int, Motor>();
 			foreach(var reply in replies)
 			{
 				var message = Messages.Decode(reply);
 				if(message is Messages.ReadResponse)
 				{
-					Console.WriteLine(message);
+					var readResponse = message as Messages.ReadResponse;
+
+					// We found a motor
+					var ID = readResponse.ID;
+					Motor motor;
+					if(priorData.ContainsKey(ID))
+					{
+						motor = priorData[ID];
+					}
+					else
+					{
+						motor = new Motor(readResponse.ID, this);
+					}
+					motor.MarkSeen();
+					motor.Process(readResponse);
+					newData.Add(ID, motor);
 				}
 			}
-			Console.WriteLine(replies);
+			this.FMotors = newData;
+		}
+
+		public void Send(Messages.IMessage message)
+		{
+			var frame = message.Encode();
+			this.FChannel.Send(frame);
+		}
+
+		public Dictionary<int, Motor> Motors
+		{
+			get
+			{
+				return this.FMotors;
+			}
+		}
+
+		public UInt32 Timestamp
+		{
+			get
+			{
+				return this.FTimestamp;
+			}
+		}
+
+		public Device Device
+		{
+			get
+			{
+				return this.FDevice;
+			}
+		}
+
+		public double BusTraffic
+		{
+			get
+			{
+				return (double)(this.FDevice.RxBitsPerSecond + this.FDevice.TxBitsPerSecond) / (double)this.FBitrate;
+			}
 		}
 	}
 }
