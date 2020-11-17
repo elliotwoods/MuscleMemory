@@ -15,6 +15,6 @@ namespace Control {
 		Velocity filterVelocity = 0;
 		MultiTurnPosition priorTarget = 0;
 		uint64_t priorTargetTimestamp = 0;
-		const uint32_t maxTimeDelta = 1 * 1000000; // 1 second
+		const uint32_t maxTimeDelta = 200 * 1000; // 200ms
 	};
 }
