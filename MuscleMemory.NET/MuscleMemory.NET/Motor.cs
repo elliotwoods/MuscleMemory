@@ -71,5 +71,14 @@ namespace MuscleMemory
 				return this.FCachedRegisterValues;
 			}
 		}
+
+		public void SetRegister(Messages.RegisterType registerType, int value)
+		{
+			var writeRequest = new Messages.WriteRequest();
+			writeRequest.ID = this.ID;
+			writeRequest.RegisterType = registerType;
+			writeRequest.Value = value;
+			this.FBus.Send(writeRequest);
+		}
 	}
 }

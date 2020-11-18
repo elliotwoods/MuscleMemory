@@ -98,7 +98,6 @@ namespace MuscleMemory
 		public void Refresh(int timeout = 1000)
 		{
 			this.FMotors.Clear();
-
 			// Send the request to all indexes
 			for (int i = 1; i < Messages.MaxIndex; i++)
 			{
@@ -109,10 +108,10 @@ namespace MuscleMemory
 			}
 		}
 
-		public void Send(Messages.IMessage message)
+		public void Send(Messages.IMessage message, bool blocking = false)
 		{
 			var frame = message.Encode();
-			this.FChannel.Send(frame);
+			this.FChannel.Send(frame, true);
 		}
 
 		public Dictionary<int, Motor> Motors
