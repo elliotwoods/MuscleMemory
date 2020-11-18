@@ -10,3 +10,4 @@ Server/static/app.bin
 Server/static/app_version.txt
 .vs
 obj
+packages
