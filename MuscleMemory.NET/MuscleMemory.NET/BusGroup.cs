@@ -80,6 +80,14 @@ namespace MuscleMemory
 			}
 		}
 
+		public List<Bus> Buses
+		{
+			get
+			{
+				return this.FBuses;
+			}
+		}
+
 		public Dictionary<int, Motor> Motors
 		{
 			get
