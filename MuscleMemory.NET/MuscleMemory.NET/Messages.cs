@@ -184,6 +184,8 @@ namespace MuscleMemory
 
 			public void Decode(Frame frame)
 			{
+				this.ID = (int) (frame.Identifier >> 19);
+
 				if (frame.Data.Length < 1 + 2)
 				{
 					throw (new Exception("Invalid message format"));
