@@ -154,7 +154,7 @@ namespace MuscleMemory
 				var frame = new Frame();
 				frame.Identifier = (UInt32)(this.ID << 19);
 				frame.Extended = true;
-				frame.Data = new byte[1 + 2];
+				frame.Data = new byte[1 + 2 + 4];
 				using (var memoryStream = new MemoryStream(frame.Data))
 				{
 					using (var binaryWriter = new BinaryWriter(memoryStream))
