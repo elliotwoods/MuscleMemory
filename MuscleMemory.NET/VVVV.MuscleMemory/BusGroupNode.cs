@@ -14,7 +14,9 @@ namespace VVVV.MuscleMemory
 	[PluginInfo(Name = "BusGroup",
 				Category = "MuscleMemory",
 				Help = "Get all attached buses",
-				Tags = "CAN")]
+				Tags = "CAN",
+				AutoEvaluate = true
+		)]
 	#endregion PluginInfo
 	public class BusGroupNode : IPluginEvaluate
 	{
