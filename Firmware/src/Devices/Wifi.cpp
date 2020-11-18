@@ -114,11 +114,13 @@ namespace Devices {
 
 		printf("[Wifi] Checking for OTA\n");
 		{
-			if(httpClient.begin((this->baseURI + "/static/app_version.txt").c_str())) {
+			if(httpClient.begin((this->baseURI + "/static/Version.h").c_str())) {
 				auto result = httpClient.GET();
 				if(result == HTTP_CODE_OK) {
 					auto text = httpClient.getString();
-					auto compare = strcmp(text.c_str(), MM_VERSION);
+					char versionString[100];
+					sprintf(versionString, "#define MM_VERSION \"%s\"", MM_VERSION);
+					auto compare = strcmp(text.c_str(), versionString);
 					if(compare == 0) {
 						printf("[Wifi] Server firmware version is same as ours (%s). Ignoring\n", MM_VERSION);
 					}
@@ -129,7 +131,7 @@ namespace Devices {
 
 				}
 				else {
-					printf("[Wifi] Server firmware version is unknown. Ignoring\n", MM_VERSION);
+					printf("[Wifi] Server firmware version is unknown. Ignoring. Over version is : %s\n", MM_VERSION);
 				}
 				httpClient.end();
 			}
