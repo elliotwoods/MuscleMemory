@@ -106,5 +106,17 @@ namespace MuscleMemory
 			}
 			return motors;
 		}
+
+		public Motor FindMotor(int ID)
+		{
+			foreach (var bus in this.FBuses)
+			{
+				if(bus.Motors.ContainsKey(ID))
+				{
+					return bus.Motors[ID];
+				}
+			}
+			return null;
+		}
 	}
 }
