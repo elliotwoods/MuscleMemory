@@ -58,6 +58,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusGroupNode.cs" />
+    <Compile Include="BusInfoNode.cs" />
+    <Compile Include="GetRegisterValueNode.cs" />
+    <Compile Include="MotorInfoNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
