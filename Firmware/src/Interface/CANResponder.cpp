@@ -56,6 +56,7 @@ namespace Interface {
 		can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(TX_GPIO_NUM, RX_GPIO_NUM, CAN_MODE_NORMAL);
 		{
 			g_config.rx_queue_len = 64;
+			g_config.tx_queue_len = 64;
 		}
 
 		can_timing_config_t t_config = CAN_TIMING_CONFIG_500KBITS();
@@ -166,138 +167,13 @@ namespace Interface {
 		this->otaFirmware.updateCANTask();
 #endif
 
-		// For reads and writes we use more complex manner than simple get/set functions
-		static auto & registry = Registry::X();
-
-		std::set<Registry::RegisterType> readRequests;
-
 		// handle incoming messages
-		{
-			can_message_t message;
-			bool firstRead = true;
+		while(this->receive(10 / portTICK_PERIOD_MS)) {
 
-			// Wait up to 100 ms on first read
-			while(can_receive(&message, firstRead ? 100 / portTICK_PERIOD_MS : 0) == ESP_OK)
-			{
-				firstRead = false;
-				this->rxCount++;
-
-				auto dataMover = message.data;
-				auto operation = valueAndMove<Registry::Operation>(dataMover);
-
-				if(operation >= Registry::Operation::OTARequests) {
-#ifdef OTA_ENABLED
-					this->otaFirmware.processMessage(message);
-					this->rxCount++;
-#endif
-				}
-				else {
-					auto registerID = valueAndMove<Registry::RegisterType>(dataMover);
-					auto value = valueAndMove<int32_t>(dataMover);
-
-					// Print message preview
-					if (CAN_PRINT_PREVIEW_ENABLED) {
-						printf("Can Rx. ID [%d], Flags [%d], Data [%X %X %X %X %X %X %X %X]\n"
-							, message.identifier
-							, message.flags
-							, message.data[0]
-							, message.data[1]
-							, message.data[2]
-							, message.data[3]
-							, message.data[4]
-							, message.data[5]
-							, message.data[6]
-							, message.data[7]
-							);
-
-						char registerName[100];
-						{
-							auto findRegister = registry.registers.find(registerID);
-							if(findRegister == registry.registers.end()) {
-								sprintf(registerName, "Unknown (%d)", (uint16_t) registerID);
-							}
-							else {
-								sprintf(registerName, "%s", findRegister->second.name.c_str());
-							}
-						}
-						printf("Operation [%d], Register [%s], Value [%d]\n"
-							, (uint8_t) operation
-							, registerName
-							, value);
-					}
-
-					if(message.flags & CAN_MSG_FLAG_RTR) {
-						// Queue full read response
-						printf("RETR\n");
-						for(const auto & defaultRegisterID : Registry::defaultRegisterReads) {
-							readRequests.insert(defaultRegisterID);
-						}
-					}
-					else if(operation == Registry::Operation::ReadRequest) {
-						// Queue individual read response
-						readRequests.insert(registerID);
-					}
-					else if(operation == Registry::Operation::WriteRequest) {
-						// Perform write requests
-						if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::Operation) + sizeof(int32_t)) {
-							auto findRegister = registry.registers.find(registerID);
-							if(findRegister == registry.registers.end()) {
-								printf("[CAN] : Error on write request. Register (%d) not found", (uint16_t) registerID);
-							}
-							else {
-								findRegister->second.value = value;
-								if(registerID == Registry::RegisterType::TargetPosition) {
-									Control::FilteredTarget::X().notifyTargetChange();
-								}
-							}
-						}
-					}
-					else if(operation == Registry::Operation::WriteDefault) {
-						// Perform write default requests
-						auto findRegister = registry.registers.find(registerID);
-						if(findRegister == registry.registers.end()) {
-							printf("[CAN] : Error on write default request. Register (%d) not found", (uint16_t) registerID);
-						}
-						else {
-							if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::Operation) + sizeof(int32_t)) {
-								// If the message contains a value also, then write that value
-								findRegister->second.value = value;
-							}
-							registry.saveDefault(registerID);
-						}	
-					}
-				}
-
-				
-			}
 		}
 
-		// respond to any read requests
-		{
-			for(const auto & registerID : readRequests) {
-				auto findRegister = registry.registers.find(registerID);
-				if(findRegister == registry.registers.end()) {
-					printf("[CAN] : Error on read request. Register (%d) not found\n", (uint16_t) registerID);
-				}
-				else {
-					can_message_t message;
-					message.flags = CAN_MSG_FLAG_EXTD;
-
-					auto data = message.data;
-					valueAndMove<Registry::Operation>(data) = Registry::Operation::ReadResponse;
-					valueAndMove<Registry::RegisterType>(data) = registerID;
-					valueAndMove<int32_t>(data) = findRegister->second.value;
-
-					message.data_length_code = sizeof(Registry::Operation) + sizeof(Registry::RegisterType) + sizeof(int32_t);
-
-					if(can_transmit(&message, 1 / portTICK_PERIOD_MS) != ESP_OK) {
-						printf("[CAN] Transmit failed\n");
-						this->errorCount++;
-					}
-					this->txCount++;
-				}
-			}
-		}
+		// handle outgoing messages
+		this->send();
 
 		// Read alerts
 		{
@@ -332,5 +208,171 @@ namespace Interface {
 				}
 			}
 		}
+	}
+
+	//----------
+	void
+	CANResponder::queueReadRequest(Registry::RegisterType registerType)
+	{
+		static auto & registry = Registry::X();
+
+		auto findRegister = registry.registers.find(registerType);
+		if(findRegister == registry.registers.end()) {
+			printf("[CAN] : Error on read request. Register (%d) not found\n", (uint16_t) registerType);
+		}
+		else {
+			can_message_t message;
+			message.flags = CAN_MSG_FLAG_EXTD;
+			message.identifier = getRegisterValue(Registry::RegisterType::DeviceID) << 19;
+
+			auto data = message.data;
+			valueAndMove<Registry::Operation>(data) = Registry::Operation::ReadResponse;
+			valueAndMove<Registry::RegisterType>(data) = registerType;
+			valueAndMove<int32_t>(data) = findRegister->second.value;
+
+			message.data_length_code = sizeof(Registry::Operation) + sizeof(Registry::RegisterType) + sizeof(int32_t);
+
+			if (CAN_PRINT_PREVIEW_ENABLED) {
+				printf("Can Tx. ID [%d], Flags [%d], Data [%X %X %X %X %X %X %X %X (%d)]\n"
+					, message.identifier
+					, message.flags
+					, message.data[0]
+					, message.data[1]
+					, message.data[2]
+					, message.data[3]
+					, message.data[4]
+					, message.data[5]
+					, message.data[6]
+					, message.data[7]
+					, message.data_length_code
+					);
+			}
+
+			this->txQueue.push_back(message);
+		}
+	}
+
+	//----------
+	bool
+	CANResponder::receive(TickType_t timeout)
+	{
+		static auto & registry = Registry::X();
+
+		can_message_t message;
+
+		if(!can_receive(&message, timeout) == ESP_OK) {
+			return false;
+		}
+		else {
+			this->rxCount++;
+
+			auto dataMover = message.data;
+			auto operation = valueAndMove<Registry::Operation>(dataMover);
+
+			if(operation >= Registry::Operation::OTARequests) {
+#ifdef OTA_ENABLED
+				this->otaFirmware.processMessage(message);
+				this->rxCount++;
+#endif
+			}
+			else {
+				auto registerID = valueAndMove<Registry::RegisterType>(dataMover);
+				auto value = valueAndMove<int32_t>(dataMover);
+
+				// Print message preview
+				if (CAN_PRINT_PREVIEW_ENABLED) {
+					printf("Can Rx. ID [%d], Flags [%d], Data [%X %X %X %X %X %X %X %X (%d)]\n"
+						, message.identifier
+						, message.flags
+						, message.data[0]
+						, message.data[1]
+						, message.data[2]
+						, message.data[3]
+						, message.data[4]
+						, message.data[5]
+						, message.data[6]
+						, message.data[7]
+						, message.data_length_code
+						);
+
+					char registerName[100];
+					{
+						auto findRegister = registry.registers.find(registerID);
+						if(findRegister == registry.registers.end()) {
+							sprintf(registerName, "Unknown (%d)", (uint16_t) registerID);
+						}
+						else {
+							sprintf(registerName, "%s", findRegister->second.name.c_str());
+						}
+					}
+					printf("Operation [%d], Register [%s], Value [%d]\n"
+						, (uint8_t) operation
+						, registerName
+						, value);
+				}
+
+				if(message.flags & CAN_MSG_FLAG_RTR) {
+					// Queue full read response
+					if (CAN_PRINT_PREVIEW_ENABLED) {
+						printf("RETR\n");
+					}
+					for(const auto & defaultRegisterType : Registry::defaultRegisterReads) {
+						this->queueReadRequest(defaultRegisterType);
+					}
+				}
+				else if(operation == Registry::Operation::ReadRequest) {
+					// Queue individual read response
+					this->queueReadRequest(registerID);
+				}
+				else if(operation == Registry::Operation::WriteRequest) {
+					// Perform write requests
+					if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::RegisterType) + sizeof(int32_t)) {
+						auto findRegister = registry.registers.find(registerID);
+						if(findRegister == registry.registers.end()) {
+							printf("[CAN] : Error on write request. Register (%d) not found", (uint16_t) registerID);
+						}
+						else {
+							findRegister->second.value = value;
+							if(registerID == Registry::RegisterType::TargetPosition) {
+								Control::FilteredTarget::X().notifyTargetChange();
+							}
+						}
+					}
+				}
+				else if(operation == Registry::Operation::WriteDefault) {
+					// Perform write default requests
+					auto findRegister = registry.registers.find(registerID);
+					if(findRegister == registry.registers.end()) {
+						printf("[CAN] : Error on write default request. Register (%d) not found", (uint16_t) registerID);
+					}
+					else {
+						if(message.data_length_code == sizeof(Registry::Operation) + sizeof(Registry::Operation) + sizeof(int32_t)) {
+							// If the message contains a value also, then write that value
+							findRegister->second.value = value;
+						}
+						registry.saveDefault(registerID);
+					}	
+				}
+			}
+			return true;
+		}
+	}
+
+	//----------
+	void
+	CANResponder::send()
+	{
+		for(auto & message : this->txQueue)
+		{
+			if(can_transmit(&message, 10 / portTICK_PERIOD_MS) != ESP_OK) {
+				printf("[CAN] Transmit failed\n");
+				this->errorCount++;
+			}
+			this->txCount++;
+
+			// Perform a receive between each send (I think this clears the ACK queue)
+			this->receive(0);
+		}
+		this->txQueue.clear();
 	}
 }

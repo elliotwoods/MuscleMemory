@@ -3,12 +3,18 @@
 //#define OTA_ENABLED
 
 #include "Control/FilteredTarget.h"
+#include "Registry.h"
 
 #ifdef OTA_ENABLED
 #include "Interface/CAN/OTAFirmware.h"
 #endif
 
 #include <stdint.h>
+#include <vector>
+
+extern "C" {
+	#include "driver/can.h"
+}
 
 namespace Interface {
 	class CANResponder {
@@ -19,6 +25,10 @@ namespace Interface {
 		void update(); // From main loop
 		void updateTask(); // From CAN task
 	private:
+		void queueReadRequest(Registry::RegisterType);
+		bool receive(TickType_t timeout);
+		void send();
+		std::vector<can_message_t> txQueue;
 #ifdef OTA_ENABLED
 		CAN::OTAFirmware otaFirmware;
 #endif

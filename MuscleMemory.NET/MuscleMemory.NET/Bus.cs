@@ -12,14 +12,14 @@ namespace MuscleMemory
 	{
 		Device FDevice;
 		int FBitrate;
+		string FDevicePath;
 		Channel FChannel;
 		UInt32 FTimestamp = 0;
 		Dictionary<int, Motor> FMotors = new Dictionary<int, Motor>();
 
-		public Bus(Device device, int bitrate)
+		public Bus(Device device)
 		{
 			this.FDevice = device;
-			this.Open(bitrate);
 		}
 
 		~Bus()
@@ -36,6 +36,29 @@ namespace MuscleMemory
 					this.FTimestamp = this.FDevice.Timestamp;
 				});
 				this.FDevice.Update();
+				var frames = this.FChannel.Receive();
+				foreach(var frame in frames)
+				{
+					var message = Messages.Decode(frame);
+					if(message is Messages.ReadResponse)
+					{
+						var readResponse = message as Messages.ReadResponse;
+
+						// We found a motor
+						var ID = readResponse.ID;
+						Motor motor;
+						if (!this.FMotors.ContainsKey(ID))
+						{
+							motor = new Motor(ID, this);
+							this.FMotors[ID] = motor;
+						}
+						else
+						{
+							motor = this.FMotors[ID];
+						}
+						motor.Receive(readResponse);
+					}
+				}
 			}
 		}
 
@@ -43,6 +66,7 @@ namespace MuscleMemory
 		{
 			this.FBitrate = bitrate;
 			this.FDevice.Open();
+			this.FDevicePath = this.FDevice.Path;
 
 			var channels = this.FDevice.Channels;
 			if (channels.Count != 1)
@@ -51,8 +75,6 @@ namespace MuscleMemory
 			}
 			this.FChannel = channels.Values.ToList()[0];
 			this.FChannel.Start(bitrate);
-
-			this.Refresh();
 		}
 
 		public void Close()
@@ -61,7 +83,7 @@ namespace MuscleMemory
 			{
 				this.FChannel.Stop();
 				this.FDevice.Close();
-				this.FDevice = null;
+				this.FChannel = null;
 			}
 		}
 
@@ -69,12 +91,14 @@ namespace MuscleMemory
 		{
 			get
 			{
-				return this.FDevice != null;
+				return this.FChannel != null;
 			}
 		}
 
 		public void Refresh(int timeout = 1000)
 		{
+			this.FMotors.Clear();
+
 			// Send the request to all indexes
 			for (int i = 1; i < Messages.MaxIndex; i++)
 			{
@@ -83,38 +107,6 @@ namespace MuscleMemory
 				message.RegisterType = Messages.RegisterType.DeviceID;
 				this.FChannel.Send(message.Encode());
 			}
-
-			// Wait for responses
-			Thread.Sleep(timeout);
-			var replies = this.FChannel.Receive();
-
-			// Rebuild our dictionary of motors
-			var priorData = this.FMotors;
-			var newData = new Dictionary<int, Motor>();
-			foreach(var reply in replies)
-			{
-				var message = Messages.Decode(reply);
-				if(message is Messages.ReadResponse)
-				{
-					var readResponse = message as Messages.ReadResponse;
-
-					// We found a motor
-					var ID = readResponse.ID;
-					Motor motor;
-					if(priorData.ContainsKey(ID))
-					{
-						motor = priorData[ID];
-					}
-					else
-					{
-						motor = new Motor(readResponse.ID, this);
-					}
-					motor.MarkSeen();
-					motor.Process(readResponse);
-					newData.Add(ID, motor);
-				}
-			}
-			this.FMotors = newData;
 		}
 
 		public void Send(Messages.IMessage message)
@@ -152,6 +144,22 @@ namespace MuscleMemory
 			get
 			{
 				return (double)(this.FDevice.RxBitsPerSecond + this.FDevice.TxBitsPerSecond) / (double)this.FBitrate;
+			}
+		}
+
+		public string DevicePath
+		{
+			get
+			{
+				return this.FDevicePath;
+			}
+		}
+
+		public int Bitrate
+		{
+			get
+			{
+				return this.FBitrate;
 			}
 		}
 	}

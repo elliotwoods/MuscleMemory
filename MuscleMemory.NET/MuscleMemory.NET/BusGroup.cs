@@ -6,12 +6,11 @@ namespace MuscleMemory
 {
 	public class BusGroup
 	{
-		int FBitrate;
-		List<Bus> FBuses;
+		int FBitrate = 0;
+		List<Bus> FBuses = null;
 
-		public BusGroup(int bitrate = 500000)
+		public BusGroup()
 		{
-			this.Open(bitrate);
 		}
 
 		~BusGroup()
@@ -21,22 +20,24 @@ namespace MuscleMemory
 
 		public void Open(int bitrate)
 		{
-			this.FBitrate = bitrate;
 			this.Close();
+			this.FBuses = new List<Bus>();
+			this.FBitrate = bitrate;
 			var devices = Device.ListDevices();
-			var buses = new List<Bus>();
 			foreach(var device in devices)
 			{
 				try
 				{
-					buses.Add(new Bus(device, bitrate));
+					var bus = new Bus(device);
+					bus.Open(bitrate);
+					bus.Refresh();
+					this.FBuses.Add(bus);
 				}
 				catch(Exception e)
 				{
 					Console.WriteLine(e);
 				}
 			}
-			this.FBuses = buses;
 		}
 
 		public void Close()
@@ -47,6 +48,7 @@ namespace MuscleMemory
 				{
 					bus.Close();
 				}
+				this.FBuses.Clear();
 				this.FBuses = null;
 			}
 		}
@@ -64,6 +66,7 @@ namespace MuscleMemory
 			this.Open(this.FBitrate);
 		}
 
+		// Update must be called regularly (e.g. once per mainloop frame)
 		public void Update()
 		{
 			foreach(var bus in this.FBuses)
@@ -88,20 +91,20 @@ namespace MuscleMemory
 			}
 		}
 
-		public Dictionary<int, Motor> Motors
+		public Dictionary<int, Motor> GetAllMotors()
 		{
-			get
+			var motors = new Dictionary<int, Motor>();
+			if (this.IsOpen)
 			{
-				var motors = new Dictionary<int, Motor>();
-				foreach(var bus in this.FBuses)
+				foreach (var bus in this.FBuses)
 				{
-					foreach(var iterator in bus.Motors)
+					foreach (var iterator in bus.Motors)
 					{
 						motors[iterator.Key] = iterator.Value;
 					}
 				}
-				return motors;
 			}
+			return motors;
 		}
 	}
 }
