@@ -1,8 +1,20 @@
 #include "ShowID.h"
 #include "Registry.h"
+#include "GUI/Controller.h"
 
 namespace GUI {
 	namespace Panels {
+		void ShowID::show()
+		{
+			auto panel = std::make_shared<GUI::Panels::ShowID>();
+			GUI::Controller::X().pushPanel(panel);
+			while(!panel->shouldExit) {
+				GUI::Controller::X().update();
+				vTaskDelay(10 / portTICK_PERIOD_MS);
+			}
+			GUI::Controller::X().popPanel();
+		}
+
 		//----------
 		ShowID::ShowID()
 		{
@@ -31,10 +43,10 @@ namespace GUI {
 			sprintf(message, "Device ID [0x%X]", value);
 			u8g2.drawStr(3, 12, message);	
 
-			u8g2.setFont(u8g2_font_fub35_tn);
+			u8g2.setFont(u8g2_font_inb38_mr);
 			sprintf(message, "%d", value);
 			int IDxPosition = 93;
-			auto pxWidth = int(log(value) / log(10)) * 30;
+			auto pxWidth = int(log(value) / log(10)) * 31;
 
 			u8g2.drawStr(IDxPosition - pxWidth, 53, message);
 

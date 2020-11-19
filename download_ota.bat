@@ -1,16 +1,17 @@
 # A script for downloading the OTA partition from the device
+echo off
 
 pushd
 
 cd ..\esp-idf
 
 echo Importing IDF
-echo
+echo.
 call export.bat
 
-echo
+echo.
 echo DOWNLOADING (no progress indication)
-echo
+echo.
 
 python components\app_update\otatool.py --port COM3 --baud 956000 read_ota_partition --name app0 --output app.bin
 

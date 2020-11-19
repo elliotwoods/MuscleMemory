@@ -18,6 +18,7 @@
 #include "GUI/Panels/SplashScreen.h"
 #include "GUI/Panels/ShowID.h"
 #include "GUI/Panels/Dashboard.h"
+#include "GUI/Panels/MarqueeText.h"
 
 #include "Interface/SystemInfo.h"
 #include "Interface/CANResponder.h"
@@ -122,8 +123,7 @@ initDevices()
 	}
 
 	// Show version
-	showSplashMessage(MM_VERSION);
-
+	GUI::Panels::MarqueeText::show(MM_VERSION);
 
 	// Show boot partition
 	{
@@ -225,9 +225,34 @@ initController()
 #endif
 
 #ifdef PROVISIONING_ENABLED
-	if(Registry::X().registers.at(Registry::RegisterType::ProvisioningEnabled).value) {
-		Control::Provisioning provisioning(motorDriver, ina219, as5047, encoderCalibration, canResponder, webSockets);
-		provisioning.perform();
+	{
+		if((getRegisterValue(Registry::RegisterType::ProvisioningEnabled) == 0) && GUI::Controller::X().isDialButtonPressed()) {
+			bool holdingButton = true;
+
+			// They have to hold for 3 seconds
+			char buffer[100];
+			for(uint8_t i=3; i>0; i--) {
+				sprintf(buffer, "Provisioning in (%u)", i);
+				showSplashMessage(buffer);
+
+				// wait
+				vTaskDelay(1000 / portTICK_RATE_MS);
+
+				if(!GUI::Controller::X().isDialButtonPressed()) {
+					holdingButton = false;
+					break;
+				}
+			}
+
+			// If they didn't let go throughout all iterations, enable provisioning
+			if(holdingButton) {
+				setRegisterValue(Registry::RegisterType::ProvisioningEnabled, 1);
+			}
+		}
+		if(getRegisterValue(Registry::RegisterType::ProvisioningEnabled) == 1) {
+			Control::Provisioning provisioning(motorDriver, ina219, as5047, fileSystem, encoderCalibration, canResponder, webSockets);
+			provisioning.perform();
+		}
 	}
 #endif
 
@@ -354,14 +379,7 @@ setup()
 	initController();
 
 	// Display ID
-	{
-		auto showID = std::make_shared<GUI::Panels::ShowID>();
-		GUI::Controller::X().setRootPanel(showID);
-		while(!showID->shouldExit) {
-			GUI::Controller::X().update();
-			vTaskDelay(10 / portTICK_PERIOD_MS);
-		}
-	}
+	GUI::Panels::ShowID::show();
 	
 	GUI::Controller::X().setRootPanel(std::make_shared<GUI::Panels::Dashboard>());
 	initInterface();
