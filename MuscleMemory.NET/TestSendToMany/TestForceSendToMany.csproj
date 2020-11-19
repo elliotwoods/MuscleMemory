@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <OutputPath>$(SolutionDir)\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <OutputPath>..\bin\x64\Debug\</OutputPath>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 

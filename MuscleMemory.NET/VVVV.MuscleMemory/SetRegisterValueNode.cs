@@ -36,6 +36,9 @@ namespace VVVV.MuscleMemory
 		[Input("Send", IsBang = true)]
 		public ISpread<bool> FInSend;
 
+		[Input("Blind")]
+		public ISpread<bool> FInBlind;
+
 		[Import()]
 		public ILogger FLogger;
 		#endregion fields & pins
@@ -52,10 +55,17 @@ namespace VVVV.MuscleMemory
 				{
 					if(FInSend[i])
 					{
-						var motor = busGroup.FindMotor(FInID[i]);
-						if (motor != null)
+						if (FInBlind[i])
 						{
-							motor.SetRegister(FInRegisterType[i], FInValue[i]);
+							FInBusGorup[0].SetRegisterValueBlind(FInID[i], FInRegisterType[i], FInValue[i]);
+						}
+						else
+						{
+							var motor = busGroup.FindMotor(FInID[i]);
+							if (motor != null)
+							{
+								motor.SetRegister(FInRegisterType[i], FInValue[i]);
+							}
 						}
 					}
 				}

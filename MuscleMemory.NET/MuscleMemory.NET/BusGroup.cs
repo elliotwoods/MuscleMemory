@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Candle;
 
 namespace MuscleMemory
@@ -30,7 +32,7 @@ namespace MuscleMemory
 				{
 					var bus = new Bus(device);
 					bus.Open(bitrate);
-					bus.Refresh();
+					bus.SendRefresh();
 					this.FBuses.Add(bus);
 				}
 				catch(Exception e)
@@ -77,10 +79,14 @@ namespace MuscleMemory
 
 		public void Refresh()
 		{
-			foreach(var bus in this.FBuses)
+			Parallel.ForEach(this.FBuses, (bus) =>
 			{
-				bus.Refresh();
-			}
+				bus.SendRefresh();
+			});
+
+			// Allow time for responses (this doesn't seem to be necessary)
+			Thread.Sleep(100);
+			this.Update();
 		}
 
 		public List<Bus> Buses
@@ -91,9 +97,9 @@ namespace MuscleMemory
 			}
 		}
 
-		public Dictionary<int, Motor> GetAllMotors()
+		public SortedDictionary<int, Motor> GetAllMotors()
 		{
-			var motors = new Dictionary<int, Motor>();
+			var motors = new SortedDictionary<int, Motor>();
 			if (this.IsOpen)
 			{
 				foreach (var bus in this.FBuses)
@@ -117,6 +123,18 @@ namespace MuscleMemory
 				}
 			}
 			return null;
+		}
+
+		public void SetRegisterValueBlind(int ID, Messages.RegisterType registerType, int value)
+		{
+			var message = new Messages.WriteRequest();
+			message.RegisterType = registerType;
+			message.Value = value;
+			message.ID = ID;
+			foreach (var bus in this.FBuses)
+			{
+				bus.Send(message);
+			}
 		}
 	}
 }

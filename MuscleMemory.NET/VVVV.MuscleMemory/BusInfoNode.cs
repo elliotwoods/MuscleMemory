@@ -62,7 +62,7 @@ namespace VVVV.MuscleMemory
 				{
 					if(FInRefresh[i])
 					{
-						bus.Refresh();
+						bus.SendRefresh();
 					}
 
 					FOutMotorIDs.Add(bus.Motors.Keys.ToSpread());
