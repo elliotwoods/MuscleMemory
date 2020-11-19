@@ -8,6 +8,8 @@ namespace GUI {
 		class ShowID : public Panel
 		{
 		public:
+			static void show();
+			
 			ShowID(); 
 			void update() override;
 			void draw(U8G2 &) override;
