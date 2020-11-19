@@ -45,41 +45,15 @@ namespace Devices {
 			return true;
 		}
 
-		auto partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, partitionLabel);
+		this->partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA
+			, ESP_PARTITION_SUBTYPE_DATA_FAT
+			, partitionLabel);
 
-		if(!partition) {
-			printf("No FAT patition found\n");
+		if(!this->partition) {
+			printf("[FileSystem] No FAT patition found\n");
 			return false;
 		}
 
-		// Format the partition if user is holding button
-		if(GUI::Controller::X().isDialButtonPressed()) {
-			bool holdingButton = true;
-
-			// They have to hold for 3 seconds
-			for(uint8_t i=1; i<=3; i++) {
-				printf("User is holding button (%u)\n", i);
-
-				// wait
-				vTaskDelay(1000 / portTICK_RATE_MS);
-
-				if(!GUI::Controller::X().isDialButtonPressed()) {
-					holdingButton = false;
-					break;
-				}
-			}
-
-			// If they didn't let go - then perform the format
-			if(holdingButton) {
-				printf("Erasing FAT partition\n");
-				
-				// Erase entire partition
-				//esp_partition_erase_range(partition, 0, partition->size);
-
-				// Break partition formatting only
-				esp_partition_erase_range(partition, 0, 0x10000);
-			}			
-		}
 
 		esp_vfs_fat_mount_config_t config = {
 			.format_if_mount_failed = formatIfNeeded,
@@ -116,4 +90,27 @@ namespace Devices {
 		this->partitionLabel.clear();
 		this->mountPoint.clear();
 	}
+
+	//----------
+	void
+	FileSystem::format()
+	{
+		if(this->wl_handle != WL_INVALID_HANDLE) {
+			this->unmount();
+		}
+
+		if(!this->partition) {
+			printf("[FileSystem] : No partition found\n");
+			return;
+		}
+		
+		printf("[FileSystem] Erasing FAT partition\n");
+		
+		// Erase entire partition
+		//esp_partition_erase_range(partition, 0, partition->size);
+
+		// Break partition formatting only
+		esp_partition_erase_range(this->partition, 0, 0x10000);
+	}
+
 }
