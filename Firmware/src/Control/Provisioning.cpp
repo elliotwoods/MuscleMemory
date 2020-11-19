@@ -44,12 +44,14 @@ namespace Control
 	Provisioning::Provisioning(Devices::MotorDriver &motorDriver
 		, Devices::INA219 &ina219
 		, Devices::AS5047 &as5047
+		, Devices::FileSystem &fileSystem
 		, EncoderCalibration &encoderCalibration
 		, Interface::CANResponder &canResponder
 		, Interface::WebSockets &webSockets)
 	: motorDriver(motorDriver)
 	, ina219(ina219)
 	, as5047(as5047)
+	, fileSystem(fileSystem)
 	, encoderCalibration(encoderCalibration)
 	, canResponder(canResponder)
 	, webSockets(webSockets)
@@ -81,20 +83,20 @@ namespace Control
 			},
 			{
 				[&](char * text) {
-					sprintf(text, "Current : %d", this->settings.current);
+					sprintf(text, "Has calibration : %s"
+						, this->encoderCalibration.getHasCalibration()
+						? "TRUE"
+						: "FALSE");
 				},
-				[&]() {
-					this->settings.current *= 2;
-					if(this->settings.current > this->settings.maxCurrent) {
-						this->settings.current = 1;
-					}
-				}
+				NULL
 			},
 			{
 				[&](char * text) {
-					sprintf(text, "Speed: %d", this->settings.speed);
+					sprintf(text, "Calibrate encoder");
 				},
-				NULL
+				[&]() {
+					this->encoderCalibration.calibrate(this->as5047, this->motorDriver);
+				}
 			},
 			{
 				[&](char * text) {
@@ -106,19 +108,17 @@ namespace Control
 			},
 			{
 				[&](char * text) {
-					sprintf(text, "Speed +");
+					sprintf(text, "Erase disk");
 				},
 				[&]() {
-					this->settings.speed++;
+					this->fileSystem.format();
 				}
 			},
 			{
 				[&](char * text) {
-					sprintf(text, "Speed -");
+					sprintf(text, "Manual moves:");
 				},
-				[&]() {
-					this->settings.speed--;
-				}
+				NULL
 			},
 			{
 				[&](char * text) {
@@ -138,19 +138,35 @@ namespace Control
 			},
 			{
 				[&](char * text) {
-					sprintf(text, "Has calibration : %s"
-						, this->encoderCalibration.getHasCalibration()
-						? "TRUE"
-						: "FALSE");
+					sprintf(text, "Current : %d", this->settings.current);
+				},
+				[&]() {
+					this->settings.current *= 2;
+					if(this->settings.current > this->settings.maxCurrent) {
+						this->settings.current = 1;
+					}
+				}
+			},
+			{
+				[&](char * text) {
+					sprintf(text, "Speed: %d", this->settings.speed);
 				},
 				NULL
 			},
 			{
 				[&](char * text) {
-					sprintf(text, "Calibrate encoder");
+					sprintf(text, "Speed +");
 				},
 				[&]() {
-					this->encoderCalibration.calibrate(this->as5047, this->motorDriver);
+					this->settings.speed++;
+				}
+			},
+			{
+				[&](char * text) {
+					sprintf(text, "Speed -");
+				},
+				[&]() {
+					this->settings.speed--;
 				}
 			},
 			{
