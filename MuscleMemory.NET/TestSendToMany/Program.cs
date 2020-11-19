@@ -34,13 +34,6 @@ namespace TestApp
 			Console.WriteLine("Opening bus...");
 			busGroup.Open(500000);
 
-			//Console.WriteLine("Found motors : ");
-			//var motors = busGroup.GetAllMotors();
-			//foreach(var it in motors)
-			//{
-			//	Console.WriteLine("{0} : {1}", it.Key, it.Value);
-			//}
-
 			ForceSendToAll(busGroup, Messages.RegisterType.ControlMode, 1, true);
 
 			int i = 0;
