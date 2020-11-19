@@ -5,13 +5,15 @@ VisualStudioVersion = 16.0.30711.63
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MuscleMemory.NET", "MuscleMemory.NET\MuscleMemory.NET.csproj", "{E9F61617-BBE4-4998-8A50-C1DDC587A544}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp", "TestApp\TestApp.csproj", "{6878BB23-6ED6-4862-9624-5DCE9DC1C227}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Candle.NET", "..\..\Candle.NET\Candle.NET\Candle.NET.csproj", "{F89EE8AC-C7C8-4528-897E-FDA5E0BAEE70}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Candle", "..\..\Candle.NET\Candle\Candle.vcxproj", "{7979386C-6095-41EC-98BA-10DB979A384D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VVVV.MuscleMemory", "VVVV.MuscleMemory\VVVV.MuscleMemory.csproj", "{95208C19-8A9E-4D76-9447-07C7E30FE58A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFindMotors", "TestFindMotors\TestFindMotors.csproj", "{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestForceSendToMany", "TestSendToMany\TestForceSendToMany.csproj", "{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,12 +29,6 @@ Global
 		{E9F61617-BBE4-4998-8A50-C1DDC587A544}.Release|Any CPU.ActiveCfg = Release|x64
 		{E9F61617-BBE4-4998-8A50-C1DDC587A544}.Release|x64.ActiveCfg = Release|x64
 		{E9F61617-BBE4-4998-8A50-C1DDC587A544}.Release|x64.Build.0 = Release|x64
-		{6878BB23-6ED6-4862-9624-5DCE9DC1C227}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{6878BB23-6ED6-4862-9624-5DCE9DC1C227}.Debug|x64.ActiveCfg = Debug|x64
-		{6878BB23-6ED6-4862-9624-5DCE9DC1C227}.Debug|x64.Build.0 = Debug|x64
-		{6878BB23-6ED6-4862-9624-5DCE9DC1C227}.Release|Any CPU.ActiveCfg = Release|x64
-		{6878BB23-6ED6-4862-9624-5DCE9DC1C227}.Release|x64.ActiveCfg = Release|x64
-		{6878BB23-6ED6-4862-9624-5DCE9DC1C227}.Release|x64.Build.0 = Release|x64
 		{F89EE8AC-C7C8-4528-897E-FDA5E0BAEE70}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{F89EE8AC-C7C8-4528-897E-FDA5E0BAEE70}.Debug|x64.ActiveCfg = Debug|x64
 		{F89EE8AC-C7C8-4528-897E-FDA5E0BAEE70}.Debug|x64.Build.0 = Debug|x64
@@ -53,6 +49,17 @@ Global
 		{95208C19-8A9E-4D76-9447-07C7E30FE58A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{95208C19-8A9E-4D76-9447-07C7E30FE58A}.Release|x64.ActiveCfg = Release|Any CPU
 		{95208C19-8A9E-4D76-9447-07C7E30FE58A}.Release|x64.Build.0 = Release|Any CPU
+		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Debug|x64.ActiveCfg = Debug|x64
+		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Debug|x64.Build.0 = Debug|x64
+		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Release|Any CPU.ActiveCfg = Release|x64
+		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Release|x64.ActiveCfg = Release|x64
+		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Debug|x64.ActiveCfg = Debug|x64
+		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Debug|x64.Build.0 = Debug|x64
+		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Release|Any CPU.ActiveCfg = Release|x64
+		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Release|x64.ActiveCfg = Release|x64
+		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

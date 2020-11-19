@@ -15,7 +15,7 @@ namespace MuscleMemory
 		string FDevicePath;
 		Channel FChannel;
 		UInt32 FTimestamp = 0;
-		Dictionary<int, Motor> FMotors = new Dictionary<int, Motor>();
+		SortedDictionary<int, Motor> FMotors = new SortedDictionary<int, Motor>();
 
 		public Bus(Device device)
 		{
@@ -95,7 +95,7 @@ namespace MuscleMemory
 			}
 		}
 
-		public void Refresh(int timeout = 1000)
+		public void SendRefresh()
 		{
 			this.FMotors.Clear();
 			// Send the request to all indexes
@@ -104,17 +104,17 @@ namespace MuscleMemory
 				var message = new Messages.ReadRequest();
 				message.ID = i;
 				message.RegisterType = Messages.RegisterType.DeviceID;
-				this.FChannel.Send(message.Encode());
+				this.FChannel.Send(message.Encode(), true);
 			}
 		}
 
 		public void Send(Messages.IMessage message, bool blocking = false)
 		{
 			var frame = message.Encode();
-			this.FChannel.Send(frame, true);
+			this.FChannel.Send(frame, blocking);
 		}
 
-		public Dictionary<int, Motor> Motors
+		public SortedDictionary<int, Motor> Motors
 		{
 			get
 			{

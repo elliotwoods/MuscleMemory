@@ -18,11 +18,14 @@ namespace VVVV.MuscleMemory
 				AutoEvaluate = true
 		)]
 	#endregion PluginInfo
-	public class BusGroupNode : IPluginEvaluate
+	public class BusGroupNode : IPluginEvaluate, IDisposable
 	{
 		#region fields & pins
 		[Input("Refresh", IsSingle = true, IsBang = true)]
 		public ISpread<bool> FInRefresh;
+
+		[Input("Restart", IsSingle = true, IsBang = true)]
+		public ISpread<bool> FInRestart;
 
 		[Input("Bitrate", IsSingle = true, DefaultValue = 500000)]
 		public IDiffSpread<int> FInBitrate;
@@ -49,17 +52,25 @@ namespace VVVV.MuscleMemory
 		public ILogger FLogger;
 
 		BusGroup FBusGroup = new BusGroup();
+
+		public void Dispose()
+		{
+			if(this.FBusGroup != null)
+			{
+				this.FBusGroup.Close();
+				this.FBusGroup = null;
+			}
+		}
 		#endregion fields & pins
 
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			if (FInRefresh[0] || FInBitrate.IsChanged)
+			if (FInRestart[0] || FInBitrate.IsChanged)
 			{
 				this.FBusGroup.Close();
 			}
 
-			
 			if (!FBusGroup.IsOpen && FInEnabled[0])
 			{
 				this.FBusGroup.Open(this.FInBitrate[0]);
@@ -67,6 +78,11 @@ namespace VVVV.MuscleMemory
 			else if(FBusGroup.IsOpen && !FInEnabled[0])
 			{
 				this.FBusGroup.Close();
+			}
+
+			if(FInRefresh[0] && this.FBusGroup.IsOpen)
+			{
+				this.FBusGroup.Refresh();
 			}
 
 			this.FOutBusgroup[0] = this.FBusGroup;
