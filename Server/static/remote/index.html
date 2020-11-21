@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+
+<head>
+	<title>🎛 Muscle Memory Remote</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<link type="text/css" rel="stylesheet" href="../css/bootstrap.min.css" />
+	<link type="text/css" rel="stylesheet" href="../css/bootstrap-custom.css" />
+	<script src="../node_modules/@fortawesome/fontawesome-free/js/all.js" crossorigin="anonymous"></script>
+	<link type="text/css" rel="stylesheet" href="../css/remote.css" />
+</head>
+
+<body>
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="../node_modules/jquery/dist/jquery.js"></script>
+
+	<script src="../thirdparty/popper.min.js"></script>
+	<script src="../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+	<script src="./remote.js" type="module"></script>
+
+	<div id="motorContainer">
+		<div id="motorContainerLeft" class="motorContainer">
+			<ul class="list-group" id="motorListLeft" class="motorList"></ul>
+		</div>
+		<div id="motorContainerRight" class="motorContainer">
+			<ul class="list-group" id="motorListRight" class="motorList"></ul>
+		</div>
+	</div>
+	
+
+	<button id="moveButton" type="button" class="btn btn-secondary">
+		Move
+	</button>
+</body>
+
+</html>

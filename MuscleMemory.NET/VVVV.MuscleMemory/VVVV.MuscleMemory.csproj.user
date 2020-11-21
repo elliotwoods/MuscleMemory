@@ -4,4 +4,8 @@
     <StartAction>Program</StartAction>
     <StartProgram>C:\vvvv\vvvv_50beta38.1_x64\vvvv.exe</StartProgram>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\vvvv\vvvv_50beta38.1_x64\vvvv.exe</StartProgram>
+  </PropertyGroup>
 </Project>

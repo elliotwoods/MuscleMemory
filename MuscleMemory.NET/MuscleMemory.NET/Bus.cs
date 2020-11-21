@@ -161,5 +161,10 @@ namespace MuscleMemory
 				return this.FBitrate;
 			}
 		}
+
+		public override string ToString()
+		{
+			return String.Format("Path : {0}, Motors : {1}", this.FDevicePath, this.FMotors.Count);
+		}
 	}
 }

@@ -16,6 +16,9 @@ interface.client = client
 
 from utils import *
 
+from pythonosc.udp_client import SimpleUDPClient
+osc_client = SimpleUDPClient("127.0.0.1", 3355)
+
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -38,9 +41,19 @@ app.include_router(
 	, tags=["interface"]
 )
 
+@app.get("/remote/move/{selection}/{movement}")
+def getMovement(selection, movement):
+	osc_client.send_message("/movement", [selection, int(movement)])
+	return True
+
 @app.get("/")
 def root():
 	return RedirectResponse(url="/static/index.html")
+
+@app.get("/remote")
+def test_error():
+	return RedirectResponse(url="/static/remote/index.html")
+
 
 @app.get("/testError")
 @simple_api

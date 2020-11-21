@@ -1,0 +1,27 @@
+#motorContainer {
+	position: absolute;
+	height: 100%;
+	width: calc(100vw - 100px);
+	overflow : auto;
+}
+
+#motorContainerLeft {
+	float: left;
+	width: 50%;
+}
+
+#motorContainerRight {
+	float: right;
+	width: 50%;
+}
+
+.motorList {
+	width : 50%;
+}
+
+#moveButton {
+	position: absolute;
+	right: 0px;
+	width: 100px;
+	height: 100%;
+}
