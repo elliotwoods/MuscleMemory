@@ -1,5 +1,5 @@
-#define WIFI_SSID "KimchiAndChips::Link"
-#define WIFI_PASSWORD "chips4tea!"
+#define WIFI_SSID "YourSSID"
+#define WIFI_PASSWORD "YourPassword"
 #define MUSCLE_MEMORY_SERVER_HOST "192.168.0.26"
 #define MUSCLE_MEMORY_SERVER_PORT 8000
 #define MUSCLE_MEMORY_SERVER_PORT_STRING "8000"
