@@ -33,15 +33,21 @@ namespace TestFindMotors
 			}
 
 			// Print gaps in ID range
-			Console.WriteLine("Missing IDs:");
 			var foundIDs = foundMotors.Keys.ToList();
-			for (int i=foundIDs[0]; i<foundIDs[foundMotors.Count-1]; i++)
+			if(foundMotors.Count > 0)
 			{
-				if(!foundIDs.Contains(i))
+				var startID = foundIDs[0];
+				var endID = foundIDs[foundMotors.Count - 1];
+				Console.WriteLine("Missing contiguous IDs between {0} -> {1}:", startID, endID);
+				for (int id = startID; id <= endID; id++)
 				{
-					Console.Write("{0}, ", i);
+					if (!foundIDs.Contains(id))
+					{
+						Console.Write("{0}, ", id);
+					}
 				}
 			}
+			
 			Console.WriteLine();
 
 			busGroup.Close();
