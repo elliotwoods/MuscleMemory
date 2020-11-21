@@ -5,7 +5,7 @@ from oled import oled
 wifi = network.WLAN(network.STA_IF)
 wifi.active(True)
 print(wifi.scan())
-wifi.connect('Kimchi and Chips 2.4Ghz', 'coffeekitchen405')
+wifi.connect('YourSSID', 'YourWifiPassword')
 
 tries = 0
 while not wifi.isconnected():
