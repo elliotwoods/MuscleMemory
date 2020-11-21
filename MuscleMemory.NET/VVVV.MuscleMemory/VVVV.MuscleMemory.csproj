@@ -48,12 +48,15 @@
     <Reference Include="System.Xml" />
     <Reference Include="VVVV.Core, Version=39.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\VVVV.Core.39.0.0\lib\net461\VVVV.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VVVV.PluginInterfaces, Version=39.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\VVVV.PluginInterfaces.39.0.0\lib\net46\VVVV.PluginInterfaces.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="VVVV.Utils, Version=39.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\VVVV.Utils.39.0.0\lib\net461\VVVV.Utils.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>

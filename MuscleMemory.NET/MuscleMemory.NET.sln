@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Candle", "..\..\Candle.NET\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VVVV.MuscleMemory", "VVVV.MuscleMemory\VVVV.MuscleMemory.csproj", "{95208C19-8A9E-4D76-9447-07C7E30FE58A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFindMotors", "TestFindMotors\TestFindMotors.csproj", "{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFindMotors", "TestFindMotors\TestFindMotors.csproj", "{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestForceSendToMany", "TestSendToMany\TestForceSendToMany.csproj", "{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}"
 EndProject
@@ -54,6 +54,7 @@ Global
 		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Debug|x64.Build.0 = Debug|x64
 		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Release|Any CPU.ActiveCfg = Release|x64
 		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Release|x64.ActiveCfg = Release|x64
+		{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}.Release|x64.Build.0 = Release|x64
 		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Debug|x64.ActiveCfg = Debug|x64
 		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Debug|x64.Build.0 = Debug|x64

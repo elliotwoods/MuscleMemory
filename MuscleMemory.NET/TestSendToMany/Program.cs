@@ -34,11 +34,20 @@ namespace TestApp
 			Console.WriteLine("Opening bus...");
 			busGroup.Open(500000);
 
+			// Refresh the motors (for debugging)
+			busGroup.Refresh();
+
 			// Enable Torque
 			ForceSendToAll(busGroup, Messages.RegisterType.ControlMode, 1, true);
 
 			// Disable screen (movements are smoother)
 			ForceSendToAll(busGroup, Messages.RegisterType.InterfaceEnabled, 0, true);
+
+			foreach (var bus in busGroup.Buses)
+			{
+				var deviceState = bus.Device.DeviceState;
+				Console.WriteLine(deviceState);
+			}
 
 			// Perform movement N times
 			int N = 1000;
