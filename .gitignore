@@ -11,3 +11,4 @@ Server/static/app_version.txt
 .vs
 obj
 packages
+WifiConfig.h

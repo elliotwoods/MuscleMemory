@@ -34,22 +34,32 @@ namespace TestApp
 			Console.WriteLine("Opening bus...");
 			busGroup.Open(500000);
 
+			// Enable Torque
 			ForceSendToAll(busGroup, Messages.RegisterType.ControlMode, 1, true);
 
-			int i = 0;
-			int limit = 1 << 10;
-			int amp = 9;
-			for (; i<limit; i++)
+			// Disable screen (movements are smoother)
+			ForceSendToAll(busGroup, Messages.RegisterType.InterfaceEnabled, 0, true);
+
+			// Perform movement N times
+			int N = 1000;
+			for(int n = 0; n<N; n++)
 			{
-				var pos = i << amp;
-				Console.WriteLine("Moving to {0}", pos);
-				ForceSendToAll(busGroup, Messages.RegisterType.TargetPosition, pos, false);
-			}
-			for (; i >= 0; i--)
-			{
-				var pos = i << amp;
-				Console.WriteLine("Moving to {0}", pos);
-				ForceSendToAll(busGroup, Messages.RegisterType.TargetPosition, pos, false);
+				Console.WriteLine("Iteration {0}/{1}...", n, N);
+				int i = 0;
+				int limit = 1 << 10;
+				int amp = 9;
+				for (; i < limit; i++)
+				{
+					var pos = i << amp;
+					Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
+					ForceSendToAll(busGroup, Messages.RegisterType.TargetPosition, pos, false);
+				}
+				for (; i >= 0; i--)
+				{
+					var pos = i << amp;
+					Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
+					ForceSendToAll(busGroup, Messages.RegisterType.TargetPosition, pos, false);
+				}
 			}
 
 			Console.WriteLine("Closing bus...");
