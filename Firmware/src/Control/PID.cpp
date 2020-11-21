@@ -142,11 +142,13 @@ namespace Control {
 		}
 
 		// Apply soft limits
-		if(multiTurnPosition > softLimitMax) {
-			torque = -maximumTorque;
-		}
-		else if(multiTurnPosition < softLimitMin) {
-			torque = maximumTorque;
+		if(softLimitMax > softLimitMin) {
+			if(multiTurnPosition > softLimitMax) {
+				torque = -maximumTorque;
+			}
+			else if(multiTurnPosition < softLimitMin) {
+				torque = maximumTorque;
+			}	
 		}
 
 		// Store priors

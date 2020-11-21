@@ -46,12 +46,12 @@
 	}},
 	{ RegisterType::SoftLimitMin, {
 		"SoftLimitMin"
-		, - 64 * (1 << 14)
+		, 0 // - 64 * (1 << 14)
 		, Access::ReadWrite
 	}},
 	{ RegisterType::SoftLimitMax, {
 		"SoftLimitMax"
-		, 64 * (1 << 14)
+		, 0 //64 * (1 << 14)
 		, Access::ReadWrite
 	}},
 	{ RegisterType::DriveOffset, {
