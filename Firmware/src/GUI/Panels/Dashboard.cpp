@@ -66,23 +66,26 @@ namespace GUI {
 
 			// Draw soft limits
 			{
-				{
-					auto registerValue = getRegisterValue(Registry::RegisterType::SoftLimitMin);
-					float phase = float(registerValue / (1 << 14)) / rotationRange * TWO_PI;
+				const auto softLimitMin = getRegisterValue(Registry::RegisterType::SoftLimitMin);
+					const auto softLimitMax = getRegisterValue(Registry::RegisterType::SoftLimitMax);
 
-					u8g2.drawLine(centerCircle[0] + centerDiscDiameter * sinf(phase)
-						, centerCircle[1] - centerDiscDiameter * cosf(phase)
-						, centerCircle[0] + markerRadiusMajor * sinf(phase)
-						, centerCircle[0] - markerRadiusMajor * cosf(phase));
-				}
+				if(softLimitMax > softLimitMin) {
+					{
+						float phase = float(softLimitMin / (1 << 14)) / rotationRange * TWO_PI;
 
-				{
-					auto registerValue = getRegisterValue(Registry::RegisterType::SoftLimitMax);
-					float phase = float(registerValue / (1 << 14)) / rotationRange * TWO_PI;
-					u8g2.drawLine(centerCircle[0] + centerDiscDiameter * sinf(phase)
-						, centerCircle[1] - centerDiscDiameter * cosf(phase)
-						, centerCircle[0] + markerRadiusMajor * sinf(phase)
-						, centerCircle[0] - markerRadiusMajor * cosf(phase));
+						u8g2.drawLine(centerCircle[0] + centerDiscDiameter * sinf(phase)
+							, centerCircle[1] - centerDiscDiameter * cosf(phase)
+							, centerCircle[0] + markerRadiusMajor * sinf(phase)
+							, centerCircle[0] - markerRadiusMajor * cosf(phase));
+					}
+
+					{
+						float phase = float(softLimitMax / (1 << 14)) / rotationRange * TWO_PI;
+						u8g2.drawLine(centerCircle[0] + centerDiscDiameter * sinf(phase)
+							, centerCircle[1] - centerDiscDiameter * cosf(phase)
+							, centerCircle[0] + markerRadiusMajor * sinf(phase)
+							, centerCircle[0] - markerRadiusMajor * cosf(phase));
+					}
 				}
 			}
 
