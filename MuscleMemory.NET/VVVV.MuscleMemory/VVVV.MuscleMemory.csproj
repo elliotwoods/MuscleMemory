@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="BusGroupNode.cs" />
     <Compile Include="BusInfoNode.cs" />
+    <Compile Include="MotorInfoTestNode.cs" />
     <Compile Include="SetPrimaryRegisterNode.cs" />
     <Compile Include="GetRegisterValueNode.cs" />
     <Compile Include="MotorInfoNode.cs" />
