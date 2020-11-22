@@ -13,7 +13,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VVVV.MuscleMemory", "VVVV.M
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFindMotors", "TestFindMotors\TestFindMotors.csproj", "{FD13876E-8266-478D-B20D-7DE7C9B5DFB1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestForceSendToMany", "TestSendToMany\TestForceSendToMany.csproj", "{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestForceSendToMany", "TestForceSendToMany\TestForceSendToMany.csproj", "{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSendToMany", "TestSendToMany\TestSendToMany.csproj", "{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +63,12 @@ Global
 		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Release|Any CPU.ActiveCfg = Release|x64
 		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Release|x64.ActiveCfg = Release|x64
 		{643A4CB6-F903-4B8C-B1CA-DE9FB0B47604}.Release|x64.Build.0 = Release|x64
+		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Debug|x64.ActiveCfg = Debug|x64
+		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Debug|x64.Build.0 = Debug|x64
+		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Release|Any CPU.ActiveCfg = Release|x64
+		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Release|x64.ActiveCfg = Release|x64
+		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

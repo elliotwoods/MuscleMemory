@@ -11,14 +11,14 @@ using VVVV.PluginInterfaces.V2;
 namespace VVVV.MuscleMemory
 {
 	#region PluginInfo
-	[PluginInfo(Name = "SetRegisterValue",
+	[PluginInfo(Name = "SetPrimaryRegister",
 				Category = "MuscleMemory",
-				Help = "Send data to register values",
-				Tags = "CAN",
+				Help = "Send data to primary register, usually this is the TargetPosition",
+				Tags = "CAN, TargetPosition",
 				AutoEvaluate = true
 		)]
 	#endregion PluginInfo
-	public class SetRegisterValueNode : IPluginEvaluate
+	public class SetPrimaryRegisterNode : IPluginEvaluate
 	{
 		#region fields & pins
 		[Input("Bus Group", IsSingle = true)]
@@ -26,9 +26,6 @@ namespace VVVV.MuscleMemory
 
 		[Input("ID", DefaultValue = 1)]
 		public ISpread<int> FInID;
-
-		[Input("Register Type")]
-		public ISpread<Messages.RegisterType> FInRegisterType;
 
 		[Input("Value")]
 		public ISpread<int> FInValue;
@@ -52,22 +49,22 @@ namespace VVVV.MuscleMemory
 			// since FInBusGroup is single, we can presume it is ignored for SpreadMax
 
 			var busGroup = FInBusGorup[0];
-			if(busGroup is BusGroup)
+			if (busGroup is BusGroup)
 			{
 				for (int i = 0; i < SpreadMax; i++)
 				{
-					if(FInSend[i])
+					if (FInSend[i])
 					{
 						if (FInBlind[i])
 						{
-							FInBusGorup[0].SetRegisterValueBlind(FInID[i], FInRegisterType[i], FInValue[i], FInBlocking[i]);
+							FInBusGorup[0].SetPrimaryRegisterValueBlind(FInID[i], FInValue[i], FInBlocking[i]);
 						}
 						else
 						{
 							var motor = busGroup.FindMotor(FInID[i]);
 							if (motor != null)
 							{
-								motor.SetRegister(FInRegisterType[i], FInValue[i], FInBlocking[i]);
+								motor.SetPrimaryRegister(FInValue[i], FInBlocking[i]);
 							}
 						}
 					}

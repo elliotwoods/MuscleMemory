@@ -75,7 +75,7 @@ namespace VVVV.MuscleMemory
 						{
 							foreach(var registerType in FInRegisterType)
 							{
-								motor.RequestRegister(registerType);
+								motor.RequestRegister(registerType, false);
 							}
 						}
 

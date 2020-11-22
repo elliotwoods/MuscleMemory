@@ -108,7 +108,7 @@ namespace MuscleMemory
 			}
 		}
 
-		public void Send(Messages.IMessage message, bool blocking = false)
+		public void Send(Messages.IMessage message, bool blocking)
 		{
 			var frame = message.Encode();
 			this.FChannel.Send(frame, blocking);
