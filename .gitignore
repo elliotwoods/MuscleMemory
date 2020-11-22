@@ -12,3 +12,4 @@ Server/static/app_version.txt
 obj
 packages
 WifiConfig.h
+.ipynb_checkpoints
