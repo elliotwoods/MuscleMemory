@@ -106,13 +106,15 @@ public:
 		OTADownloading = 210,
 		OTAWritePosition = 211,
 		OTASize = 212,
+
+		PrimaryRegister = TargetPosition
 	};
 
 	enum Operation : uint8_t {
 		ReadRequest = 0,
 		WriteRequest = 1,
 		ReadResponse = 2,
-		WriteDefault = 3,
+		WriteAndSaveDefaultRequest = 3,
 
 		OTARequests = 100, // mark the start of OTA requests in the enum
 		OTAInfo = 100,

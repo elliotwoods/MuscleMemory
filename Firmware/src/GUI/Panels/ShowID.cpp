@@ -67,6 +67,9 @@ namespace GUI {
 				Registry::X().saveDefault(Registry::RegisterType::DeviceID);
 				this->editing = false;
 				this->shouldExit = true;
+
+				// For the time being - always reboot since we can't restart CAN safely
+				esp_restart();
 			}
 		}
 
