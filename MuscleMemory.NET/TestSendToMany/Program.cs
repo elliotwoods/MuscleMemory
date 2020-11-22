@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MuscleMemory;
@@ -7,25 +8,27 @@ namespace TestApp
 {
 	class Program
 	{
-		static void ForceSendToAll(BusGroup busGroup, Messages.RegisterType registerType, int value, bool wait)
-		{
-			var writeRequest = new Messages.WriteRequest();
-			writeRequest.RegisterType = registerType;
-			writeRequest.Value = value;
+		static UInt64 txCountTotal = 0;
 
-			for (int i=0; i<=80; i++)
+		static void SendToAll(BusGroup busGroup, Messages.RegisterType registerType, int value, bool blocking)
+		{
+			var motors = busGroup.GetAllMotors();
+			foreach(var motor in motors.Values)
 			{
-				writeRequest.ID = i;
-				Parallel.ForEach(busGroup.Buses, (bus) =>
-				{
-					bus.Send(writeRequest, true);
-					if (wait)
-					{
-						Thread.Sleep(1);
-					}
-				});
+				motor.SetRegister(registerType, value, blocking);
 			}
 		}
+
+		static void SendToAllPrimary(BusGroup busGroup, int value, bool blocking)
+		{
+			var motors = busGroup.GetAllMotors();
+			foreach (var motor in motors.Values)
+			{
+				motor.SetPrimaryRegister(value, blocking);
+			}
+		}
+
+
 
 		static void Main(string[] args)
 		{
@@ -35,13 +38,40 @@ namespace TestApp
 			busGroup.Open(500000);
 
 			// Refresh the motors (for debugging)
+			Console.WriteLine("Finding motors...");
 			busGroup.Refresh();
 
+			// Print found motors
+			var foundMotors = busGroup.GetAllMotors();
+			Console.WriteLine("Found {0} motors : ", foundMotors.Count);
+			foreach (var it in foundMotors)
+			{
+				Console.WriteLine("{0} : {1}", it.Key, it.Value);
+			}
+
+			// Print gaps in ID range
+			var foundIDs = foundMotors.Keys.ToList();
+			if (foundMotors.Count > 0)
+			{
+				var startID = foundIDs[0];
+				var endID = foundIDs[foundMotors.Count - 1];
+				Console.WriteLine("Missing contiguous IDs between {0} -> {1}:", startID, endID);
+				for (int id = startID; id <= endID; id++)
+				{
+					if (!foundIDs.Contains(id))
+					{
+						Console.Write("{0}, ", id);
+					}
+				}
+			}
+
+			Thread.Sleep(2000);
+
 			// Enable Torque
-			ForceSendToAll(busGroup, Messages.RegisterType.ControlMode, 1, true);
+			SendToAll(busGroup, Messages.RegisterType.ControlMode, 1, true);
 
 			// Disable screen (movements are smoother)
-			ForceSendToAll(busGroup, Messages.RegisterType.InterfaceEnabled, 0, true);
+			SendToAll(busGroup, Messages.RegisterType.InterfaceEnabled, 0, true);
 
 			foreach (var bus in busGroup.Buses)
 			{
@@ -56,19 +86,29 @@ namespace TestApp
 				Console.WriteLine("Iteration {0}/{1}...", n, N);
 				int i = 0;
 				int limit = 1 << 10;
-				int amp = 9;
+				int amp = 13;
 				for (; i < limit; i++)
 				{
 					var pos = i << amp;
-					Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
-					ForceSendToAll(busGroup, Messages.RegisterType.TargetPosition, pos, false);
+					if(i % 4 == 0)
+					{
+						Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
+					}
+					SendToAllPrimary(busGroup, pos, false);
+					Thread.Sleep(10);
 				}
 				for (; i >= 0; i--)
 				{
 					var pos = i << amp;
-					Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
-					ForceSendToAll(busGroup, Messages.RegisterType.TargetPosition, pos, false);
+					if (i % 4 == 0)
+					{
+						Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
+					}
+					SendToAllPrimary(busGroup, pos, false);
+					Thread.Sleep(10);
 				}
+
+				Console.WriteLine("Wrote {0} messages total", txCountTotal);
 			}
 
 			Console.WriteLine("Closing bus...");

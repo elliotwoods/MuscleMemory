@@ -125,7 +125,7 @@ namespace MuscleMemory
 			return null;
 		}
 
-		public void SetRegisterValueBlind(int ID, Messages.RegisterType registerType, int value)
+		public void SetRegisterValueBlind(int ID, Messages.RegisterType registerType, int value, bool blocking)
 		{
 			var message = new Messages.WriteRequest();
 			message.RegisterType = registerType;
@@ -133,7 +133,18 @@ namespace MuscleMemory
 			message.ID = ID;
 			foreach (var bus in this.FBuses)
 			{
-				bus.Send(message);
+				bus.Send(message, blocking);
+			}
+		}
+
+		public void SetPrimaryRegisterValueBlind(int ID, int value, bool blocking)
+		{
+			var message = new Messages.WritePrimaryRegisterRequest();
+			message.ID = ID;
+			message.Value = value;
+			foreach(var bus in this.FBuses)
+			{
+				bus.Send(message, blocking);
 			}
 		}
 	}

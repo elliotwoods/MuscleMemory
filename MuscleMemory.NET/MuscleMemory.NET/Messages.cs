@@ -243,11 +243,51 @@ namespace MuscleMemory
 			}
 		}
 
-		public class WriteDefault : GenericRequest
+		public class WriteAndSaveDefaultRequest : GenericRequest
 		{
-			public WriteDefault()
+			public WriteAndSaveDefaultRequest()
 			{
 				this.FOperation = Operation.ReadResponse;
+			}
+		}
+
+		public class WritePrimaryRegisterRequest : IMessage
+		{
+			public int ID;
+			public Int32 Value;
+
+			public void Decode(Frame frame)
+			{
+				this.ID = (int)(frame.Identifier >> 1);
+
+				if (frame.Data.Length < 4)
+				{
+					throw (new Exception("Invalid message format"));
+				}
+
+				using (var memoryStream = new MemoryStream(frame.Data))
+				{
+					using (var binaryReader = new BinaryReader(memoryStream))
+					{
+						this.Value = binaryReader.ReadInt32();
+					}
+				}
+			}
+
+			public Frame Encode()
+			{
+				var frame = new Frame();
+				frame.Identifier = (UInt32)(this.ID << 1);
+				frame.Extended = false;
+				frame.Data = new byte[4];
+				using (var memoryStream = new MemoryStream(frame.Data))
+				{
+					using (var binaryWriter = new BinaryWriter(memoryStream))
+					{
+						binaryWriter.Write((Int32) this.Value);
+					}
+				}
+				return frame;
 			}
 		}
 
@@ -272,7 +312,7 @@ namespace MuscleMemory
 					request = new ReadResponse();
 					break;
 				case Operation.WriteDefault:
-					request = new WriteDefault();
+					request = new WriteAndSaveDefaultRequest();
 					break;
 				case Operation.OTARequests:
 				case Operation.OTAData:

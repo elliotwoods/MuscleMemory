@@ -27,12 +27,12 @@ namespace MuscleMemory
 			this.FCachedRegisterValues[readResponse.RegisterType] = readResponse.Value;
 		}
 		
-		public void RequestRegister(Messages.RegisterType registerType)
+		public void RequestRegister(Messages.RegisterType registerType, bool blocking)
 		{
 			var readRequest = new Messages.ReadRequest();
 			readRequest.ID = this.ID;
 			readRequest.RegisterType = registerType;
-			this.FBus.Send(readRequest);
+			this.FBus.Send(readRequest, blocking);
 		}
 
 		public void Receive(Messages.ReadResponse readResponse)
@@ -72,13 +72,21 @@ namespace MuscleMemory
 			}
 		}
 
-		public void SetRegister(Messages.RegisterType registerType, int value)
+		public void SetRegister(Messages.RegisterType registerType, int value, bool blocking)
 		{
 			var writeRequest = new Messages.WriteRequest();
 			writeRequest.ID = this.ID;
 			writeRequest.RegisterType = registerType;
 			writeRequest.Value = value;
-			this.FBus.Send(writeRequest);
+			this.FBus.Send(writeRequest, blocking);
+		}
+
+		public void SetPrimaryRegister(int value, bool blocking)
+		{
+			var writeRequest = new Messages.WritePrimaryRegisterRequest();
+			writeRequest.ID = this.ID;
+			writeRequest.Value = value;
+			this.FBus.Send(writeRequest, blocking);
 		}
 	}
 }
