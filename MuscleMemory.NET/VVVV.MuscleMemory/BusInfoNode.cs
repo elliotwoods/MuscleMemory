@@ -38,6 +38,9 @@ namespace VVVV.MuscleMemory
 		[Output("Bitrate")]
 		public ISpread<int> FOutBitrate;
 
+		[Output("Tx Queue Size")]
+		public ISpread<int> FOutTxQueueSize;
+
 		[Output("Bus Traffic")]
 		public ISpread<double> FOutBusTraffic;
 
@@ -54,6 +57,7 @@ namespace VVVV.MuscleMemory
 			FOutTimestamp.SliceCount = 0;
 			FOutBitrate.SliceCount = 0;
 			FOutBusTraffic.SliceCount = 0;
+			FOutTxQueueSize.SliceCount = 0;
 
 			for(int i=0; i<SpreadMax; i++)
 			{
@@ -71,6 +75,7 @@ namespace VVVV.MuscleMemory
 					FOutTimestamp.Add((int)bus.Timestamp);
 					FOutBitrate.Add(bus.Bitrate);
 					FOutBusTraffic.Add(bus.BusTraffic);
+					FOutTxQueueSize.Add(bus.TxQueueSize);
 				}
 			}
 		}

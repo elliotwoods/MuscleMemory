@@ -36,6 +36,8 @@ namespace MuscleMemory
 					this.FTimestamp = this.FDevice.Timestamp;
 				});
 				this.FDevice.Update();
+
+				// Decode incoming messages
 				var frames = this.FChannel.Receive();
 				foreach(var frame in frames)
 				{
@@ -159,6 +161,14 @@ namespace MuscleMemory
 			get
 			{
 				return this.FBitrate;
+			}
+		}
+
+		public int TxQueueSize
+		{
+			get
+			{
+				return this.FDevice.ActionQueueSize;
 			}
 		}
 
