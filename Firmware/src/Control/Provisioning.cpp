@@ -141,9 +141,14 @@ namespace Control
 					sprintf(text, "Current : %d", this->settings.current);
 				},
 				[&]() {
-					this->settings.current *= 2;
-					if(this->settings.current > this->settings.maxCurrent) {
+					if(this->settings.current >= this->settings.maxCurrent) {
 						this->settings.current = 1;
+					}
+					else {
+						this->settings.current *= 2;
+						if(this->settings.current > this->settings.maxCurrent) {
+							this->settings.current = 1;
+						}
 					}
 				}
 			},
@@ -158,7 +163,15 @@ namespace Control
 					sprintf(text, "Speed +");
 				},
 				[&]() {
-					this->settings.speed++;
+					if(this->settings.speed < 0) {
+						this->settings.speed /= 2;
+					}
+					else if (this->settings.speed == 0) {
+						this->settings.speed = 1;
+					}
+					else {
+						this->settings.speed *= 2;
+					}
 				}
 			},
 			{
@@ -166,7 +179,15 @@ namespace Control
 					sprintf(text, "Speed -");
 				},
 				[&]() {
-					this->settings.speed--;
+					if(this->settings.speed < 0) {
+						this->settings.speed *= 2;
+					}
+					else if (this->settings.speed == 0) {
+						this->settings.speed = -1;
+					}
+					else {
+						this->settings.speed /= 2;
+					}
 				}
 			},
 			{
