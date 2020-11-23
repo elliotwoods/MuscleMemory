@@ -62,12 +62,15 @@
   <ItemGroup>
     <Compile Include="BusGroupNode.cs" />
     <Compile Include="BusInfoNode.cs" />
-    <Compile Include="MotorInfoTestNode.cs" />
+    <Compile Include="ManualAddMotorNode.cs" />
+    <Compile Include="MotorListTestNode.cs" />
+    <Compile Include="PingNode.cs" />
     <Compile Include="SetPrimaryRegisterNode.cs" />
     <Compile Include="GetRegisterValueNode.cs" />
     <Compile Include="MotorInfoNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SetRegisterValueNode.cs" />
+    <Compile Include="BlockUntilCompleteNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

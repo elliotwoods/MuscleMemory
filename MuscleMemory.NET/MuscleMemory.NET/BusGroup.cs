@@ -63,9 +63,27 @@ namespace MuscleMemory
 			}
 		}
 
+		public void BlockUntilActionsComplete()
+		{
+			Parallel.ForEach(this.FBuses, (bus) =>
+			{
+				bus.Device.BlockUntilActionsComplete();
+			});
+		}
+
 		public void Restart()
 		{
 			this.Open(this.FBitrate);
+		}
+
+		public List<Exception> GetAllErrors()
+		{
+			var errors = new List<Exception>();
+			foreach(var bus in this.FBuses)
+			{
+				errors.AddRange(bus.Device.ReceiveErrors());
+			}
+			return errors;
 		}
 
 		// Update must be called regularly (e.g. once per mainloop frame)
@@ -127,10 +145,7 @@ namespace MuscleMemory
 
 		public void SetRegisterValueBlind(int ID, Messages.RegisterType registerType, int value, bool blocking)
 		{
-			var message = new Messages.WriteRequest();
-			message.RegisterType = registerType;
-			message.Value = value;
-			message.ID = ID;
+			var message = new Messages.WriteRequest(ID, registerType, value);
 			foreach (var bus in this.FBuses)
 			{
 				bus.Send(message, blocking);
@@ -139,12 +154,19 @@ namespace MuscleMemory
 
 		public void SetPrimaryRegisterValueBlind(int ID, int value, bool blocking)
 		{
-			var message = new Messages.WritePrimaryRegisterRequest();
-			message.ID = ID;
-			message.Value = value;
+			var message = new Messages.WritePrimaryRegisterRequest(ID, value);
 			foreach(var bus in this.FBuses)
 			{
 				bus.Send(message, blocking);
+			}
+		}
+
+		public void PingBlind(int ID)
+		{
+			var message = new Messages.Ping(ID);
+			foreach (var bus in this.FBuses)
+			{
+				bus.Send(message, false);
 			}
 		}
 	}

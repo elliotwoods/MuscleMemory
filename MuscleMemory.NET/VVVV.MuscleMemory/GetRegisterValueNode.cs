@@ -41,6 +41,9 @@ namespace VVVV.MuscleMemory
 		[Output("Values")]
 		public ISpread<ISpread<int>> FOutValues;
 
+		[Output("Bus Group")]
+		public ISpread<BusGroup> FOutBusGroup;
+
 		[Import()]
 		public ILogger FLogger;
 		#endregion fields & pins
@@ -48,6 +51,8 @@ namespace VVVV.MuscleMemory
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
+			FOutBusGroup[0] = FInBusGorup[0];
+
 			FOutMotorPresent.SliceCount = FInID.SliceCount;
 			FOutLastSeen.SliceCount = FInID.SliceCount;
 			FOutValues.SliceCount = FInID.SliceCount;
@@ -105,5 +110,6 @@ namespace VVVV.MuscleMemory
 			}
 			
 		}
+
 	}
 }

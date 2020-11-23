@@ -11,12 +11,12 @@ using VVVV.PluginInterfaces.V2;
 namespace VVVV.MuscleMemory
 {
 	#region PluginInfo
-	[PluginInfo(Name = "MotorInfoTest",
+	[PluginInfo(Name = "MotorListTest",
 				Category = "MuscleMemory",
 				Help = "Get info for Motor",
 				Tags = "CAN")]
 	#endregion PluginInfo
-	public class MotorInfoTestNode : IPluginEvaluate
+	public class MotorListTestNode : IPluginEvaluate
 	{
 		#region fields & pins
 		[Input("Refresh")]

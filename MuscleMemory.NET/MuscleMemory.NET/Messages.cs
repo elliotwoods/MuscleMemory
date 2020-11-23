@@ -1,8 +1,6 @@
 ﻿using Candle;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace MuscleMemory
 {
@@ -15,7 +13,10 @@ namespace MuscleMemory
 			ReadRequest = 0,
 			WriteRequest = 1,
 			ReadResponse = 2,
-			WriteDefault = 3,
+			WriteAndSaveDefaultRequest = 3,
+
+			Ping = 8,
+			PingResponse = 9,
 
 			OTARequests = 100, // mark the start of OTA requests in the enum
 			OTAInfo = 100,
@@ -116,7 +117,6 @@ namespace MuscleMemory
 
 		public interface IMessage
 		{
-			void Decode(Frame frame);
 			Frame Encode();
 		}
 
@@ -126,6 +126,19 @@ namespace MuscleMemory
 			public int ID;
 			public RegisterType RegisterType;
 			public Int32 Value;
+
+			public GenericRequest()
+			{
+				// This constructor is used when decoding
+			}
+
+			public GenericRequest(int ID, Operation operation, RegisterType registerType, Int32 value)
+			{
+				this.ID = ID;
+				this.FOperation = operation;
+				this.RegisterType = registerType;
+				this.Value = value;
+			}
 
 			public void Decode(Frame frame)
 			{
@@ -182,7 +195,13 @@ namespace MuscleMemory
 			public int ID;
 			public RegisterType RegisterType;
 
-			public void Decode(Frame frame)
+			public ReadRequest(int ID, RegisterType registerType)
+			{
+				this.ID = ID;
+				this.RegisterType = registerType;
+			}
+
+			public ReadRequest(Frame frame)
 			{
 				this.ID = (int) (frame.Identifier >> 19);
 
@@ -229,25 +248,40 @@ namespace MuscleMemory
 
 		public class WriteRequest : GenericRequest
 		{
-			public WriteRequest()
+			public WriteRequest(int ID, RegisterType registerType, Int32 value) : base(ID, Operation.WriteRequest, registerType, value)
+			{
+			}
+
+			public WriteRequest(Frame frame)
 			{
 				this.FOperation = Operation.WriteRequest;
+				this.Decode(frame);
 			}
 		}
 
 		public class ReadResponse : GenericRequest
 		{
-			public ReadResponse()
+			public ReadResponse(int ID, RegisterType registerType, Int32 value) : base(ID, Operation.ReadResponse, registerType, value)
+			{
+			}
+
+			public ReadResponse(Frame frame)
 			{
 				this.FOperation = Operation.ReadResponse;
+				this.Decode(frame);
 			}
 		}
 
 		public class WriteAndSaveDefaultRequest : GenericRequest
 		{
-			public WriteAndSaveDefaultRequest()
+			public WriteAndSaveDefaultRequest(int ID, RegisterType registerType, Int32 value) : base(ID, Operation.WriteAndSaveDefaultRequest, registerType, value)
 			{
-				this.FOperation = Operation.ReadResponse;
+			}
+
+			public WriteAndSaveDefaultRequest(Frame frame)
+			{
+				this.FOperation = Messages.Operation.WriteAndSaveDefaultRequest;
+				this.Decode(frame);
 			}
 		}
 
@@ -256,7 +290,13 @@ namespace MuscleMemory
 			public int ID;
 			public Int32 Value;
 
-			public void Decode(Frame frame)
+			public WritePrimaryRegisterRequest(int ID, Int32 value)
+			{
+				this.ID = ID;
+				this.Value = value;
+			}
+
+			public WritePrimaryRegisterRequest(Frame frame)
 			{
 				this.ID = (int)(frame.Identifier >> 1);
 
@@ -277,7 +317,7 @@ namespace MuscleMemory
 			public Frame Encode()
 			{
 				var frame = new Frame();
-				frame.Identifier = (UInt32)(this.ID << 1);
+				frame.Identifier = (UInt32)(this.ID << 1); // This is a standard frame. The mask works differently
 				frame.Extended = false;
 				frame.Data = new byte[4];
 				using (var memoryStream = new MemoryStream(frame.Data))
@@ -291,6 +331,56 @@ namespace MuscleMemory
 			}
 		}
 
+		public class Ping : IMessage
+		{
+			public int ID;
+
+			public Ping(int ID)
+			{
+				this.ID = ID;
+			}
+
+			public Ping(Frame frame)
+			{
+				this.ID = (int)(frame.Identifier >> 19);
+			}
+
+			public Frame Encode()
+			{
+				var frame = new Frame();
+				frame.Identifier = (UInt32)(this.ID << 19);
+				frame.Extended = true;
+				frame.Data = new byte[1];
+				frame.Data[0] = (byte)Operation.Ping;
+				return frame;
+			}
+		}
+
+		public class PingResponse : IMessage
+		{
+			public int ID;
+
+			public PingResponse(int ID)
+			{
+				this.ID = ID;
+			}
+
+			public PingResponse(Frame frame)
+			{
+				this.ID = (int)(frame.Identifier >> 19);
+			}
+
+			public Frame Encode()
+			{
+				var frame = new Frame();
+				frame.Identifier = (UInt32)(this.ID << 19);
+				frame.Extended = true;
+				frame.Data = new byte[1];
+				frame.Data[0] = (byte)Operation.PingResponse;
+				return frame;
+			}
+		}
+
 		public static IMessage Decode(Frame frame)
 		{
 			if(frame.Data.Length < 1)
@@ -299,20 +389,23 @@ namespace MuscleMemory
 			}
 
 			var operation = (Operation) frame.Data[0];
-			IMessage request;
+			IMessage message;
 			switch (operation)
 			{
 				case Operation.ReadRequest:
-					request = new ReadRequest();
+					message = new ReadRequest(frame);
 					break;
 				case Operation.WriteRequest:
-					request = new WriteRequest();
+					message = new WriteRequest(frame);
 					break;
 				case Operation.ReadResponse:
-					request = new ReadResponse();
+					message = new ReadResponse(frame);
 					break;
-				case Operation.WriteDefault:
-					request = new WriteAndSaveDefaultRequest();
+				case Operation.WriteAndSaveDefaultRequest:
+					message = new WriteAndSaveDefaultRequest(frame);
+					break;
+				case Operation.PingResponse:
+					message = new PingResponse(frame);
 					break;
 				case Operation.OTARequests:
 				case Operation.OTAData:
@@ -322,8 +415,7 @@ namespace MuscleMemory
 					return null;
 			}
 
-			request.Decode(frame);
-			return request;
+			return message;
 		}
 	}
 }

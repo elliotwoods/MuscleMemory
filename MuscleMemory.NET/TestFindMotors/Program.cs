@@ -19,9 +19,10 @@ namespace TestFindMotors
 			{
 				Console.WriteLine(bus.DevicePath);
 			}
-
+			Console.WriteLine();
 
 			Console.WriteLine("Finding motors");
+			Console.WriteLine();
 			busGroup.Refresh();
 
 			// Print found motors
@@ -29,8 +30,10 @@ namespace TestFindMotors
 			Console.WriteLine("Found {0} motors : ", foundMotors.Count);
 			foreach (var it in foundMotors)
 			{
-				Console.WriteLine("{0} : {1}", it.Key, it.Value);
+				Console.WriteLine(it.Value);
 			}
+			Console.WriteLine();
+
 
 			// Print gaps in ID range
 			var foundIDs = foundMotors.Keys.ToList();
@@ -38,7 +41,7 @@ namespace TestFindMotors
 			{
 				var startID = foundIDs[0];
 				var endID = foundIDs[foundMotors.Count - 1];
-				Console.WriteLine("Missing contiguous IDs between {0} -> {1}:", startID, endID);
+				Console.WriteLine("Missing contiguous IDs between {0} -> {1} (if any):", startID, endID);
 				for (int id = startID; id <= endID; id++)
 				{
 					if (!foundIDs.Contains(id))
@@ -50,6 +53,11 @@ namespace TestFindMotors
 			
 			Console.WriteLine();
 
+			var errors = busGroup.GetAllErrors();
+			foreach(var error in errors)
+			{
+				Console.WriteLine(error);
+			}
 			busGroup.Close();
 		}
 	}

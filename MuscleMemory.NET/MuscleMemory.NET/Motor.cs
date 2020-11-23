@@ -29,9 +29,7 @@ namespace MuscleMemory
 		
 		public void RequestRegister(Messages.RegisterType registerType, bool blocking)
 		{
-			var readRequest = new Messages.ReadRequest();
-			readRequest.ID = this.ID;
-			readRequest.RegisterType = registerType;
+			var readRequest = new Messages.ReadRequest(this.ID, registerType);
 			this.FBus.Send(readRequest, blocking);
 		}
 
@@ -64,6 +62,12 @@ namespace MuscleMemory
 			}
 		}
 
+		public void Ping()
+		{
+			var message = new Messages.Ping(this.ID);
+			this.FBus.Send(message, false);
+		}
+
 		public Dictionary<Messages.RegisterType, int> CachedRegisterValues
 		{
 			get
@@ -74,19 +78,19 @@ namespace MuscleMemory
 
 		public void SetRegister(Messages.RegisterType registerType, int value, bool blocking)
 		{
-			var writeRequest = new Messages.WriteRequest();
-			writeRequest.ID = this.ID;
-			writeRequest.RegisterType = registerType;
-			writeRequest.Value = value;
+			var writeRequest = new Messages.WriteRequest(this.ID, registerType, value);
 			this.FBus.Send(writeRequest, blocking);
 		}
 
 		public void SetPrimaryRegister(int value, bool blocking)
 		{
-			var writeRequest = new Messages.WritePrimaryRegisterRequest();
-			writeRequest.ID = this.ID;
-			writeRequest.Value = value;
+			var writeRequest = new Messages.WritePrimaryRegisterRequest(this.ID, value);
 			this.FBus.Send(writeRequest, blocking);
+		}
+
+		public override string ToString()
+		{
+			return String.Format("[Motor : #{0}]", this.ID);
 		}
 	}
 }
