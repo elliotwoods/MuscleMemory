@@ -116,6 +116,9 @@ public:
 		ReadResponse = 2,
 		WriteAndSaveDefaultRequest = 3,
 
+		Ping = 8,
+		PingResponse = 9,
+
 		OTARequests = 100, // mark the start of OTA requests in the enum
 		OTAInfo = 100,
 		OTAData = 101,

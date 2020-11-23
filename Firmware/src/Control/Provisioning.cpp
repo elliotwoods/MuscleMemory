@@ -182,6 +182,10 @@ namespace Control
 				}
 			},
 		});
+		panel->onInteraction = [&]() {
+			this->canResponder.notifyKeepAlive();
+		};
+
 		// Set up our gui as main gui
 		gui.pushPanel(panel);
 
