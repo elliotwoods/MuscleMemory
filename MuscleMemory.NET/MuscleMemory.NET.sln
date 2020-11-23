@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestForceSendToMany", "Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSendToMany", "TestSendToMany\TestSendToMany.csproj", "{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSendTooMuch", "TestSendTooMuch\TestSendTooMuch.csproj", "{31F9D7E3-251E-4290-819F-DED3634C4CE8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,12 @@ Global
 		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Release|Any CPU.ActiveCfg = Release|x64
 		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Release|x64.ActiveCfg = Release|x64
 		{F4A1DFBA-49F4-40D9-A010-E06C39FE3A75}.Release|x64.Build.0 = Release|x64
+		{31F9D7E3-251E-4290-819F-DED3634C4CE8}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{31F9D7E3-251E-4290-819F-DED3634C4CE8}.Debug|x64.ActiveCfg = Debug|x64
+		{31F9D7E3-251E-4290-819F-DED3634C4CE8}.Debug|x64.Build.0 = Debug|x64
+		{31F9D7E3-251E-4290-819F-DED3634C4CE8}.Release|Any CPU.ActiveCfg = Release|x64
+		{31F9D7E3-251E-4290-819F-DED3634C4CE8}.Release|x64.ActiveCfg = Release|x64
+		{31F9D7E3-251E-4290-819F-DED3634C4CE8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,9 +12,7 @@ namespace TestApp
 
 		static void ForceSendToAll(BusGroup busGroup, Messages.RegisterType registerType, int value, bool blocking)
 		{
-			var writeRequest = new Messages.WriteRequest();
-			writeRequest.RegisterType = registerType;
-			writeRequest.Value = value;
+			var writeRequest = new Messages.WriteRequest(1, registerType, value);
 
 			for (int i = 1; i <= maxMotorID; i++)
 			{
@@ -29,8 +27,7 @@ namespace TestApp
 
 		static void ForceSendToAllPrimary(BusGroup busGroup, int value, bool blocking)
 		{
-			var writeRequest = new Messages.WritePrimaryRegisterRequest();
-			writeRequest.Value = value;
+			var writeRequest = new Messages.WritePrimaryRegisterRequest(1, value);
 
 			for (int i = 1; i <= maxMotorID; i++)
 			{

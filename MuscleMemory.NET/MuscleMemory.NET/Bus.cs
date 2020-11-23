@@ -42,26 +42,41 @@ namespace MuscleMemory
 				foreach(var frame in frames)
 				{
 					var message = Messages.Decode(frame);
-					if(message is Messages.ReadResponse)
+					if(message is Messages.PingResponse)
+					{
+						var pingResponse = message as Messages.PingResponse;
+
+						var ID = pingResponse.ID;
+
+						this.NotifyMotorExists(ID);
+					}
+					else if(message is Messages.ReadResponse)
 					{
 						var readResponse = message as Messages.ReadResponse;
 
 						// We found a motor
 						var ID = readResponse.ID;
-						Motor motor;
-						if (!this.FMotors.ContainsKey(ID))
-						{
-							motor = new Motor(ID, this);
-							this.FMotors[ID] = motor;
-						}
-						else
-						{
-							motor = this.FMotors[ID];
-						}
+
+						var motor = this.NotifyMotorExists(ID);
 						motor.Receive(readResponse);
 					}
 				}
 			}
+		}
+
+		public Motor NotifyMotorExists(int ID)
+		{
+			Motor motor;
+			if (!this.FMotors.ContainsKey(ID))
+			{
+				motor = new Motor(ID, this);
+				this.FMotors[ID] = motor;
+			}
+			else
+			{
+				motor = this.FMotors[ID];
+			}
+			return motor;
 		}
 
 		public void Open(int bitrate)
@@ -103,9 +118,7 @@ namespace MuscleMemory
 			// Send the request to all indexes
 			for (int i = 1; i < Messages.MaxIndex; i++)
 			{
-				var message = new Messages.ReadRequest();
-				message.ID = i;
-				message.RegisterType = Messages.RegisterType.DeviceID;
+				var message = new Messages.Ping(i);
 				this.FChannel.Send(message.Encode(), true);
 			}
 		}

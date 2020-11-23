@@ -22,7 +22,7 @@ namespace VVVV.MuscleMemory
 	{
 		#region fields & pins
 		[Input("Bus Group", IsSingle = true)]
-		public ISpread<BusGroup> FInBusGorup;
+		public ISpread<BusGroup> FInBusGroup;
 
 		[Input("ID", DefaultValue = 1)]
 		public ISpread<int> FInID;
@@ -42,6 +42,9 @@ namespace VVVV.MuscleMemory
 		[Input("Blocking")]
 		public ISpread<bool> FInBlocking;
 
+		[Output("Bus Group")]
+		public ISpread<BusGroup> FOutBusGroup;
+
 		[Import()]
 		public ILogger FLogger;
 		#endregion fields & pins
@@ -49,18 +52,19 @@ namespace VVVV.MuscleMemory
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			// since FInBusGroup is single, we can presume it is ignored for SpreadMax
+			FOutBusGroup[0] = FInBusGroup[0];
 
-			var busGroup = FInBusGorup[0];
+			var busGroup = FInBusGroup[0];
 			if(busGroup is BusGroup)
 			{
+				// since FInBusGroup is single, we can presume it is ignored for SpreadMax
 				for (int i = 0; i < SpreadMax; i++)
 				{
 					if(FInSend[i])
 					{
 						if (FInBlind[i])
 						{
-							FInBusGorup[0].SetRegisterValueBlind(FInID[i], FInRegisterType[i], FInValue[i], FInBlocking[i]);
+							FInBusGroup[0].SetRegisterValueBlind(FInID[i], FInRegisterType[i], FInValue[i], FInBlocking[i]);
 						}
 						else
 						{
