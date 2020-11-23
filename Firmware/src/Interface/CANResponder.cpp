@@ -77,7 +77,7 @@ namespace Interface {
 		//Setup bus alerts
 		ESP_ERROR_CHECK(can_reconfigure_alerts(CAN_ALERT_ABOVE_ERR_WARN | CAN_ALERT_ERR_PASS | CAN_ALERT_BUS_OFF, NULL));
 
-		this->timeOfLastCANRx = esp_timer_get_time();
+		this->notifyKeepAlive();
 	}
 
 	//----------
@@ -123,7 +123,7 @@ namespace Interface {
 				setRegisterValue(Registry::RegisterType::CANWatchdogTimer, timeSinceLastMessage);
 			}
 			if(this->rxCount > 0) {
-				this->timeOfLastCANRx = now;
+				this->notifyKeepAlive();
 			}
 		}
 
@@ -212,6 +212,26 @@ namespace Interface {
 
 	//----------
 	void
+	CANResponder::notifyKeepAlive()
+	{
+		this->timeOfLastCANRx = esp_timer_get_time();
+	}
+
+	//----------
+	void
+	CANResponder::queuePingResponse()
+	{
+		can_message_t message;
+		message.flags = CAN_MSG_FLAG_EXTD;
+		message.identifier = getRegisterValue(Registry::RegisterType::DeviceID) << 19;
+		auto data = message.data;
+		valueAndMove<Registry::Operation>(data) = Registry::Operation::PingResponse;
+		message.data_length_code = sizeof(Registry::Operation);
+		this->txQueue.push_back(message);
+	}
+
+	//----------
+	void
 	CANResponder::queueReadRequest(Registry::RegisterType registerType)
 	{
 		static auto & registry = Registry::X();
@@ -282,6 +302,12 @@ namespace Interface {
 			{
 				// Extended message - decode and operate
 
+				if(operation == Registry::Operation::Ping) {
+					if (CAN_PRINT_PREVIEW_ENABLED) {
+						printf("[CAN] Ping\n");
+					}
+					this->queuePingResponse();
+				}
 				if(operation >= Registry::Operation::OTARequests) {
 #ifdef OTA_ENABLED
 				this->otaFirmware.processMessage(message);
@@ -322,7 +348,6 @@ namespace Interface {
 							, registerName
 							, value);
 					}
-
 					if(operation == Registry::Operation::ReadRequest) {
 						// Queue individual read response
 						this->queueReadRequest(registerID);
@@ -361,7 +386,9 @@ namespace Interface {
 			else {
 				// Non-extended message - treat as TargetPosition write (or whatever is currently defined as PrimaryRegister)
 				if(message.data_length_code == sizeof(int32_t)) {
-					setRegisterValue(Registry::RegisterType::PrimaryRegister, valueAndMove<int32_t>(dataMover));
+					// make a new pointer at the start of the message. dataMover is already advanced by 1
+					auto data = message.data;
+					setRegisterValue(Registry::RegisterType::PrimaryRegister, valueAndMove<int32_t>(data));
 					Control::FilteredTarget::X().notifyTargetChange();
 				}
 				else {

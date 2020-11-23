@@ -4,6 +4,7 @@
 #include <functional>
 #include <vector>
 #include <initializer_list>
+#include <functional>
 
 namespace GUI {
 	namespace Panels {
@@ -20,6 +21,8 @@ namespace GUI {
 			void draw(U8G2 &) override;
 			void buttonPressed() override;
 			void dial(int8_t) override;
+
+			std::function<void()> onInteraction;
 		private:
 			std::string title;
 			std::vector<Option> options;

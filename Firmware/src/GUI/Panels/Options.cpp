@@ -74,6 +74,10 @@ namespace GUI {
 		void
 		Options::buttonPressed()
 		{
+			if(this->onInteraction) {
+				this->onInteraction();
+			}
+
 			if(this->selection < this->options.size()) {
 				auto & action = this->options[this->selection].action;
 				if(action) {
@@ -86,6 +90,10 @@ namespace GUI {
 		void
 		Options::dial(int8_t movements)
 		{
+			if(this->onInteraction) {
+				this->onInteraction();
+			}
+
 			// Move selection
 			auto newSelection = (int16_t) this->selection + (int16_t) movements;
 			if(newSelection < 0) {

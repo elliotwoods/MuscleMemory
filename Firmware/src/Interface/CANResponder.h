@@ -24,7 +24,9 @@ namespace Interface {
 		void deinit();
 		void update(); // From main loop
 		void updateTask(); // From CAN task
+		void notifyKeepAlive();
 	private:
+		void queuePingResponse();
 		void queueReadRequest(Registry::RegisterType);
 		bool receive(TickType_t timeout);
 		void send();
