@@ -8,12 +8,13 @@ namespace VVVV.MuscleMemory
 	#region PluginInfo
 	[PluginInfo(Name = "Ping",
 				Category = "MuscleMemory",
+				Version = "ID",
 				Help = "Ping a motor",
 				Tags = "CAN",
 				AutoEvaluate = true
 		)]
 	#endregion PluginInfo
-	public class PingNode : IPluginEvaluate
+	public class PingMotorIDNode : IPluginEvaluate
 	{
 		#region fields & pins
 		[Input("Bus Group", IsSingle = true)]

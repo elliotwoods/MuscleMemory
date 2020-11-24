@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TestFindMotors": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TestSendTooMuch": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

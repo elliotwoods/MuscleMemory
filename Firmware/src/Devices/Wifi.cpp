@@ -131,7 +131,7 @@ namespace Devices {
 
 				}
 				else {
-					printf("[Wifi] Server firmware version is unknown. Ignoring. Over version is : %s\n", MM_VERSION);
+					printf("[Wifi] Server firmware version is unknown. Ignoring. Our version is : %s\n", MM_VERSION);
 				}
 				httpClient.end();
 			}

@@ -8,13 +8,14 @@ namespace Control {
 		static FilteredTarget & X();
 		void update(); // called from main loop
 		void notifyTargetChange();
-		MultiTurnPosition getTargetFiltered() const; // called from drive loop
+		MultiTurnPosition getTargetFiltered(); // called from drive loop
 	private:
 		FilteredTarget();
 		bool targetChange = true;
 		Velocity filterVelocity = 0;
 		MultiTurnPosition priorTarget = 0;
 		uint64_t priorTargetTimestamp = 0;
+		int64_t priorUpdateTimestamp = 0;
 		const uint32_t maxTimeDelta = 200 * 1000; // 200ms
 	};
 }

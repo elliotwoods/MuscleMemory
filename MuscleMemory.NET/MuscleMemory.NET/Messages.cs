@@ -144,7 +144,7 @@ namespace MuscleMemory
 			{
 				this.ID = (int) (frame.Identifier >> 19);
 
-				if (frame.Data.Length < 1 + 2)
+				if (frame.Data.Length < 1 + 2 + 4)
 				{
 					throw (new Exception("Invalid message format"));
 				}
@@ -388,25 +388,24 @@ namespace MuscleMemory
 				return null;
 			}
 
+			if(!frame.Extended)
+			{
+				return new WritePrimaryRegisterRequest(frame);
+			}
+
 			var operation = (Operation) frame.Data[0];
-			IMessage message;
 			switch (operation)
 			{
 				case Operation.ReadRequest:
-					message = new ReadRequest(frame);
-					break;
+					return new ReadRequest(frame);
 				case Operation.WriteRequest:
-					message = new WriteRequest(frame);
-					break;
+					return new WriteRequest(frame);
 				case Operation.ReadResponse:
-					message = new ReadResponse(frame);
-					break;
+					return new ReadResponse(frame);
 				case Operation.WriteAndSaveDefaultRequest:
-					message = new WriteAndSaveDefaultRequest(frame);
-					break;
+					return new WriteAndSaveDefaultRequest(frame);
 				case Operation.PingResponse:
-					message = new PingResponse(frame);
-					break;
+					return new PingResponse(frame);
 				case Operation.OTARequests:
 				case Operation.OTAData:
 				case Operation.OTARequestInfo:
@@ -414,8 +413,6 @@ namespace MuscleMemory
 				default:
 					return null;
 			}
-
-			return message;
 		}
 	}
 }
