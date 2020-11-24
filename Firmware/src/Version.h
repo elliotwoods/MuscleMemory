@@ -1,1 +1,1 @@
-#define MM_VERSION "2020-11-23"
+#define MM_VERSION "2020-11-24B"

@@ -39,17 +39,42 @@ namespace Control {
 
 	//----------
 	MultiTurnPosition IRAM_ATTR
-	FilteredTarget::getTargetFiltered() const
+	FilteredTarget::getTargetFiltered()
 	{
 		const auto now = esp_timer_get_time();
-		const auto timeDelta = (int32_t) (now - this->priorTargetTimestamp);
-		if(timeDelta > this->maxTimeDelta) {
-			// If we haven't receiving any updates within X seconds, don't perform filtering
-			return this->priorTarget;
+
+		const auto maxVelocity = getRegisterValue(Registry::RegisterType::MaxVelocity);
+		const auto currentPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
+
+
+		int32_t target;
+		// select target based on how recently a new target has been set
+		{
+			const auto timeSinceLastSetTargetPosition = (int32_t) (now - this->priorTargetTimestamp);
+			if(timeSinceLastSetTargetPosition > this->maxTimeDelta) {
+				// If we haven't receiving any updates within X seconds, don't perform filtering
+				target = this->priorTarget;
+			}
+			else {
+				target = this->filterVelocity * timeSinceLastSetTargetPosition / 1000 + this->priorTarget;
+			}
 		}
-		else {
-			return this->filterVelocity * timeDelta / 1000 + this->priorTarget;
+		
+		// clamp velocity
+		if(maxVelocity > 0) {
+			const auto timeSinceLastUpdate = now - this->priorUpdateTimestamp;
+			const auto deltaLimit = (int64_t) maxVelocity * timeSinceLastUpdate / 1000000LL;
+			if(target - currentPosition > deltaLimit) {
+				target = currentPosition + (int32_t) deltaLimit;
+			}
+			else if(target - currentPosition < - (int32_t) deltaLimit) {
+				target = currentPosition - deltaLimit;
+			}
 		}
+
+		this->priorUpdateTimestamp = now;
+
+		return target;
 	}
 
 	//-----------

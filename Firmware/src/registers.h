@@ -68,7 +68,7 @@
 	}},
 	{ RegisterType::MaxVelocity, {
 		"MaxVelocity"
-		, 100000
+		, 0
 		, Access::ReadWrite
 	}},
 
