@@ -9,56 +9,69 @@ namespace TestFindMotors
 	{
 		static void Main(string[] args)
 		{
-			var busGroup = new BusGroup();
-
-			Console.WriteLine("Opening bus");
-			busGroup.Open(500000);
-
-			Console.WriteLine("Found {0} buses :", busGroup.Buses.Count);
-			foreach(var bus in busGroup.Buses)
+			// do the same as VVVV example
 			{
-				Console.WriteLine(bus.DevicePath);
+				var busGroup = new BusGroup();
+				busGroup.Open(500000);
+				busGroup.Refresh();
+				var motors = busGroup.GetAllMotors();
+				Console.WriteLine("Found {0} motors", motors.Count);
+				busGroup.Close();
 			}
-			Console.WriteLine();
 
-			Console.WriteLine("Finding motors");
-			Console.WriteLine();
-			busGroup.Refresh();
-
-			// Print found motors
-			var foundMotors = busGroup.GetAllMotors();
-			Console.WriteLine("Found {0} motors : ", foundMotors.Count);
-			foreach (var it in foundMotors)
+			// do our actual program test
 			{
-				Console.WriteLine(it.Value);
-			}
-			Console.WriteLine();
+				var busGroup = new BusGroup();
 
+				Console.WriteLine("Opening bus");
+				busGroup.Open(500000);
 
-			// Print gaps in ID range
-			var foundIDs = foundMotors.Keys.ToList();
-			if(foundMotors.Count > 0)
-			{
-				var startID = foundIDs[0];
-				var endID = foundIDs[foundMotors.Count - 1];
-				Console.WriteLine("Missing contiguous IDs between {0} -> {1} (if any):", startID, endID);
-				for (int id = startID; id <= endID; id++)
+				Console.WriteLine("Found {0} buses :", busGroup.Buses.Count);
+				foreach (var bus in busGroup.Buses)
 				{
-					if (!foundIDs.Contains(id))
+					Console.WriteLine(bus.DevicePath);
+				}
+				Console.WriteLine();
+
+				Console.WriteLine("Finding motors");
+				Console.WriteLine();
+				busGroup.Refresh();
+
+				// Print found motors
+				var foundMotors = busGroup.GetAllMotors();
+				Console.WriteLine("Found {0} motors : ", foundMotors.Count);
+				foreach (var it in foundMotors)
+				{
+					Console.WriteLine(it.Value);
+				}
+				Console.WriteLine();
+
+
+				// Print gaps in ID range
+				var foundIDs = foundMotors.Keys.ToList();
+				if (foundMotors.Count > 0)
+				{
+					var startID = foundIDs[0];
+					var endID = foundIDs[foundMotors.Count - 1];
+					Console.WriteLine("Missing contiguous IDs between {0} -> {1} (if any):", startID, endID);
+					for (int id = startID; id <= endID; id++)
 					{
-						Console.Write("{0}, ", id);
+						if (!foundIDs.Contains(id))
+						{
+							Console.Write("{0}, ", id);
+						}
 					}
 				}
-			}
-			
-			Console.WriteLine();
 
-			var errors = busGroup.GetAllErrors();
-			foreach(var error in errors)
-			{
-				Console.WriteLine(error);
+				Console.WriteLine();
+
+				var errors = busGroup.GetAllErrors();
+				foreach (var error in errors)
+				{
+					Console.WriteLine(error);
+				}
+				busGroup.Close();
 			}
-			busGroup.Close();
 		}
 	}
 }
