@@ -76,6 +76,7 @@ namespace MuscleMemory
 			{
 				motor = this.FMotors[ID];
 			}
+			motor.MarkSeen();
 			return motor;
 		}
 

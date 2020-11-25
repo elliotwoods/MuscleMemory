@@ -32,6 +32,9 @@ namespace VVVV.MuscleMemory
 		[Input("Send Requests", IsSingle = true)]
 		public ISpread<bool> FInSendRequests;
 
+		[Output("Bus Group")]
+		public ISpread<BusGroup> FOutBusGroup;
+
 		[Output("Motor Present")]
 		public ISpread<bool> FOutMotorPresent;
 
@@ -40,9 +43,6 @@ namespace VVVV.MuscleMemory
 
 		[Output("Values")]
 		public ISpread<ISpread<int>> FOutValues;
-
-		[Output("Bus Group")]
-		public ISpread<BusGroup> FOutBusGroup;
 
 		[Import()]
 		public ILogger FLogger;

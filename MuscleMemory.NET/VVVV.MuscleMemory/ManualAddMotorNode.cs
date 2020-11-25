@@ -21,7 +21,7 @@ namespace VVVV.MuscleMemory
 	public class ManualAddMotorNode : IPluginEvaluate
 	{
 		#region fields & pins
-		[Input("Bus", IsSingle = true)]
+		[Input("Bus")]
 		public ISpread<Bus> FInBus;
 
 		[Input("Motor ID", DefaultValue = 1)]
@@ -44,7 +44,11 @@ namespace VVVV.MuscleMemory
 				{
 					for (int iMotorID = 0; iMotorID < FInID[iBus].SliceCount; iMotorID++)
 					{
-						bus.NotifyMotorExists(FInID[iBus][iMotorID]);
+						if(FInAdd[iBus][iMotorID])
+						{
+							var motorID = FInID[iBus][iMotorID];
+							bus.NotifyMotorExists(motorID);
+						}
 					}
 				}
 			}

@@ -35,7 +35,6 @@ namespace MuscleMemory
 
 		public void Receive(Messages.ReadResponse readResponse)
 		{
-			this.MarkSeen();
 			this.FCachedRegisterValues[readResponse.RegisterType] = readResponse.Value;
 		}
 

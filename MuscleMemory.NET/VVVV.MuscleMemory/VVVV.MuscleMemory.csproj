@@ -63,7 +63,7 @@
     <Compile Include="BusGroupNode.cs" />
     <Compile Include="BusInfoNode.cs" />
     <Compile Include="ManualAddMotorNode.cs" />
-    <Compile Include="MotorListTestNode.cs" />
+    <Compile Include="TestMotorListNode.cs" />
     <Compile Include="PingMotorIDNode.cs" />
     <Compile Include="PingMotorNode.cs" />
     <Compile Include="SetPrimaryRegisterNode.cs" />
