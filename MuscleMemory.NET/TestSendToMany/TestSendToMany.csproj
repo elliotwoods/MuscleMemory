@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GCAN\GCAN.csproj" />
     <ProjectReference Include="..\MuscleMemory.NET\MuscleMemory.NET.csproj" />
   </ItemGroup>
 

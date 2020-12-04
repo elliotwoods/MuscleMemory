@@ -24,6 +24,9 @@ namespace VVVV.MuscleMemory
 		[Input("Bus Group", IsSingle = true)]
 		public ISpread<BusGroup> FInBusGroup;
 
+		[Input("Timeout", IsSingle = true)]
+		public ISpread<int> FInTimeout;
+
 		[Input("Enabled", IsSingle = true)]
 		public ISpread<bool> FInEnabled;
 
@@ -37,7 +40,7 @@ namespace VVVV.MuscleMemory
 			var busGroup = FInBusGroup[0];
 			if (busGroup is BusGroup && FInEnabled[0])
 			{
-				busGroup.BlockUntilActionsComplete();
+				busGroup.BlockUntilActionsComplete(new TimeSpan(0, 0, FInTimeout[0]));
 			}
 		}
 	}

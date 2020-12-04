@@ -52,6 +52,16 @@ namespace TestApp
 			// Refresh the motors (for debugging)
 			busGroup.Refresh();
 
+			{
+				var motors = busGroup.GetAllMotors();
+				Console.WriteLine("Found {0} motors", motors.Count);
+				if(motors.Count == 0)
+				{
+					busGroup.Close();
+					return;
+				}
+			}
+
 			// Enable Torque
 			ForceSendToAll(busGroup, Messages.RegisterType.ControlMode, 1, true);
 

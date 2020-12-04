@@ -114,12 +114,12 @@ namespace GCAN
 			{
 				try
 				{
-					// Rx frames
+					// Rx+Tx frames
 					{
 						foreach(var channel in this.FChannels)
 						{
 							var typedChannel = channel.Value as Channel;
-							typedChannel.ReceiveIncoming();
+							typedChannel.ThreadedUpdate();
 						}
 					}
 
@@ -142,7 +142,29 @@ namespace GCAN
 				}
 				catch (Exception e)
 				{
+					Console.WriteLine(e);
 					this.FExceptionQueue.Add(e);
+				}
+			}
+		}
+
+		public override void BlockUntilActionsComplete(TimeSpan timeout)
+		{
+			var startTime = DateTime.Now;
+			foreach(var it in this.Channels)
+			{
+				var channel = it.Value as Channel;
+				while(channel.TxQueueSize > 0)
+				{
+					if(DateTime.Now - startTime > timeout)
+					{
+						throw (new Exception("BlockUntilActionsComplete timeout"));
+					}
+
+					this.PerformBlocking(() =>
+					{
+						channel.ThreadedUpdate();
+					});
 				}
 			}
 		}

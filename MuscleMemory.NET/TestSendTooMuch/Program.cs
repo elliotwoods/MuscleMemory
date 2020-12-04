@@ -56,7 +56,7 @@ namespace TestApp
 					}
 				}
 
-				busGroup.BlockUntilActionsComplete();
+				busGroup.BlockUntilActionsComplete(new TimeSpan(0, 0, 10));
 				busGroup.Update();
 				rxCountTotal += (UInt64)bus.RxCountThisFrame;
 				

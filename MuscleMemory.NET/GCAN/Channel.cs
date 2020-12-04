@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace GCAN
@@ -8,6 +10,7 @@ namespace GCAN
 	{
 		Device FDevice;
 		UInt32 FChannelIndex;
+		protected BlockingCollection<NativeFunctions.CAN_OBJ> FTxQueue = new BlockingCollection<NativeFunctions.CAN_OBJ>();
 
 		public Channel(Device device, UInt32 channelIndex)
 			: base(device, (byte) channelIndex)
@@ -118,11 +121,17 @@ namespace GCAN
 					, this.FDevice.DeviceType
 					, this.FDevice.DeviceIndex
 					, this.FChannelIndex);
-			});
 
-			this.FCounterLastTime = DateTime.Now;
-			this.FCounterRxBits = 0;
-			this.FCounterTxBits = 0;
+				NativeFunctions.ThrowIfError(
+					NativeFunctions.ResetCAN(
+						this.FDevice.DeviceType
+						, this.FDevice.DeviceIndex
+						, this.FChannelIndex)
+
+					, this.FDevice.DeviceType
+					, this.FDevice.DeviceIndex
+					, this.FChannelIndex);
+			});
 		}
 
 		public override void Stop()
@@ -168,60 +177,125 @@ namespace GCAN
 			nativeFrame.DataLen = (byte) frame.Data.Length;
 			Buffer.BlockCopy(frame.Data, 0, nativeFrame.data, 0, frame.Data.Length);
 
+			// Note : this shoud actually increment after we've actully sent (e.g. on thread). But since it's a heuristic this is kind of fine for now
 			var lengthOnBus = frame.LengthOnBus;
+			this.IncrementTx(lengthOnBus);
 
-			this.FDevice.PerformInRightThread(() =>
+			if (blocking)
 			{
-				try
+				
+				// Send this one frame
+				this.FDevice.PerformInRightThread(() =>
 				{
-					NativeFunctions.ThrowIfError(
-						NativeFunctions.Transmit(
+					NativeFunctions.Transmit(
+						this.FDevice.DeviceType
+						, this.FDevice.DeviceIndex
+						, this.FChannelIndex
+						, new NativeFunctions.CAN_OBJ[] { nativeFrame }
+						, 1);
+
+					this.ThreadedUpdate();
+				}, true);
+			}
+			else
+			{
+				this.FTxQueue.Add(nativeFrame);
+			}
+		}
+
+		public void ThreadedUpdate()
+		{
+			// Send frames
+			{
+				var framesToSend = new List<NativeFunctions.CAN_OBJ>();
+
+				// Pull them from the queue
+				{
+					NativeFunctions.CAN_OBJ frame;
+					while (this.FTxQueue.TryTake(out frame))
+					{
+						framesToSend.Add(frame);
+					}
+				}
+
+				// Send them out
+				if (framesToSend.Count > 0)
+				{
+					var framesSent = NativeFunctions.Transmit(
 							this.FDevice.DeviceType
 							, this.FDevice.DeviceIndex
 							, this.FChannelIndex
-							, new NativeFunctions.CAN_OBJ[] { nativeFrame }
-							, 1)
+							, framesToSend.ToArray()
+							, (UInt16)framesToSend.Count);
 
-						, this.FDevice.DeviceType
-						, this.FDevice.DeviceIndex
-						, this.FChannelIndex);
-					this.IncrementTx(lengthOnBus);
-
-					this.ReceiveIncoming();
+					// Queue again anything that didn't send
+					for (int i = (int)framesSent; i < framesToSend.Count; i++)
+					{
+						this.FTxQueue.Add(framesToSend[i]);
+					}
 				}
-				catch(Exception e)
+
+				// Alternative method : force send everything
+				//int txOffset = 0;
+				//while(txOffset != framesToSend.Count)
+				//{
+				//	var framesSent = NativeFunctions.Transmit(
+				//			this.FDevice.DeviceType
+				//			, this.FDevice.DeviceIndex
+				//			, this.FChannelIndex
+				//			, framesToSend.GetRange(txOffset, framesToSend.Count - txOffset).ToArray()
+				//			, (UInt16)framesToSend.Count);
+				//	txOffset += (int) framesSent;
+				//}
+			}
+
+			// Receive frames
+			{
+
+				var rxCountOnDevice = NativeFunctions.GetReceiveNum(this.FDevice.DeviceType
+					, this.FDevice.DeviceIndex
+					, this.FChannelIndex);
+
+				if(rxCountOnDevice > 0)
 				{
-					this.Device.NotifyError(e);
-				}
+					var rxBuffer = new NativeFunctions.CAN_OBJ[rxCountOnDevice];
 
-			}, blocking);
+					var rxCount = NativeFunctions.ReceiveArray(this.FDevice.DeviceType
+						, this.FDevice.DeviceIndex
+						, this.FChannelIndex
+						, rxBuffer
+						, (UInt32)rxBuffer.Length
+						, 0);
+
+					for (int i = 0; i < rxCount; i++)
+					{
+						var nativeFrame = rxBuffer[i];
+
+						var frame = new Candle.Frame();
+						{
+							frame.Identifier = nativeFrame.ID;
+							frame.Extended = nativeFrame.ExternFlag == 1;
+							frame.RTR = nativeFrame.RemoteFlag == 1;
+							frame.Error = false; // Not sure how we get error frames with GCAN
+
+							frame.Data = new byte[nativeFrame.DataLen];
+							Buffer.BlockCopy(nativeFrame.data, 0, frame.Data, 0, nativeFrame.DataLen);
+
+							frame.Timestamp = nativeFrame.TimeStamp;
+						}
+
+						this.IncrementRx(frame.LengthOnBus);
+						this.FRxQueue.Add(frame);
+					}
+				}
+			}
 		}
 
-		public void ReceiveIncoming()
+		public int TxQueueSize
 		{
-			NativeFunctions.CAN_OBJ nativeFrame;
-			while (NativeFunctions.Receive(this.FDevice.DeviceType
-				, this.FDevice.DeviceIndex
-				, this.FChannelIndex
-				, out nativeFrame
-				, 1
-				, 0) == NativeFunctions.ECANStatus.STATUS_OK)
+			get
 			{
-				var frame = new Candle.Frame();
-				{
-					frame.Identifier = nativeFrame.ID;
-					frame.Extended = nativeFrame.ExternFlag == 1;
-					frame.RTR = nativeFrame.RemoteFlag == 1;
-					frame.Error = false; // Not sure how we get error frames
-
-					frame.Data = new byte[nativeFrame.DataLen];
-					Buffer.BlockCopy(nativeFrame.data, 0, frame.Data, 0, nativeFrame.DataLen);
-
-					frame.Timestamp = nativeFrame.TimeStamp;
-				}
-
-				this.IncrementRx(frame.LengthOnBus);
-				this.FRxQueue.Add(frame);
+				return this.FTxQueue.Count;
 			}
 		}
 	}
