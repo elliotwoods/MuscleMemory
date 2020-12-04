@@ -10,6 +10,17 @@ namespace TestApp
 	{
 		static UInt64 txCountTotal = 0;
 
+		static void Finalise(BusGroup busGroup)
+		{
+			busGroup.BlockUntilActionsComplete(new TimeSpan(0, 0, 10));
+			busGroup.Update();
+			var errors = busGroup.GetAllErrors();
+			foreach (var error in errors)
+			{
+				Console.WriteLine(error);
+			}
+		}
+
 		static void SendToAll(BusGroup busGroup, Messages.RegisterType registerType, int value, bool blocking)
 		{
 			var motors = busGroup.GetAllMotors();
@@ -17,6 +28,7 @@ namespace TestApp
 			{
 				motor.SetRegister(registerType, value, blocking);
 			}
+			Finalise(busGroup);
 		}
 
 		static void SendToAllPrimary(BusGroup busGroup, int value, bool blocking)
@@ -26,12 +38,14 @@ namespace TestApp
 			{
 				motor.SetPrimaryRegister(value, blocking);
 			}
+			Finalise(busGroup);
 		}
-
 
 
 		static void Main(string[] args)
 		{
+			GCAN.Initializer.RegisterDevices();
+
 			var busGroup = new BusGroup();
 
 			Console.WriteLine("Opening bus...");
@@ -39,7 +53,7 @@ namespace TestApp
 
 			// Refresh the motors (for debugging)
 			Console.WriteLine("Finding motors...");
-			busGroup.Refresh();
+			busGroup.Refresh(80);
 
 			// Print found motors
 			var foundMotors = busGroup.GetAllMotors();
@@ -47,6 +61,11 @@ namespace TestApp
 			foreach (var it in foundMotors)
 			{
 				Console.WriteLine("{0} : {1}", it.Key, it.Value);
+			}
+			if(foundMotors.Count == 0)
+			{
+				busGroup.Close();
+				return;
 			}
 
 			// Print gaps in ID range
@@ -75,31 +94,39 @@ namespace TestApp
 
 			// Perform movement N times
 			int N = 1000;
-			for(int n = 0; n<N; n++)
+			for (int n = 0; n < N; n++)
 			{
 				Console.WriteLine("Iteration {0}/{1}...", n, N);
 				int i = 0;
-				int limit = 1 << 10;
-				int amp = 13;
-				for (; i < limit; i++)
+				int limit = 1 << 21;
+				int step = 1 << 9;
+				for (; i < limit; i += step)
 				{
-					var pos = i << amp;
-					if(i % 4 == 0)
-					{
-						Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
-					}
-					SendToAllPrimary(busGroup, pos, false);
-					Thread.Sleep(10);
-				}
-				for (; i >= 0; i--)
-				{
-					var pos = i << amp;
+					var stepStart = DateTime.Now;
 					if (i % 4 == 0)
 					{
-						Console.WriteLine("Moving to {0}/{1}", pos, limit << amp);
+						Console.WriteLine("Moving to {0}/{1}", i, limit);
 					}
-					SendToAllPrimary(busGroup, pos, false);
-					Thread.Sleep(10);
+					SendToAllPrimary(busGroup, i, true);
+
+					var delayTime = 50 - (DateTime.Now - stepStart).TotalMilliseconds;
+					if(delayTime < 0)
+					{
+						Console.WriteLine("T");
+					}
+					else
+					{
+						Thread.Sleep((int) delayTime);
+					}
+				}
+				for (; i >= 0; i -= step)
+				{
+					if (i % 4 == 0)
+					{
+						Console.WriteLine("Moving to {0}/{1}", i, limit);
+					}
+					SendToAllPrimary(busGroup, i, true);
+					//Thread.Sleep(100);
 				}
 
 				Console.WriteLine("Wrote {0} messages total", txCountTotal);

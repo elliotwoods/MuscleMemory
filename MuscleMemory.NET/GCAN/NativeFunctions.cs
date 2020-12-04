@@ -110,20 +110,34 @@ namespace GCAN
 
 
 		[DllImport("ECANVCI64.dll", EntryPoint = "Transmit")]
-		public static extern ECANStatus Transmit(
+		public static extern UInt32 Transmit(
 			UInt32 DeviceType,
 			UInt32 DeviceInd,
 			UInt32 CANInd,
 			CAN_OBJ[] Send,
 			UInt16 length);
 
+		[DllImport("ECANVCI64.dll", EntryPoint = "GetReceiveNum")]
+		public static extern UInt32 GetReceiveNum(
+			UInt32 DeviceType,
+			UInt32 DeviceInd,
+			UInt32 CANInd);
 
 		[DllImport("ECANVCI64.dll", EntryPoint = "Receive")]
-		public static extern ECANStatus Receive(
+		public static extern UInt32 Receive(
 			UInt32 DeviceType,
 			UInt32 DeviceInd,
 			UInt32 CANInd,
 			out CAN_OBJ Receive,
+			UInt32 length,
+			UInt32 WaitTime);
+
+		[DllImport("ECANVCI64.dll", EntryPoint = "Receive")]
+		public static extern UInt32 ReceiveArray(
+			UInt32 DeviceType,
+			UInt32 DeviceInd,
+			UInt32 CANInd,
+			[Out] CAN_OBJ[] Data,
 			UInt32 length,
 			UInt32 WaitTime);
 
@@ -180,11 +194,11 @@ namespace GCAN
 						case 0x0020:
 							throw (new Exception("CAN receive register full"));
 						case 0x0040:
-							throw (new Exception("CAN receiv register overflow"));
+							throw (new Exception("CAN receive register overflow"));
 						case 0x0080:
 							throw (new Exception("CAN controller active error"));
 						default:
-							throw (new Exception("Unknown GCAN error"));
+							throw (new Exception(String.Format("Unknown GCAN error ({0})", errorInfo.ErrCode)));
 					}
 				}
 			}

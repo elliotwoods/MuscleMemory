@@ -110,8 +110,10 @@ namespace MuscleMemory
 				for (int i = 1; i <= maxIndex; i++)
 				{
 					var message = new Messages.Ping(i);
-					this.FChannel.Send(message.Encode(), true);
+					this.FChannel.Send(message.Encode());
 				}
+
+				this.Channel.Device.BlockUntilActionsComplete(new TimeSpan(0, 0, 5));
 			}
 			catch (Exception e)
 			{

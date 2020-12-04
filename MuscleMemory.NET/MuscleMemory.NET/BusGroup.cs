@@ -46,6 +46,7 @@ namespace MuscleMemory
 						Console.WriteLine(e);
 					}
 				}
+				this.FDevices.Add(device);
 			}
 		}
 
@@ -77,11 +78,11 @@ namespace MuscleMemory
 			}
 		}
 
-		public void BlockUntilActionsComplete()
+		public void BlockUntilActionsComplete(TimeSpan timeout)
 		{
 			Parallel.ForEach(this.FDevices, (device) =>
 			{
-				device.BlockUntilActionsComplete();
+				device.BlockUntilActionsComplete(timeout);
 			});
 		}
 
@@ -103,7 +104,12 @@ namespace MuscleMemory
 		// Update must be called regularly (e.g. once per mainloop frame)
 		public void Update()
 		{
-			foreach(var bus in this.FBuses)
+			foreach (var device in this.FDevices)
+			{
+				device.Update();
+			}
+
+			foreach (var bus in this.FBuses)
 			{
 				bus.Update();
 			}
@@ -116,7 +122,7 @@ namespace MuscleMemory
 				bus.SendRefresh(maxIndex);
 			});
 
-			// Allow time for responses (this doesn't seem to be necessary)
+			// Allow time for responses (this doesn't seem to be necessary many times)
 			Thread.Sleep(100);
 			this.Update();
 		}

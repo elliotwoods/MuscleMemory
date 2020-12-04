@@ -53,7 +53,7 @@ namespace VVVV.MuscleMemory
 		[Import()]
 		public ILogger FLogger;
 
-		BusGroup FBusGroup = new BusGroup();
+		BusGroup FBusGroup = null;
 
 		public void Dispose()
 		{
@@ -68,10 +68,15 @@ namespace VVVV.MuscleMemory
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			if(!FAlternativeDevicesRegistered)
+			if (!FAlternativeDevicesRegistered)
 			{
 				GCAN.Initializer.RegisterDevices();
 				FAlternativeDevicesRegistered = true;
+			}
+
+			if (this.FBusGroup == null)
+			{
+				this.FBusGroup = new BusGroup();
 			}
 
 			if (FInRestart[0] || FInBitrate.IsChanged)
@@ -82,6 +87,7 @@ namespace VVVV.MuscleMemory
 			if (!FBusGroup.IsOpen && FInEnabled[0])
 			{
 				this.FBusGroup.Open(this.FInBitrate[0]);
+				this.FBusGroup.Refresh();
 			}
 			else if(FBusGroup.IsOpen && !FInEnabled[0])
 			{
