@@ -10,35 +10,32 @@ namespace MuscleMemory
 {
 	public class Bus
 	{
-		Device FDevice;
+		Channel FChannel;
 		int FBitrate;
 		string FDevicePath;
-		Channel FChannel;
 		UInt32 FTimestamp = 0;
+		int FRxCountThisFrame = 0;
 		SortedDictionary<int, Motor> FMotors = new SortedDictionary<int, Motor>();
 
-		public Bus(Device device)
+		public Bus(Channel channel)
 		{
-			this.FDevice = device;
+			this.FChannel = channel;
 		}
 
 		~Bus()
 		{
-			this.Close();
+			this.Stop();
 		}
 
 		public void Update()
 		{
 			if (this.IsOpen)
 			{
-				this.FDevice.Perform(() =>
-				{
-					this.FTimestamp = this.FDevice.Timestamp;
-				});
-				this.FDevice.Update();
+				this.FTimestamp = this.FChannel.Device.Timestamp;
 
 				// Decode incoming messages
 				var frames = this.FChannel.Receive();
+				this.FRxCountThisFrame = frames.Count;
 				foreach(var frame in frames)
 				{
 					var message = Messages.Decode(frame);
@@ -80,27 +77,18 @@ namespace MuscleMemory
 			return motor;
 		}
 
-		public void Open(int bitrate)
+		public void Start(int bitrate)
 		{
 			this.FBitrate = bitrate;
-			this.FDevice.Open();
-			this.FDevicePath = this.FDevice.Path;
-
-			var channels = this.FDevice.Channels;
-			if (channels.Count != 1)
-			{
-				throw (new Exception("This library currently only supports devices with exactly 1 channel"));
-			}
-			this.FChannel = channels.Values.ToList()[0];
+			this.FDevicePath = this.FChannel.Device.Path;
 			this.FChannel.Start(bitrate);
 		}
 
-		public void Close()
+		public void Stop()
 		{
 			if(this.IsOpen)
 			{
 				this.FChannel.Stop();
-				this.FDevice.Close();
 				this.FChannel = null;
 			}
 		}
@@ -113,14 +101,21 @@ namespace MuscleMemory
 			}
 		}
 
-		public void SendRefresh()
+		public void SendRefresh(int maxIndex = Messages.MaxIndex)
 		{
 			this.FMotors.Clear();
 			// Send the request to all indexes
-			for (int i = 1; i < Messages.MaxIndex; i++)
+			try
 			{
-				var message = new Messages.Ping(i);
-				this.FChannel.Send(message.Encode(), true);
+				for (int i = 1; i <= maxIndex; i++)
+				{
+					var message = new Messages.Ping(i);
+					this.FChannel.Send(message.Encode(), true);
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
 			}
 		}
 
@@ -128,6 +123,14 @@ namespace MuscleMemory
 		{
 			var frame = message.Encode();
 			this.FChannel.Send(frame, blocking);
+		}
+
+		public Channel Channel
+		{
+			get
+			{
+				return this.FChannel;
+			}
 		}
 
 		public SortedDictionary<int, Motor> Motors
@@ -146,19 +149,19 @@ namespace MuscleMemory
 			}
 		}
 
-		public Device Device
-		{
-			get
-			{
-				return this.FDevice;
-			}
-		}
-
 		public double BusTraffic
 		{
 			get
 			{
-				return (double)(this.FDevice.RxBitsPerSecond + this.FDevice.TxBitsPerSecond) / (double)this.FBitrate;
+				return (double)(this.FChannel.RxBitsPerSecond + this.FChannel.TxBitsPerSecond) / (double)this.FBitrate;
+			}
+		}
+
+		public int RxCountThisFrame
+		{
+			get
+			{
+				return this.FRxCountThisFrame;
 			}
 		}
 
@@ -182,7 +185,7 @@ namespace MuscleMemory
 		{
 			get
 			{
-				return this.FDevice.ActionQueueSize;
+				return this.FChannel.Device.ActionQueueSize;
 			}
 		}
 

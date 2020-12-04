@@ -7,25 +7,26 @@ namespace TestApp
 {
 	class Program
 	{
-		static UInt64 txCountTotal = 0;
-
 		static void Main(string[] args)
 		{
+			UInt64 txCountTotal = 0;
+			UInt64 rxCountTotal = 0;
+
+			// Also get GCAN devices
+			GCAN.Initializer.RegisterDevices();
+
 			var busGroup = new BusGroup();
 
 			Console.WriteLine("Opening bus...");
 			busGroup.Open(500000);
 
-			// Refresh the motors (for debugging)
-			busGroup.Refresh();
-
-			if(busGroup.Buses.Count != 1)
+			if(busGroup.Buses.Count < 1)
 			{
-				throw (new Exception("Can only deal with exactly 1 bus"));
+				throw (new Exception("No buses found"));
 			}
 
 			var bus = busGroup.Buses[0];
-			Console.WriteLine("Timestamp : {0}", bus.Device.Timestamp);
+			Console.WriteLine("Timestamp : {0}", bus.Channel.Device.Timestamp);
 
 			// Disable Torque and enable screen (watch the screen to notice messaging)
 			Console.WriteLine("Setting up for run");
@@ -46,7 +47,7 @@ namespace TestApp
 					bus.Send(writeRequest, false);
 					txCountTotal += 1;
 
-					// Send to absent device 2
+					// Send to absent devices
 					for(int j=0; j<256; j++)
 					{
 						writeRequest.ID = 2;
@@ -56,8 +57,10 @@ namespace TestApp
 				}
 
 				busGroup.BlockUntilActionsComplete();
+				busGroup.Update();
+				rxCountTotal += (UInt64)bus.RxCountThisFrame;
 				
-				Console.WriteLine("Sent {0} messages", txCountTotal);
+				Console.WriteLine("Sent {0} frames. Received {1} frames", txCountTotal, rxCountTotal);
 			}
 			
 

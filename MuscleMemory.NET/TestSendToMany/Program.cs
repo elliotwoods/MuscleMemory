@@ -73,12 +73,6 @@ namespace TestApp
 			// Disable screen (movements are smoother)
 			SendToAll(busGroup, Messages.RegisterType.InterfaceEnabled, 0, true);
 
-			foreach (var bus in busGroup.Buses)
-			{
-				var deviceState = bus.Device.DeviceState;
-				Console.WriteLine(deviceState);
-			}
-
 			// Perform movement N times
 			int N = 1000;
 			for(int n = 0; n<N; n++)

@@ -9,15 +9,19 @@ namespace TestFindMotors
 	{
 		static void Main(string[] args)
 		{
-			// do the same as VVVV example
-			{
-				var busGroup = new BusGroup();
-				busGroup.Open(500000);
-				busGroup.Refresh();
-				var motors = busGroup.GetAllMotors();
-				Console.WriteLine("Found {0} motors", motors.Count);
-				busGroup.Close();
-			}
+			// Register GCAN
+			GCAN.Initializer.RegisterDevices();
+
+			//// do the same as VVVV example
+			//{
+			//	Console.WriteLine("First try");
+			//	var busGroup = new BusGroup();
+			//	busGroup.Open(500000);
+			//	busGroup.Refresh(80);
+			//	var motors = busGroup.GetAllMotors();
+			//	Console.WriteLine("Found {0} motors", motors.Count);
+			//	busGroup.Close();
+			//}
 
 			// do our actual program test
 			{
@@ -35,7 +39,7 @@ namespace TestFindMotors
 
 				Console.WriteLine("Finding motors");
 				Console.WriteLine();
-				busGroup.Refresh();
+				busGroup.Refresh(80);
 
 				// Print found motors
 				var foundMotors = busGroup.GetAllMotors();

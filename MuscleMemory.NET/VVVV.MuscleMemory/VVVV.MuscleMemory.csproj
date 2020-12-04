@@ -77,6 +77,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Candle.NET\Candle.NET\Candle.NET.csproj">
+      <Project>{f89ee8ac-c7c8-4528-897e-fda5e0baee70}</Project>
+      <Name>Candle.NET</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GCAN\GCAN.csproj">
+      <Project>{64e55d86-e129-42db-8516-4d982eda47fe}</Project>
+      <Name>GCAN</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MuscleMemory.NET\MuscleMemory.NET.csproj">
       <Project>{e9f61617-bbe4-4998-8a50-c1ddc587a544}</Project>
       <Name>MuscleMemory.NET</Name>
