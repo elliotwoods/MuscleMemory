@@ -20,6 +20,8 @@ namespace VVVV.MuscleMemory
 	#endregion PluginInfo
 	public class BusGroupNode : IPluginEvaluate, IDisposable
 	{
+		static bool FAlternativeDevicesRegistered = false;
+
 		#region fields & pins
 		[Input("Refresh", IsSingle = true, IsBang = true)]
 		public ISpread<bool> FInRefresh;
@@ -66,6 +68,12 @@ namespace VVVV.MuscleMemory
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
+			if(!FAlternativeDevicesRegistered)
+			{
+				GCAN.Initializer.RegisterDevices();
+				FAlternativeDevicesRegistered = true;
+			}
+
 			if (FInRestart[0] || FInBitrate.IsChanged)
 			{
 				this.FBusGroup.Close();

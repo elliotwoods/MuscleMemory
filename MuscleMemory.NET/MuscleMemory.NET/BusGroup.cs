@@ -9,6 +9,7 @@ namespace MuscleMemory
 	public class BusGroup
 	{
 		int FBitrate = 0;
+		List<Device> FDevices = null;
 		List<Bus> FBuses = null;
 
 		public BusGroup()
@@ -23,21 +24,27 @@ namespace MuscleMemory
 		public void Open(int bitrate)
 		{
 			this.Close();
+			this.FDevices = new List<Device>();
 			this.FBuses = new List<Bus>();
 			this.FBitrate = bitrate;
 			var devices = Device.ListDevices();
 			foreach(var device in devices)
 			{
-				try
+				device.Open();
+				var channels = device.Channels;
+				foreach (var channelIt in channels)
 				{
-					var bus = new Bus(device);
-					bus.Open(bitrate);
-					bus.SendRefresh();
-					this.FBuses.Add(bus);
-				}
-				catch(Exception e)
-				{
-					Console.WriteLine(e);
+					var channel = channelIt.Value;
+					try
+					{
+						var bus = new Bus(channel);
+						bus.Start(bitrate);
+						this.FBuses.Add(bus);
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine(e);
+					}
 				}
 			}
 		}
@@ -48,10 +55,17 @@ namespace MuscleMemory
 			{
 				foreach (var bus in this.FBuses)
 				{
-					bus.Close();
+					bus.Stop();
 				}
 				this.FBuses.Clear();
 				this.FBuses = null;
+
+				foreach(var device in this.FDevices)
+				{
+					device.Close();
+				}
+				this.FDevices.Clear();
+				this.FDevices = null;
 			}
 		}
 
@@ -65,9 +79,9 @@ namespace MuscleMemory
 
 		public void BlockUntilActionsComplete()
 		{
-			Parallel.ForEach(this.FBuses, (bus) =>
+			Parallel.ForEach(this.FDevices, (device) =>
 			{
-				bus.Device.BlockUntilActionsComplete();
+				device.BlockUntilActionsComplete();
 			});
 		}
 
@@ -79,9 +93,9 @@ namespace MuscleMemory
 		public List<Exception> GetAllErrors()
 		{
 			var errors = new List<Exception>();
-			foreach(var bus in this.FBuses)
+			foreach(var device in this.FDevices)
 			{
-				errors.AddRange(bus.Device.ReceiveErrors());
+				errors.AddRange(device.ReceiveErrors());
 			}
 			return errors;
 		}
@@ -95,11 +109,11 @@ namespace MuscleMemory
 			}
 		}
 
-		public void Refresh()
+		public void Refresh(int maxIndex = Messages.MaxIndex)
 		{
 			Parallel.ForEach(this.FBuses, (bus) =>
 			{
-				bus.SendRefresh();
+				bus.SendRefresh(maxIndex);
 			});
 
 			// Allow time for responses (this doesn't seem to be necessary)

@@ -17,20 +17,17 @@ namespace VVVV.MuscleMemory
 	public class PingMotorIDNode : IPluginEvaluate
 	{
 		#region fields & pins
-		[Input("Bus Group", IsSingle = true)]
-		public ISpread<BusGroup> FInBusGroup;
+		[Input("Bus")]
+		public ISpread<Bus> FInBus;
 
 		[Input("ID", DefaultValue = 1)]
-		public ISpread<int> FInID;
+		public ISpread<ISpread<int>> FInID;
 
 		[Input("Blind")]
-		public ISpread<bool> FInBlind;
+		public ISpread<ISpread<bool>> FInBlind;
 
 		[Input("Do", IsBang = true)]
-		public ISpread<bool> FInDo;
-
-		[Output("Bus Group")]
-		public ISpread<BusGroup> FOutBusGorup;
+		public ISpread<ISpread<bool>> FInDo;
 
 		[Import()]
 		public ILogger FLogger;
@@ -39,25 +36,32 @@ namespace VVVV.MuscleMemory
 		//called when data for any output pin is requested
 		public void Evaluate(int SpreadMax)
 		{
-			FOutBusGorup[0] = FInBusGroup[0];
-
-			if(FInBusGroup[0] == null)
+			for(int iBus=0; iBus < SpreadMax; iBus++)
 			{
-				return;
-			}
-
-			for(int i=0; i<SpreadMax; i++)
-			{
-				if(FInDo[i])
+				var bus = FInBus[iBus];
+				if(bus == null)
 				{
-					if (FInBlind[i])
+					continue;
+				}
+
+				for(int iID =0; iID< FInID[iBus].SliceCount; iID++)
+				{
+					if (FInDo[iBus][iID])
 					{
-						FInBusGroup[0].PingBlind(FInID[i]);
-					}
-					else
-					{
-						var motor = FInBusGroup[0].FindMotor(FInID[i]);
-						motor.Ping();
+						var ID = FInID[iBus][iID];
+
+						if (FInBlind[iBus][iID])
+						{
+							bus.Send(new Messages.Ping(ID), true);
+						}
+						else
+						{
+							var motors = bus.Motors;
+							if (motors.ContainsKey(ID))
+							{
+								motors[ID].Ping();
+							}
+						}
 					}
 				}
 			}
