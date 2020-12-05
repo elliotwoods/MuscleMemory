@@ -45,7 +45,7 @@ extern "C" {
 
 //#define AGENT_ENABLED
 #define PID_INSIDE_DRIVE_LOOP
-#define WEBSOCKETS_ENABLED
+//#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
@@ -67,6 +67,7 @@ Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
 Interface::SystemInfo systemInfo(ina219);
 Interface::CANResponder canResponder;
+
 Interface::WebSockets webSockets(encoderCalibration);
 
 auto splashScreen = std::make_shared<GUI::Panels::SplashScreen>();
@@ -108,9 +109,6 @@ initDevices()
 
 	// Initialise I2C
 	Devices::I2C::X().init();
-
-	// Init the registry
-	Registry::X();
 
 	// Initilaise the GUI
 	GUI::Controller::X().init(splashScreen);
@@ -375,6 +373,9 @@ initInterface()
 void
 setup()
 {
+	// Init the registry
+	Registry::X();
+	
 	initDevices();
 	initController();
 

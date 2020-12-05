@@ -47,11 +47,13 @@ namespace MuscleMemory
 			EncoderErrors = 22,
 			EncoderPositionFilterSize = 23,
 			MultiTurnSaveEnabled = 27,
+			ZeroPosSet = 28,
+			ZeroPos = 29,
 
 			// Power
 			Current = 30,
 			BusVoltage = 32,
-			ShuntVoltage = 33,
+			// ShuntVoltage = 33,
 
 			// System
 			FreeMemory = 40,

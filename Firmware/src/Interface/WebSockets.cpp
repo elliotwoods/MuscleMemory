@@ -5,7 +5,7 @@
 #include "Devices/WiFi.h"
 #include "WifiConfig.h"
 
-#define WEBSOCKETS_DEBUG
+// #define WEBSOCKETS_DEBUG
 
 //WebSocketsClient library conflicts with tensorflow
 // Since Wifi is a singleton, this is safe to keep it here
@@ -46,7 +46,7 @@ namespace Interface {
 		webSocketsClient.onEvent(webSocketEvent);
 
 		// If we fail to connect to websockets the first time, then don't try later
-		if(webSocketsClient.isConnected()) {
+		if(true || webSocketsClient.isConnected()) {
 			webSocketsClient.setReconnectInterval(5000);
 			this->initialised = true;
 			this->update();
