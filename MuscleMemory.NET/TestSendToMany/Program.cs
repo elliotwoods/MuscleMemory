@@ -99,7 +99,7 @@ namespace TestApp
 				Console.WriteLine("Iteration {0}/{1}...", n, N);
 				int i = 0;
 				int limit = 1 << 21;
-				int step = 1 << 9;
+				int step = 1 << 10;
 				for (; i < limit; i += step)
 				{
 					var stepStart = DateTime.Now;

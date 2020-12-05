@@ -28,6 +28,9 @@ namespace VVVV.MuscleMemory
 		[Output("Last Seen")]
 		public ISpread<string> FOutLastSeen;
 
+		[Output("Time Last Seen")]
+		public ISpread<double> FOutTimeSinceLastSeen;
+
 		[Output("Bus")]
 		public ISpread<Bus> FOutBus;
 
@@ -40,6 +43,7 @@ namespace VVVV.MuscleMemory
 		{
 			FOutID.SliceCount = 0;
 			FOutLastSeen.SliceCount = 0;
+			FOutTimeSinceLastSeen.SliceCount = 0;
 			FOutBus.SliceCount = 0;
 
 			foreach(var motor in FInput)
@@ -48,6 +52,7 @@ namespace VVVV.MuscleMemory
 				{
 					FOutID.Add(motor.ID);
 					FOutLastSeen.Add(motor.LastSeen.ToString());
+					FOutTimeSinceLastSeen.Add((DateTime.Now - motor.LastSeen).TotalSeconds);
 					FOutBus.Add(motor.Bus);
 				}
 			}
