@@ -7,6 +7,7 @@ namespace Control {
 	public:
 		static FilteredTarget & X();
 		void update(); // called from main loop
+		void clear();
 		void notifyTargetChange();
 		MultiTurnPosition getTargetFiltered(); // called from drive loop
 	private:

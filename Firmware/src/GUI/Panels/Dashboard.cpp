@@ -15,7 +15,7 @@ const u8g2_uint_t centerCircle[2] = {32, 32};
 const float markerRadiusMajor = 23;
 const float markerRadiusMinor = 18;
 const float notchRadiusOuter = 32.0f;
-const float rotationRange = 100 * 72 / 14;
+const float rotationRange = 100;
 
 #define MOD(a,b) ((((a)%(b))+(b))%(b))
 

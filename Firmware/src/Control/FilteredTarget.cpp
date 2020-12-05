@@ -31,6 +31,16 @@ namespace Control {
 	}
 
 	//----------
+	void
+	FilteredTarget::clear()
+	{
+		this->filterVelocity = 0;
+		this->targetChange = false;
+		this->priorTarget = getRegisterValue(Registry::RegisterType::TargetPosition);
+		this->priorTargetTimestamp = esp_timer_get_time();
+	}
+	
+	//----------
 	void IRAM_ATTR
 	FilteredTarget::notifyTargetChange()
 	{
