@@ -172,6 +172,7 @@ namespace Control {
 
 		// Align the size to 16 bytes
 		size_t saveDataSize = this->getSaveDataSize();
+		const auto lastEntryOffset = this->getWriteOffsetForLastEntry();
 
 		// Read first position, and if that fails, read last position
 		{
@@ -193,7 +194,7 @@ namespace Control {
 				if(DEBUG_MULTITURN) {
 					printf("[MultiTurn] First entry is not valid. Trying last one\n");
 				}
-				auto readPosition = this->getWriteOffsetForLastEntry();
+				auto readPosition = lastEntryOffset;
 				esp_partition_read(this->partition
 					, readPosition
 					, &loadedData
@@ -216,31 +217,25 @@ namespace Control {
 
 		// Read remaining positions if we got any data so far
 		if(anyLoaded) {
-			for(size_t readPosition=saveDataSize; readPosition<this->partition->size; readPosition += saveDataSize) {
-				if(DEBUG_MULTITURN) {
-					printf("[MultiTurn] Checking entry at (%" PRIu32 ")\n", readPosition);
-				}
-
+			for(size_t readPosition=saveDataSize; readPosition < lastEntryOffset; readPosition += saveDataSize) {
 				SaveData loadedData;
 				esp_partition_read(this->partition
 					, readPosition
 					, &loadedData
 					, saveDataSize);
 
+				const auto valid = loadedData.getCRC() == loadedData.storedCRC;
+
 				if(DEBUG_MULTITURN) {
-					printf("[MultiTurn] MT pos (%d), save sequence index (%" PRIu64 ")\n"
+					printf("[MultiTurn] Entry (%" PRIu32 "/%" PRIu32 ") : MT pos (%d), save sequence index (%" PRIu64 ") [%s]\n"
+						, readPosition / saveDataSize
+						, lastEntryOffset / saveDataSize
 						, loadedData.multiTurnPosition
-						, loadedData.saveSequenceIndex);
+						, loadedData.saveSequenceIndex
+						, valid ? "OK" : "FAILED CRC");
 				}
 
-				if(loadedData.getCRC() == loadedData.storedCRC) {
-					if(DEBUG_MULTITURN) {
-						printf("[MultiTurn] Entry %" PRIu32 " at readPosition (%" PRIu32 ") with saveSequenceIndex (%" PRIu64 ") and saved MultiTurn position (%" PRIi32 ") is valid\n"
-							, readPosition / saveDataSize
-							, readPosition
-							, loadedData.saveSequenceIndex
-							, loadedData.multiTurnPosition);
-					}
+				if(valid) {
 					if(loadedData.saveSequenceIndex > freshestData.saveSequenceIndex) {
 						freshestData = loadedData;
 						freshestReadPosition = readPosition;
@@ -261,7 +256,9 @@ namespace Control {
 			this->turns = this->implyTurns(freshestData.multiTurnPosition, currentSingleTurn);
 
 			if(DEBUG_MULTITURN) {
-				printf("[MultiTurn] Loaded multiturn data, turns (%d)\n", turns);
+				printf("[MultiTurn] Loaded multiturn data index (%d), turns (%d)\n"
+					, freshestReadPosition / saveDataSize
+					, turns);
 			}
 			return true;
 		}
