@@ -96,6 +96,18 @@
 		, 0
 		, 1
 	}},
+	{ RegisterType::ZeroPosSet, {
+		"ZeroPosSet"
+		, 0
+		, Access::ReadWrite
+		, 0
+		, 1
+	}},
+	{ RegisterType::ZeroPos, {
+		"ZeroPos"
+		, 0
+		, Access::ReadWrite
+	}},
 
 
 	{ RegisterType::Current, {
@@ -108,11 +120,11 @@
 		, 0
 		, Access::ReadOnly
 	}},
-	{ RegisterType::ShuntVoltage, {
-		"ShuntVoltage"
-		, 0
-		, Access::ReadOnly
-	}},
+	// { RegisterType::ShuntVoltage, {
+	// 	"ShuntVoltage"
+	// 	, 0
+	// 	, Access::ReadOnly
+	// }},
 
 	{ RegisterType::FreeMemory, {
 		"FreeMemory"

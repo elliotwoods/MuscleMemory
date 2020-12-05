@@ -20,6 +20,7 @@ namespace Control {
 		void init(SingleTurnPosition);
 		void driveLoopUpdate(SingleTurnPosition);
 		void mainLoopUpdate();
+		MultiTurnPosition getMultiTurnPositionNoOffset() const;
 		MultiTurnPosition getMultiTurnPosition() const;
 
 		void saveSession();
@@ -33,6 +34,8 @@ namespace Control {
 		EncoderCalibration & encoderCalibration;
 		SingleTurnPosition priorSingleTurnPosition = 0;
 		Turns turns = 0;
+		volatile MultiTurnPosition zeroOffset = 0;
+		volatile MultiTurnPosition positionNoOffset = 0;
 		volatile MultiTurnPosition position = 0;
 		
 		SaveData saveData;

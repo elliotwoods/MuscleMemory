@@ -1,5 +1,6 @@
 #include "MultiTurn.h"
 #include "GUI/Controller.h"
+#include "Control/FilteredTarget.h"
 #include "Registry.h"
 
 #include "esp_task_wdt.h"
@@ -60,6 +61,7 @@ namespace Control {
 			this->formatPartition();
 		}
 
+		this->zeroOffset = getRegisterValue(Registry::RegisterType::ZeroPos);
 		this->driveLoopUpdate(singleTurnPosition);
 	}
 
@@ -67,15 +69,19 @@ namespace Control {
 	void IRAM_ATTR
 	MultiTurn::driveLoopUpdate(SingleTurnPosition currentSingleTurnPosition)
 	{
-		if(this->priorSingleTurnPosition > HALF_WAY / 2 * 3 && currentSingleTurnPosition < HALF_WAY / 2)
+		const SingleTurnPosition OneQuarter = HALF_WAY / 2;
+		const SingleTurnPosition ThreeQuarters = HALF_WAY / 2 * 3;
+
+		if(this->priorSingleTurnPosition > ThreeQuarters && currentSingleTurnPosition < OneQuarter)
 		{
 			this->turns++;
 		}
-		else if(this->priorSingleTurnPosition < HALF_WAY / 2 && currentSingleTurnPosition > HALF_WAY / 2 * 3)
+		else if(this->priorSingleTurnPosition < OneQuarter && currentSingleTurnPosition > ThreeQuarters)
 		{
 			this->turns--;
 		}
-		this->position = (((int32_t) this->turns) << 14) + (int32_t) currentSingleTurnPosition;
+		this->positionNoOffset = (((int32_t) this->turns) << 14) + (int32_t) currentSingleTurnPosition;
+		this->position = this->positionNoOffset - this->zeroOffset;;
 		this->priorSingleTurnPosition = currentSingleTurnPosition;
 	}
 	
@@ -83,12 +89,34 @@ namespace Control {
 	void
 	MultiTurn::mainLoopUpdate()
 	{
+		// Cache value from registry for drive loop
+		this->zeroOffset = getRegisterValue(Registry::RegisterType::ZeroPos);
+
+		if(getRegisterValue(Registry::RegisterType::ZeroPosSet) == 1) {
+			// Disable control mode whilst setting
+			auto controlMode = getRegisterValue(Registry::RegisterType::ControlMode);
+			setRegisterValue(Registry::RegisterType::ControlMode, 0);
+			{
+				// Save the new zero offset
+				setRegisterValue(Registry::RegisterType::ZeroPos, this->getMultiTurnPositionNoOffset());
+				Registry::X().saveDefault(Registry::RegisterType::ZeroPos);
+
+				setRegisterValue(Registry::RegisterType::ZeroPosSet, 0);
+
+				setRegisterValue(Registry::RegisterType::TargetPosition, 0);
+
+				// Set position filter velocity to zero
+				Control::FilteredTarget::X().clear();
+			}
+			setRegisterValue(Registry::RegisterType::ControlMode, controlMode);
+			
+		}
+
 		if(getRegisterValue(Registry::RegisterType::MultiTurnSaveEnabled) == 1) {
 			// If our saveData implies a different number of turns than our actual number of turns
 			// (when loaded with our current encoder reading being active)
 			{
-				auto mtPosition = this->getMultiTurnPosition();
-				auto stPosition = MOD(mtPosition, 1 << 14);
+				auto stPosition = this->priorSingleTurnPosition;
 				auto closestTurn = this->implyTurns(this->saveData.multiTurnPosition, stPosition);
 				if(closestTurn != this->turns) {
 					if(DEBUG_MULTITURN) {
@@ -104,7 +132,13 @@ namespace Control {
 				}
 			}
 		}
-		
+	}
+
+	//-----------
+	int32_t IRAM_ATTR
+	MultiTurn::getMultiTurnPositionNoOffset() const
+	{
+		return this->positionNoOffset;
 	}
 
 	//-----------
@@ -118,7 +152,7 @@ namespace Control {
 	void
 	MultiTurn::saveSession()
 	{
-		this->saveData.multiTurnPosition = position;
+		this->saveData.multiTurnPosition = this->positionNoOffset;
 		this->saveData.saveSequenceIndex++;
 
 		// Create the checksum
@@ -163,8 +197,6 @@ namespace Control {
 	bool
 	MultiTurn::loadSession(SingleTurnPosition currentSingleTurn)
 	{
-		// We keep 2 files in case one becomes corrupted
-
 		SaveData freshestData;
 		size_t freshestReadPosition;
 
