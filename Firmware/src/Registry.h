@@ -46,7 +46,7 @@ public:
 		// Power
 		Current = 30,
 		BusVoltage = 32,
-		// ShuntVoltage = 33,
+		ShuntVoltage = 33,
 
 		// System
 		FreeMemory = 40,
@@ -214,6 +214,7 @@ public:
 private:
 	Registry();
 	~Registry();
+	void init();
 public:
 	void update();
 
