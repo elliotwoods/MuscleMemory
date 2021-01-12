@@ -122,8 +122,15 @@ namespace MuscleMemory
 				bus.SendRefresh(maxIndex);
 			});
 
-			// Allow time for responses (this doesn't seem to be necessary many times)
-			Thread.Sleep(100);
+			// Allow time for devices to respond
+			Thread.Sleep(1000);
+
+			// Flush device queues
+			Parallel.ForEach(this.FDevices, (device) =>
+			{
+				device.BlockUntilActionsComplete(new TimeSpan(0, 0, 0, 10));
+			});
+
 			this.Update();
 		}
 
