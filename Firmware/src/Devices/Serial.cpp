@@ -1,12 +1,5 @@
 #include "Serial.h"
-
-#ifdef ARDUINO
-	#define TX_PIN GPIO_NUM_1
-	#define RX_PIN GPIO_NUM_2
-#else
-	#define TX_PIN 1
-	#define RX_PIN 2
-#endif
+#include "Platform/Platform.h"
 
 namespace Devices {
 	//---------
@@ -40,8 +33,8 @@ namespace Devices {
 
 		{
 			auto result = uart_set_pin(port
-				, TX_PIN
-				, RX_PIN
+				, MM_CONFIG_SERIAL_PIN_TX
+				, MM_CONFIG_SERIAL_PIN_RX
 				, UART_PIN_NO_CHANGE
 				, UART_PIN_NO_CHANGE);
 			ESP_ERROR_CHECK(result);

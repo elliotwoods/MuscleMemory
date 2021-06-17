@@ -1,5 +1,6 @@
 #include "MotorDriver.h"
 #include "Registry.h"
+#include "Platform/Platform.h"
 
 #ifdef ARDUINO
 	#define DAC_A DAC_GPIO25_CHANNEL
@@ -13,13 +14,13 @@ namespace Devices {
 	//----------
 	MotorDriver::Configuration::Configuration()
 	{
-		this->coilPins.coil_A_positive = GPIO_NUM_32;
-		this->coilPins.coil_B_positive = GPIO_NUM_14;
-		this->coilPins.coil_A_negative = GPIO_NUM_33;
-		this->coilPins.coil_B_negative = GPIO_NUM_27;
+		this->coilPins.coil_A_positive = MM_CONFIG_MOTOR_DRIVER_PIN_A_POSITIVE;
+		this->coilPins.coil_B_positive = MM_CONFIG_MOTOR_DRIVER_PIN_B_POSITIVE;
+		this->coilPins.coil_A_negative = MM_CONFIG_MOTOR_DRIVER_PIN_A_NEGATIVE;
+		this->coilPins.coil_B_negative = MM_CONFIG_MOTOR_DRIVER_PIN_B_NEGATIVE;
 
-		this->vrefDacs.A = DAC_A;
-		this->vrefDacs.B = DAC_B;
+		this->vrefDacs.A = MM_CONFIG_MOTOR_DRIVER_DAC_A;
+		this->vrefDacs.B = MM_CONFIG_MOTOR_DRIVER_DAC_B;
 	}
 
 	//----------
@@ -75,7 +76,6 @@ namespace Devices {
 
 		int8_t coil_A;
 		int8_t coil_B;
-
 
 		if(driveOffset != 64) {
 			// Full math version

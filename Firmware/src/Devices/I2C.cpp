@@ -1,5 +1,6 @@
 #include "I2C.h"
 #include "driver/i2c.h"
+#include "Platform/Platform.h"
 
 #ifdef ARDUINO
 	#define I2C_PORT i2c_port_t::I2C_NUM_0
@@ -24,8 +25,8 @@ namespace Devices {
 		i2c_config_t busConfiguration;
 		{
 			busConfiguration.mode = i2c_mode_t::I2C_MODE_MASTER;
-			busConfiguration.scl_io_num = GPIO_NUM_15;
-			busConfiguration.sda_io_num = GPIO_NUM_4;
+			busConfiguration.scl_io_num = MM_CONFIG_I2C_PIN_SCL;
+			busConfiguration.sda_io_num = MM_CONFIG_I2C_PIN_SDA;
 			busConfiguration.scl_pullup_en = gpio_pullup_t::GPIO_PULLUP_ENABLE;
 			busConfiguration.sda_pullup_en = gpio_pullup_t::GPIO_PULLUP_ENABLE;
 			busConfiguration.master.clk_speed = 1000000;

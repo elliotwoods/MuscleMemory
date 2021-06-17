@@ -44,8 +44,8 @@ extern "C" {
 }
 
 //#define AGENT_ENABLED
-#define PID_INSIDE_DRIVE_LOOP
-//#define WEBSOCKETS_ENABLED
+#define CONTROL_INSIDE_DRIVE_LOOP
+#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
@@ -107,6 +107,8 @@ initDevices()
 		Serial.begin(115200);
 	}
 
+	printf("BOOT\n");
+
 	// Initialise I2C
 	Devices::I2C::X().init();
 
@@ -159,10 +161,17 @@ void
 motorTask(void*)
 {
 	while(true) {
-#ifdef PID_INSIDE_DRIVE_LOOP
-		if(getRegisterValue(Registry::RegisterType::ControlMode) == 1) {
+#ifdef CONTROL_INSIDE_DRIVE_LOOP
+		const auto & controlMode = getRegisterValue(Registry::RegisterType::ControlMode);
+		if(controlMode == 1) {
 			pid.update();
 		}
+#ifdef AGENT_ENABLED
+		else if(controlMode == 2) {
+			agent.update();
+		}
+#endif
+		
 #endif
 		drive.update();
 	}
@@ -175,10 +184,8 @@ agentTask(void*)
 	while(true) {
 		switch(getRegisterValue(Registry::RegisterType::ControlMode)) {
 			case 1:
-#ifndef PID_INSIDE_DRIVE_LOOP
 				// This needs cleaning up
 				pid.update();
-#endif
 				break;
 #ifdef AGENT_ENABLED
 			case 2:
@@ -293,7 +300,7 @@ initController()
 		, NULL
 		, 1);
 
-#if !defined(PID_INSIDE_DRIVE_LOOP) || defined(AGENT_ENABLED)
+#if !defined(CONTROL_INSIDE_DRIVE_LOOP)
 	xTaskCreatePinnedToCore(agentTask
 		, "Agent"
 		, 1024 * 8

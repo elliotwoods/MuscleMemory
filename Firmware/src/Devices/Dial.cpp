@@ -46,10 +46,6 @@ namespace Devices
 		pcnt_counter_pause(this->pcntUnit);
 		pcnt_counter_clear(this->pcntUnit);
 
-		// Register ISR handler and enable interrupts for PCNT unit
-		//pcnt_isr_register(pcnt_example_intr_handler, NULL, 0, &user_isr_handle);
-		//pcnt_intr_enable(PCNT_TEST_UNIT);
-
 		// Everything is set up, now go to counting
 		pcnt_counter_resume(this->pcntUnit);
 	}

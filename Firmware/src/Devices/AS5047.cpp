@@ -1,11 +1,6 @@
 #include "AS5047.h"
 #include "Arduino.h"
-
-#define SPI_HOST VSPI_HOST
-
-#define MOSI_PIN GPIO_NUM_23
-#define MISO_PIN GPIO_NUM_19
-#define CLK_PIN GPIO_NUM_18
+#include "Platform/Platform.h"
 
 // Reference : https://github.com/espressif/esp-idf/blob/master/examples/peripherals/spi_master/lcd/main/spi_master_example_main.c
 // We're on VSPI, Phase=1, MSB first
@@ -19,16 +14,16 @@ namespace Devices {
 		{
 			spi_bus_config_t busConfiguration = {0};
 			{
-				busConfiguration.mosi_io_num = MOSI_PIN;
-				busConfiguration.miso_io_num = MISO_PIN;
-				busConfiguration.sclk_io_num = CLK_PIN;
+				busConfiguration.mosi_io_num = MM_CONFIG_SPI_PIN_MOSI;
+				busConfiguration.miso_io_num = MM_CONFIG_SPI_PIN_MISO;
+				busConfiguration.sclk_io_num = MM_CONFIG_SPI_PIN_CLK;
 				busConfiguration.quadwp_io_num = -1;
 				busConfiguration.quadhd_io_num = -1;
 			}
 
-			auto result = spi_bus_initialize(SPI_HOST
+			auto result = spi_bus_initialize(MM_CONFIG_SPI_HOST
 				, &busConfiguration
-				, SPI_HOST);
+				, MM_CONFIG_SPI_HOST);
 			ESP_ERROR_CHECK(result);
 		}
 
@@ -39,12 +34,12 @@ namespace Devices {
 			{
 				deviceConfiguration.mode = 1;
 
-				deviceConfiguration.clock_speed_hz = SPI_MASTER_FREQ_16M;
+				deviceConfiguration.clock_speed_hz = MM_CONFIG_SPI_SPEED;
 				//deviceConfiguration.input_delay_ns = 10;
 				
 				deviceConfiguration.queue_size = 2;
 
-				deviceConfiguration.spics_io_num = GPIO_NUM_5;
+				deviceConfiguration.spics_io_num = MM_CONFIG_AS5047_CS;
 				deviceConfiguration.cs_ena_pretrans = 2;
 				deviceConfiguration.cs_ena_posttrans = 2;
 

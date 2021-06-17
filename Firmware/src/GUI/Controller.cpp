@@ -1,6 +1,7 @@
 #include "Controller.h"
 #include "U8G2HAL.h"
 #include "Registry.h"
+#include "Platform/Platform.h"
 
 namespace GUI {
 	//----------
@@ -21,15 +22,17 @@ namespace GUI {
 				, U8G2_R0
 				, u8g2_byte_hw_i2c_esp32
 				, u8g2_gpio_and_delay_esp32);
-			u8x8_SetPin(this->u8g2.getU8x8(), U8X8_PIN_RESET, GPIO_NUM_16);
+#ifdef MM_CONFIG_OLED_RESET_ENABLED
+			u8x8_SetPin(this->u8g2.getU8x8(), U8X8_PIN_RESET, MM_CONFIG_OLED_PIN_RESET);
+#endif
 			u8x8_SetI2CAddress(this->u8g2.getU8x8(), 0x3c);
 			this->u8g2.begin();
 		}
 
 		// Initialise the dial
 		{
-			this->dial.init(GPIO_DIAL_A, GPIO_DIAL_B);
-			gpio_set_direction(GPIO_DIAL_BUTTON, gpio_mode_t::GPIO_MODE_INPUT);
+			this->dial.init(MM_CONFIG_DIAL_PIN_A, MM_CONFIG_DIAL_PIN_B);
+			gpio_set_direction(MM_CONFIG_DIAL_PIN_BUTTON, gpio_mode_t::GPIO_MODE_INPUT);
 			this->priorDialPosition = this->dial.getPosition();
 		}
 
@@ -120,7 +123,7 @@ namespace GUI {
 	bool
 	Controller::isDialButtonPressed() const
 	{
-		return gpio_get_level(GPIO_DIAL_BUTTON) == 0;
+		return gpio_get_level(MM_CONFIG_DIAL_PIN_BUTTON) == 0;
 	}
 
 	//----------

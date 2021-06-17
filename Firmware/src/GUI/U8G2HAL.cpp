@@ -2,6 +2,7 @@
 #include "../Devices/I2C.h"
 #include "driver/i2c.h"
 #include "driver/gpio.h"
+#include "Platform/Platform.h"
 
 // reference : https://github.com/nkolban/esp32-snippets/blob/master/hardware/displays/U8G2/u8g2_esp32_hal.c
 
@@ -9,8 +10,12 @@
 
 i2c_cmd_handle_t i2c_cmd;
 
+#ifndef MM_CONFIG_OLED_RESET_ENABLED
+	#define MM_CONFIG_OLED_PIN_RESET U8G2_ESP32_HAL_UNDEFINED
+#endif
+
 struct {
-	gpio_num_t reset = GPIO_NUM_16;
+	gpio_num_t reset = MM_CONFIG_OLED_PIN_RESET;
 	gpio_num_t dc = U8G2_ESP32_HAL_UNDEFINED;
 } u8g2_esp32_hal; // Configuration
 

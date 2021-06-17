@@ -5,10 +5,6 @@
 #include <memory>
 #include <vector>
 
-#define GPIO_DIAL_A GPIO_NUM_34
-#define GPIO_DIAL_B GPIO_NUM_35
-#define GPIO_DIAL_BUTTON GPIO_NUM_39
-
 namespace GUI {
 	class Controller {
 	public:
