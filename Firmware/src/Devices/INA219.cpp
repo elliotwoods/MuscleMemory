@@ -1,7 +1,7 @@
 #include "INA219.h"
 #include "I2C.h"
 
-//#define DEBUG_INA219
+//#define DEBUG_CURRENT_SENSOR
 
 namespace Devices {
 	//---------
@@ -135,7 +135,7 @@ namespace Devices {
 		}
 
 		this->writeRegister(Register::Configuration, value);
-#ifdef DEBUG_INA219
+#ifdef DEBUG_CURRENT_SENSOR
 		printf("Configuration set to : %#04x\n", value);
 		printf("Read back : %#04x\n", this->readRegister(Register::Configuration));
 #endif
@@ -150,7 +150,7 @@ namespace Devices {
 
 		this->writeRegister(Register::Calibration, value);
 
-#ifdef DEBUG_INA219
+#ifdef DEBUG_CURRENT_SENSOR
 		printf("currentLSB : %f\n", this->currentLSB);
 		printf("shuntValue : %f\n", this->configuration.shuntValue);
 		printf("Calibration set to : %#04x\n", value);

@@ -46,7 +46,7 @@ namespace Devices {
 				deviceConfiguration.input_delay_ns = 51;
 			};
 
-			auto result = spi_bus_add_device(SPI_HOST
+			auto result = spi_bus_add_device(MM_CONFIG_SPI_HOST
 				, &deviceConfiguration
 				, &this->deviceHandle);
 			ESP_ERROR_CHECK(result);

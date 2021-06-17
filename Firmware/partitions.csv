@@ -1,9 +1,25 @@
-# Name,		Type,	SubType,	Offset,		Size,	Flags
-nvs,		data,	nvs,		0x9000, 	0x5000,
-otadata,	data,	ota,		0xe000,		0x2000,
-app0,		app,	ota_0,		,			0x200000,
-app1,		app,	ota_1,		,			0x200000,
-appdata,	data,	fat,		,			0x400000,
-multiturn,	0x40,	0x00,		,			0x400000,
+# Uncomment the section appropriate for your Muscle Memory version
+
+# parition table for MMv2:
+# Name,		Type,	SubType,	Offset,		Size,	Flag
+# nvs,		data,	nvs,		0x9000, 	0x5000,
+# otadata,	data,	ota,		0xe000,		0x2000,
+# app0,		app,	ota_0,		,			0x200000,
+# app1,		app,	ota_1,		,			0x200000,
+# appdata,	data,	fat,		,			0x400000,
+# multiturn,	0x40,	0x00,		,			0x400000,
+
+
+# partition table for MMv3
+# Name,		Type,	SubType,	Offset,		Size,	Flag
+nvs,		data,	nvs,		0x9000, 	4k,
+otadata,	data,	ota,		,			8k,
+app0,		app,	ota_0,		,			1728k,
+app1,		app,	ota_1,		,			1728k,
+appdata,	data,	fat,		,			528k,
+
+
 
 # to create/use ffat, see https://github.com/marcmerlin/esp32_fatfsima
+# minimum FAT size is 132*4096 = 528k
+# app partitions must be 64k aligned
