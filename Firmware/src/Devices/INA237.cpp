@@ -113,6 +113,7 @@ namespace Devices {
 	void
 	INA237::reset()
 	{
+		// Set the reset bit
 		this->writeRegister(Register::Configuration, 0xF000);
 	}
 
@@ -156,29 +157,6 @@ namespace Devices {
 		printf("Calibration set to : %#04x\n", value);
 		printf("Read back : %#04x\n", this->readRegister(Register::Calibration));
 #endif
-	}
-
-	//---------
-	void
-	INA237::calculateGain()
-	{
-		auto maximumShuntVoltage = this->configuration.maximumCurrent * this->configuration.shuntValue;
-		if (maximumShuntVoltage < 40e-3)
-		{
-			this->configuration.gain = Configuration::Gain_1_Range_40mV;
-		}
-		else if (maximumShuntVoltage < 80e-3)
-		{
-			this->configuration.gain = Configuration::Gain_2_Range_80mV;
-		}
-		else if (maximumShuntVoltage <= 160e-3)
-		{
-			this->configuration.gain = Configuration::Gain_4_Range_160mV;
-		}
-		else
-		{
-			this->configuration.gain = Configuration::Gain_8_Range_320mV;
-		}
 	}
 
 	//---------
