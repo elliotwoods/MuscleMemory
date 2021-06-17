@@ -9,12 +9,26 @@ namespace Devices {
 	public:
 		enum class Register
 		{
-			Configuration = 0x00,
-			ShuntVoltage = 0x01,
-			BusVoltage = 0x02,
-			Power = 0x03,
-			Current = 0x04,
-			Calibration = 0x05
+			Configuration = 0x0,
+			ADCConfiguration = 0x2,
+			ShuntCalibration = 0x3,
+			
+			ShuntVoltage = 0x4,
+			BusVoltage = 0x5,
+			Temperature = 0x6,
+			Current = 0x7,
+			Power = 0x8,
+
+			DiagnosticFlags = 0xB,
+			ShuntOvervoltageThreshold = 0xC,
+			ShuntUndervoltageThreshold = 0xD,
+			BusOvervoltageThreshold = 0xE,
+			BusUndervoltageThreshold = 0xF,
+			TemperatureLimit = 0x10,
+			PowerLimit = 0x11,
+
+			ManufacturerID = 0x3E,
+			DeviceID = 0x3F
 		};
 
 		struct Configuration
@@ -22,79 +36,98 @@ namespace Devices {
 			Configuration() {
 				
 			}
-
-			enum VoltageRange : uint8_t
+			enum ConversionDelay : uint8_t
 			{
-				From_0_to_16V = 0,
-				From_0_to_32V = 1
-			};
+				ConversionDelay_0s = 0x0,
+				ConversionDelay_2ms = 0x1,
+				ConversionDelay_510ms = 0xFF
+			}
 
-			enum Gain : uint8_t
+			enum ShuntRange : uint8_t
 			{
-				Gain_1_Range_40mV = 0,
-				Gain_2_Range_80mV = 1,
-				Gain_4_Range_160mV = 2,
-				Gain_8_Range_320mV = 3
-
-				,
-				Gain_Auto = 8
-			};
-
-			enum ADCResolution : uint8_t
-			{
-				Resolution9bit_84us = 0,
-				Resolution10bit_148us = 1,
-				Resolution11bit_276us = 2,
-				Resolution12bit_532us = 3,
-				Resolution12bit_532us_2 = 8
-
-				,
-				Samples2_1_06ms = 9 // 1.06ms, etc
-				,
-				Samples4_2_13ms = 10,
-				Samples8_4_26ms = 11,
-				Samples16_8_51ms = 12,
-				Samples32_17_02ms = 13,
-				Samples64_34_05ms = 14,
-				Samples128_68_10ms = 15
+				ShuntRange_163_84mV = 0,
+				ShuntRange_40_96mV = 1
 			};
 
 			enum OperatingMode : uint8_t
 			{
-				PowerDown = 0,
-				ShuntVoltageTriggered = 1,
-				BusVoltageTriggered = 2,
-				ShuntAndBusTriggered = 3
+				Shutdown = 0x0,
+				Triggered_BusVoltage = 0x1,
+				Triggered_ShuntVoltage = 0x2,
+				Triggered_ShuntAndBusVoltage = 0x3,
+				Triggered_Temperature = 0x4,
+				Triggered_TemperatureAndBusVoltage = 0x5,
+				Triggered_TemperatureAndShuntVoltage = 0x6,
+				Triggered_TemperatureAndBusAndShuntVoltage = 0x7,
 
-				,
-				ADCOff = 4
+				Shutdown2 = 0x8,
 
-				,
-				ShuntVoltageContinuous = 5,
-				BusVoltageContinuous = 6,
-				ShuntAndBusContinuous = 7
+				Continuous_BusVoltage = 0x9,
+				Continuous_ShuntVoltage = 0xA,
+				Continuous_ShuntAndBusVoltage = 0xB,
+				Continuous_Temperature = 0xC,
+				Continuous_TemperatureAndBusVoltage = 0xD,
+				Continuous_TemperatureAndShuntVoltage = 0xE,
+				Continuous_TemperatureAndBusAndShuntVoltage = 0xF
+			};
+
+			enum ConversionTime : uint8_t
+			{
+				Conversion_50us = 0,
+				Conversion_84us = 1,
+				Conversion_150us = 2,
+				Conversion_280us = 3,
+				Conversion_540us = 4,
+				Conversion_1052us = 5,
+				Conversion_2074us = 6,
+				Conversion_4120us = 7
+			};
+
+			enum SampleCount : uint8_t
+			{
+				SampleCount_1 = 0,
+				SampleCount_4 = 1,
+				SampleCount_16 = 2,
+				SampleCount_64 = 3,
+				SampleCount_128 = 4,
+				SampleCount_256 = 5,
+				SampleCount_512 = 6,
+				SampleCount_1024 = 7
 			};
 
 			uint8_t address = 0b1000000;
 
-			VoltageRange voltageRange = VoltageRange::From_0_to_32V;
-			Gain gain = Gain::Gain_Auto;
-			ADCResolution currentResolution = ADCResolution::Samples128_68_10ms;
-			ADCResolution busVoltageResolution = ADCResolution::Samples128_68_10ms;
-			OperatingMode operatingMode = OperatingMode::ShuntAndBusContinuous;
+			ShuntRange shuntRange = ShuntRange::ShuntRange_163_84mV;
+			OperatingMode operatingMode = OperatingMode::Continuous_TemperatureAndBusAndShuntVoltage;
+			ConversionTime busVoltageConversionTime = ConversionTime::Conversion_150us;
+			ConversionTime shuntVoltageConversionTime = ConversionTime::Conversion_150us;
+			ConversionTime temperatureConversionTime = ConversionTime::Conversion_150us;
+			SampleCount sampleCount = SampleCount::SampleCount_64;
 
-			// Shunt resistor value in Ohms
-			float shuntValue = 5e-3;
+			// Shunt resistor value in Ohms (2 * 33mOhm in parallel for MMv3)
+			float shuntValue = 16.5e-3;
 
-			// Maximum expected current in Amps. This is used to calculate the current LSB readback and gain values
-			// Note if this value is too small, then we get an overflow in the calibration register (e.g. 2A is too low with a 5mOhm shunt)
+			// For our own reference
 			float maximumCurrent = 8;
 		};
 
-		enum Errors : uint8_t
+		enum DiagnosticFlags : uint16_t
 		{
-			Overflow,
-			NoAcknowledge
+			AlertLatchEnable = 1 << 15,
+			ConversionReady = 1 << 13,
+			AlertOnAveragedValue = 1 << 13,
+			AlertPolarity = 1 << 12,
+
+			OverflowError = 1 << 9,
+			
+			TemperatureHighAlert = 1 << 7,
+			ShuntVoltageHighAlert = 1 << 6,
+			ShuntVoltageLowAlert = 1 << 5,
+			BusVoltageHighAlert = 1 << 4,
+			BusVoltageLowAlert = 1 << 3,
+			PowerHighAlert = 1 << 2,
+			ConversionCompleted = 1 << 1,
+			MemoryChecksumError = 1 << 0
 		};
 
 		INA237();
@@ -116,13 +149,11 @@ namespace Devices {
 		void setConfiguration();
 		void setCalibration();
 
-		void calculateGain();
 		Configuration configuration;
 
-		uint8_t errors = 0;
+		uint16_t errors = 0;
 
 		// Cached inside setCalibration() method
 		float currentLSB;
 	};
-
 }
