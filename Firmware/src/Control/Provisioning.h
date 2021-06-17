@@ -2,7 +2,7 @@
 
 #include "EncoderCalibration.h"
 #include "../Devices/MotorDriver.h"
-#include "../Devices/INA219.h"
+#include "../Devices/CurrentSensor.h"
 #include "../Devices/AS5047.h"
 #include "../Devices/FileSystem.h"
 
@@ -13,7 +13,7 @@ namespace Control {
 	class Provisioning {
 	public:
 		Provisioning(Devices::MotorDriver &
-			, Devices::INA219 &
+			, Devices::CurrentSensor &
 			, Devices::AS5047 &
 			, Devices::FileSystem &
 			, EncoderCalibration &
@@ -37,7 +37,7 @@ namespace Control {
 		};
 
 		Devices::MotorDriver & motorDriver;
-		Devices::INA219 & ina219;
+		Devices::CurrentSensor & currentSensor;
 		Devices::AS5047 & as5047;
 		Devices::FileSystem & fileSystem;
 		

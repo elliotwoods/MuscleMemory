@@ -1,6 +1,6 @@
 #include "Provisioning.h"
 #include "GUI/Controller.h"
-#include "Devices/INA219.h"
+#include "Devices/CurrentSensor.h"
 #include "GUI/Panels/Options.h"
 #include "Registry.h"
 
@@ -42,14 +42,14 @@ namespace Control
 {
 	//----------
 	Provisioning::Provisioning(Devices::MotorDriver &motorDriver
-		, Devices::INA219 &ina219
+		, Devices::CurrentSensor &currentSensor
 		, Devices::AS5047 &as5047
 		, Devices::FileSystem &fileSystem
 		, EncoderCalibration &encoderCalibration
 		, Interface::CANResponder &canResponder
 		, Interface::WebSockets &webSockets)
 	: motorDriver(motorDriver)
-	, ina219(ina219)
+	, currentSensor(currentSensor)
 	, as5047(as5047)
 	, fileSystem(fileSystem)
 	, encoderCalibration(encoderCalibration)
@@ -95,6 +95,7 @@ namespace Control
 					sprintf(text, "Calibrate encoder");
 				},
 				[&]() {
+					this->settings.speed = 0;
 					this->encoderCalibration.calibrate(this->as5047, this->motorDriver);
 				}
 			},
@@ -215,8 +216,8 @@ namespace Control
 
 		while (!this->shouldExit)
 		{
-			this->status.current = this->ina219.getCurrent();
-			this->status.voltage = this->ina219.getBusVoltage();
+			this->status.current = this->currentSensor.getCurrent();
+			this->status.voltage = this->currentSensor.getBusVoltage();
 			this->status.encoderReading = this->as5047.getPositionFiltered(8);
 			this->status.encoderReadingNormalised = (float) this->status.encoderReading / (float) (1 << 14);
 

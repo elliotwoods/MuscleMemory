@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Devices/INA219.h"
+#include "Devices/CurrentSensor.h"
 
 namespace Interface {
 	class SystemInfo {
 	public:
-		SystemInfo(Devices::INA219 &);
+		SystemInfo(Devices::CurrentSensor &);
 		void init();
 		void update();
 	private:
-		Devices::INA219 & ina219;
+		Devices::CurrentSensor & currentSensor;
 	};
 }

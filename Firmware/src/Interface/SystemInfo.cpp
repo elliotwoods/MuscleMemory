@@ -19,8 +19,8 @@ int temperature_sens_read() {
 
 namespace Interface {
 	//----------
-	SystemInfo::SystemInfo(Devices::INA219 & ina219)
-	: ina219(ina219)
+	SystemInfo::SystemInfo(Devices::CurrentSensor & currentSensor)
+	: currentSensor(currentSensor)
 	{
 
 	}
@@ -38,9 +38,9 @@ namespace Interface {
 	{
 		static auto & registry = Registry::X();
 		registry.registers.at(Registry::RegisterType::FreeMemory).value = xPortGetFreeHeapSize() / 1024;
-		registry.registers.at(Registry::RegisterType::Current).value = ina219.getCurrent() * 1000.0f;
-		registry.registers.at(Registry::RegisterType::BusVoltage).value = ina219.getBusVoltage() * 1000.0f;
-		registry.registers.at(Registry::RegisterType::ShuntVoltage).value = ina219.getShuntVoltage() * 1000000.0f;
+		registry.registers.at(Registry::RegisterType::Current).value = this->currentSensor.getCurrent() * 1000.0f;
+		registry.registers.at(Registry::RegisterType::BusVoltage).value = this->currentSensor.getBusVoltage() * 1000.0f;
+		registry.registers.at(Registry::RegisterType::ShuntVoltage).value = this->currentSensor.getShuntVoltage() * 1000000.0f;
 		registry.registers.at(Registry::RegisterType::CPUTemperature).value = float(temperature_sens_read() - 32) / 1.8f;
 		registry.registers.at(Registry::RegisterType::UpTime).value = esp_timer_get_time() / 1000;
 	}

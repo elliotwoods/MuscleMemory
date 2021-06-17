@@ -5,6 +5,7 @@
         "string": "cpp",
         "limits": "cpp",
         "platform.h": "c",
-        "mmv3.h": "c"
+        "mmv3.h": "c",
+        "ina237.h": "c"
     }
 }

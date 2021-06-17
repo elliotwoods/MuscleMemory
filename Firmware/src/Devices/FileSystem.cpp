@@ -38,7 +38,7 @@ namespace Devices {
 	bool
 	FileSystem::mount(const char * partitionLabel, const char * mountPoint, bool formatIfNeeded, uint8_t maxOpenFiles)
 	{
-		//this->listPartitions();
+		// this->listPartitions();
 
 		if(this->wl_handle != WL_INVALID_HANDLE) {
 			printf("Already mounted %s at %s\n", this->partitionLabel.c_str(), this->mountPoint.c_str());

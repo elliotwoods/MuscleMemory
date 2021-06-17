@@ -1,7 +1,9 @@
+#include "Platform/Platform.h"
+
 #include "Devices/AS5047.h"
 #include "Devices/MotorDriver.h"
 #include "Devices/I2C.h"
-#include "Devices/INA219.h"
+#include "Devices/CurrentSensor.h"
 #include "Devices/FileSystem.h"
 #include "Devices/Wifi.h"
 
@@ -45,7 +47,7 @@ extern "C" {
 
 //#define AGENT_ENABLED
 #define CONTROL_INSIDE_DRIVE_LOOP
-#define WEBSOCKETS_ENABLED
+//#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
@@ -54,7 +56,7 @@ extern "C" {
 
 Devices::MotorDriver motorDriver;
 Devices::AS5047 as5047; // The magnetic encoder
-Devices::INA219 ina219; // The current sensor
+Devices::CurrentSensor currentSensor; // The current sensor
 Devices::FileSystem fileSystem;
 
 Control::EncoderCalibration encoderCalibration;
@@ -65,7 +67,7 @@ Control::Agent agent;
 Control::PID pid;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
-Interface::SystemInfo systemInfo(ina219);
+Interface::SystemInfo systemInfo(currentSensor);
 Interface::CANResponder canResponder;
 
 Interface::WebSockets webSockets(encoderCalibration);
@@ -107,7 +109,15 @@ initDevices()
 		Serial.begin(115200);
 	}
 
-	printf("BOOT\n");
+
+#ifdef MM_CONFIG_MOTOR_DRIVER_ENABLE_ENABLED
+	// Drive enabled
+	gpio_reset_pin(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE);
+	gpio_set_direction(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE, GPIO_MODE_OUTPUT);
+	gpio_set_level(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE, 1);
+#endif
+
+	printf("MUSCLE MEMORY BOOT\n");
 
 	// Initialise I2C
 	Devices::I2C::X().init();
@@ -147,8 +157,8 @@ initDevices()
 	showSplashMessage("Initialise A4954...");
 	motorDriver.init();
 
-	showSplashMessage("Initialise INA219...");
-	ina219.init();	
+	showSplashMessage("Initialise INA...");
+	currentSensor.init();	
 
 #ifdef WIFI_ENABLED
 	showSplashMessage("Connect to WiFi ...");
@@ -255,7 +265,7 @@ initController()
 			}
 		}
 		if(getRegisterValue(Registry::RegisterType::ProvisioningEnabled) == 1) {
-			Control::Provisioning provisioning(motorDriver, ina219, as5047, fileSystem, encoderCalibration, canResponder, webSockets);
+			Control::Provisioning provisioning(motorDriver, currentSensor, as5047, fileSystem, encoderCalibration, canResponder, webSockets);
 			provisioning.perform();
 		}
 	}

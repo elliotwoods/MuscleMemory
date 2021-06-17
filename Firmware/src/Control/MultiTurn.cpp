@@ -1,3 +1,5 @@
+#include "Platform/Platform.h"
+
 #include "MultiTurn.h"
 #include "GUI/Controller.h"
 #include "Control/FilteredTarget.h"
@@ -46,12 +48,14 @@ namespace Control {
 		this->position = this->priorSingleTurnPosition;
 		this->turns = 0;
 
+#ifdef MM_CONFIG_MULTITURN_PARTITION_ENABLE
 		// 'Mount' the partition
 		this->partition = esp_partition_find_first( (esp_partition_type_t) 0x40,  (esp_partition_subtype_t) 0x00, "multiturn");
 		if(!this->partition) {
 			printf("[MultiTurn] Cannot mount MultiTurn partition");
 			abort();
 		}
+#endif
 
 		if(!GUI::Controller::X().isDialButtonPressed()) {
 			// Load the multiturn session
@@ -161,34 +165,39 @@ namespace Control {
 		// Align the size to 16 bytes
 		auto saveDataSize = this->getSaveDataSize();
 
-		auto writePosition = this->saveIndex * saveDataSize;
+		// Save to multiturn data partition
+#ifdef MM_CONFIG_MULTITURN_PARTITION_ENABLE
+		{
+			auto writePosition = this->saveIndex * saveDataSize;
 
-		// Check if we need to loop
-		if(writePosition >= this->getWriteOffsetForLastEntry()) {
-			this->saveIndex = 0;
-			writePosition = 0;
-		}
-
-		// Format the sector if we're at the start of a sector. WARNING - REQUIRES ALL OTHER CORE FUNCTIONS TO BE IN IRAM OTHERWISE HALTS
-		if(writePosition % 0x1000 == 0) {
-			if(DEBUG_MULTITURN) {
-				printf("[MultiTurn] Formatting (%d) bytes at sector (%d)\n", 0x1000, writePosition);
+			// Check if we need to loop
+			if(writePosition >= this->getWriteOffsetForLastEntry()) {
+				this->saveIndex = 0;
+				writePosition = 0;
 			}
-			ESP_ERROR_CHECK(esp_partition_erase_range(this->partition
+
+			// Format the sector if we're at the start of a sector. WARNING - REQUIRES ALL OTHER CORE FUNCTIONS TO BE IN IRAM OTHERWISE HALTS
+			if(writePosition % 0x1000 == 0) {
+				if(DEBUG_MULTITURN) {
+					printf("[MultiTurn] Formatting (%d) bytes at sector (%d)\n", 0x1000, writePosition);
+				}
+				ESP_ERROR_CHECK(esp_partition_erase_range(this->partition
+					, writePosition
+					, 0x1000));
+			}
+			
+
+
+			// Write the data
+			if(DEBUG_MULTITURN) {
+				printf("[MultiTurn] Saving multiturn (%d) at writePosition (%d)\n", this->saveData.multiTurnPosition, writePosition);
+			}
+			ESP_ERROR_CHECK(esp_partition_write(this->partition
 				, writePosition
-				, 0x1000));
+				, &this->saveData
+				, saveDataSize));
 		}
-		
-
-
-		// Write the data
-		if(DEBUG_MULTITURN) {
-			printf("[MultiTurn] Saving multiturn (%d) at writePosition (%d)\n", this->saveData.multiTurnPosition, writePosition);
-		}
-		ESP_ERROR_CHECK(esp_partition_write(this->partition
-			, writePosition
-			, &this->saveData
-			, saveDataSize));
+#endif
 
 		this->saveIndex++;
 	}
@@ -206,6 +215,7 @@ namespace Control {
 		size_t saveDataSize = this->getSaveDataSize();
 		const auto lastEntryOffset = this->getWriteOffsetForLastEntry();
 
+#ifdef MM_CONFIG_MULTITURN_PARTITION_ENABLE
 		// Read first position, and if that fails, read last position
 		{
 			SaveData loadedData;
@@ -281,6 +291,7 @@ namespace Control {
 				}
 			}
 		}
+#endif
 
 		if(anyLoaded) {
 			this->saveData = freshestData;
@@ -327,6 +338,11 @@ namespace Control {
 	void
 	MultiTurn::formatPartition()
 	{
+#ifndef MM_CONFIG_MULTITURN_PARTITION_ENABLE
+		if(DEBUG_MULTITURN) {
+			printf("[MultiTurn] Format : No multiturn partition\n");
+		}
+#else
 		if(DEBUG_MULTITURN) {
 			printf("[MultiTurn] Formatting save data partition\n");
 		}
@@ -360,6 +376,7 @@ namespace Control {
 				, offset
 				, this->partition->size - offset));
 		}
+#endif
 	}
 
 	//-----------
