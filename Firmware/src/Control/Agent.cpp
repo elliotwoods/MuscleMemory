@@ -94,7 +94,7 @@ namespace Control {
 	}
 
 	//----------
-	void
+	void IRAM_ATTR
 	Agent::update()
 	{
 		this->frameTimer.update();
@@ -262,7 +262,7 @@ namespace Control {
 	}
 
 	//----------
-	float
+	float IRAM_ATTR
 	Agent::selectAction(const State & state)
 	{
 		if(!this->initialised) {
@@ -308,7 +308,7 @@ namespace Control {
 	}
 
 	//----------
-	void
+	void IRAM_ATTR
 	Agent::recordTrajectory(Trajectory && trajectory)
 	{
 		this->historyWrites->trajectories[this->historyWrites->writePosition++] = trajectory;

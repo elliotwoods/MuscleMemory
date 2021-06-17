@@ -153,7 +153,7 @@ void setup()
 	// Serial.begin(115200);
 
 	// set Rotary encoder
-	dial.init(gpio_num_t::GPIO_NUM_34, gpio_num_t::GPIO_NUM_35);
+	dial.init(gpio_num_t::GPIO_NUM_36, gpio_num_t::GPIO_NUM_39);
 	initDial();
 
 	// set DeviceID if needed

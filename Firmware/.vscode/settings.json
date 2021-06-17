@@ -3,6 +3,8 @@
     "files.associations": {
         "array": "cpp",
         "string": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "platform.h": "c",
+        "mmv3.h": "c"
     }
 }

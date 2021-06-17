@@ -1,5 +1,6 @@
 #include "CANResponder.h"
 #include "Registry.h"
+#include "Platform/Platform.h"
 
 #ifdef ARDUINO
 #include "FreeRTOS.h"
@@ -17,9 +18,6 @@
 
 #define ERR_DELAY_US                    (800 * 500/25)     //Approximate time for arbitration phase at 500KBPS
 #define ERR_PERIOD_US                   (80 * 500/25)      //Approximate time for two bits at 500KBPS
-
-#define TX_GPIO_NUM GPIO_NUM_21
-#define RX_GPIO_NUM GPIO_NUM_22
 
 #define MOD_TAG "CAN"
 
@@ -53,7 +51,10 @@ namespace Interface {
 		//Initialize configuration structures using macro initializers
 		// NOTE : this will fail to compile
 		// We change line 108 of can.h to define CAN_IO_UNUSED to be GPIO_NUM_MAX
-		can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(TX_GPIO_NUM, RX_GPIO_NUM, CAN_MODE_NORMAL);
+		can_general_config_t g_config = CAN_GENERAL_CONFIG_DEFAULT(MM_CONFIG_CAN_PIN_TX
+			, MM_CONFIG_CAN_PIN_RX
+			, CAN_MODE_NORMAL);
+
 		{
 			g_config.rx_queue_len = 64;
 			g_config.tx_queue_len = 64;

@@ -10,7 +10,7 @@ QueueHandle_t rot_enc_event_queue;
 
 
 // Rotary Encoder Push button part
-#define ROT_ENC_PUSH_GPIO  GPIO_NUM_39
+#define ROT_ENC_PUSH_GPIO  GPIO_NUM_0
 #define GPIO_INPUT_PIN_SEL  (1ULL<<ROT_ENC_PUSH_GPIO)
 #define ESP_INTR_FLAG_DEFAULT 0
 
@@ -138,5 +138,5 @@ void initDial() {
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);                                // install gpio isr service
     xTaskCreate(&ROT_ENC_event, "ROT_ENC_event", 2048, NULL, 10, NULL);             // start Rotary Encoder Task
     xTaskCreate(&ROT_ENC_PUSH_event, "ROT_ENC_PUSH_event", 2048, NULL, 10, NULL);   // start Rotary Encoder Push button Task
-	//disableCore0WDT();
+	disableCore0WDT();
 }
