@@ -50,7 +50,7 @@ public:
 
 		// System
 		FreeMemory = 40,
-		CPUTemperature = 41,
+		Temperature = 41,
 		UpTime = 42,
 		InterfaceEnabled = 43,
 

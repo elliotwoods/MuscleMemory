@@ -36,12 +36,13 @@ namespace Devices {
 			Configuration() {
 				
 			}
+			
 			enum ConversionDelay : uint8_t
 			{
 				ConversionDelay_0s = 0x0,
 				ConversionDelay_2ms = 0x1,
 				ConversionDelay_510ms = 0xFF
-			}
+			};
 
 			enum ShuntRange : uint8_t
 			{
@@ -97,6 +98,7 @@ namespace Devices {
 
 			uint8_t address = 0b1000000;
 
+			ConversionDelay conversionDelay = ConversionDelay::ConversionDelay_0s;
 			ShuntRange shuntRange = ShuntRange::ShuntRange_163_84mV;
 			OperatingMode operatingMode = OperatingMode::Continuous_TemperatureAndBusAndShuntVoltage;
 			ConversionTime busVoltageConversionTime = ConversionTime::Conversion_150us;
@@ -107,7 +109,7 @@ namespace Devices {
 			// Shunt resistor value in Ohms (2 * 33mOhm in parallel for MMv3)
 			float shuntValue = 16.5e-3;
 
-			// For our own reference
+			// Used to set the LSB in setShuntCalibration
 			float maximumCurrent = 8;
 		};
 
@@ -137,6 +139,7 @@ namespace Devices {
 		float getPower();
 		float getBusVoltage();
 		float getShuntVoltage();
+		float getTemperature();
 
 		void printDebug();
 		void drawDebug(U8G2 &oled);
@@ -147,13 +150,14 @@ namespace Devices {
 
 		void reset();
 		void setConfiguration();
-		void setCalibration();
+		void setADCConfiguration();
+		void setShuntCalibration();
 
 		Configuration configuration;
 
 		uint16_t errors = 0;
 
-		// Cached inside setCalibration() method
+		// Cached inside setShuntCalibration() method
 		float currentLSB;
 	};
 }
