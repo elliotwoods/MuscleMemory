@@ -17,7 +17,8 @@ namespace Devices {
 
 		this->reset();
 		this->setConfiguration();
-		this->setCalibration();
+		this->setADCConfiguration();
+		this->setShuntCalibration();
 	}
 
 	//---------
@@ -34,7 +35,7 @@ namespace Devices {
 	INA237::getPower()
 	{
 		auto readValue = this->readRegister(Register::Power);
-		return this->currentLSB * 20.0f * (float)readValue;
+		return this->currentLSB * 3.2f * (float)readValue;
 	}
 
 	//---------
@@ -42,11 +43,8 @@ namespace Devices {
 	INA237::getBusVoltage()
 	{
 		auto readValue = this->readRegister(Register::BusVoltage);
-
-		// Overflow error
-		this->errors |= readValue & 1;
-
-		return 4e-3f * (float)(readValue >> 3);
+		auto &signedValue = *(int16_t *)&readValue;
+		return 3.125e-3f * (float)signedValue;
 	}
 
 	//---------
@@ -55,7 +53,18 @@ namespace Devices {
 	{
 		auto readValue = this->readRegister(Register::ShuntVoltage);
 		const auto & signedReadValue = * (int16_t*) & readValue;
-		return 10e-6 * (float)(signedReadValue);
+		return this->configuration.shuntRange == Configuration::ShuntRange::ShuntRange_163_84mV
+			? 5e-6 * (float) (signedReadValue)
+			: 1.25e-6 * (float) (signedReadValue);
+	}
+
+	//---------
+	float
+	INA237::getTemperature()
+	{
+		auto readValue = this->readRegister(Register::Temperature);
+		const auto & signedReadValue = * (int16_t*) & readValue;
+		return (125e-3) * (float) (signedReadValue >> 3);
 	}
 
 	//---------
@@ -121,21 +130,11 @@ namespace Devices {
 	void
 	INA237::setConfiguration()
 	{
-		if (this->configuration.gain == Configuration::Gain::Gain_Auto)
-		{
-			this->calculateGain();
-		}
-
 		uint16_t value = 0;
-		{
-			value |= this->configuration.operatingMode;
-			value |= this->configuration.currentResolution << 3;
-			value |= this->configuration.busVoltageResolution << 7;
-			value |= this->configuration.gain << 11;
-			value |= this->configuration.voltageRange << 13;
-		}
-
+		value |= (uint16_t) this->configuration.conversionDelay << 6;
+		value |= (uint16_t) this->configuration.shuntRange << 4;
 		this->writeRegister(Register::Configuration, value);
+
 #ifdef DEBUG_CURRENT_SENSOR
 		printf("Configuration set to : %#04x\n", value);
 		printf("Read back : %#04x\n", this->readRegister(Register::Configuration));
@@ -144,18 +143,36 @@ namespace Devices {
 
 	//---------
 	void
-	INA237::setCalibration()
+	INA237::setADCConfiguration()
 	{
-		this->currentLSB = this->configuration.maximumCurrent / (float)(1 << 15);
-		auto value = (uint16_t)((0.04096f) / (this->currentLSB * this->configuration.shuntValue));
-
-		this->writeRegister(Register::Calibration, value);
+		uint16_t value = 0;
+		value |= (uint16_t) this->configuration.operatingMode << 12;
+		value |= (uint16_t) this->configuration.busVoltageConversionTime << 9;
+		value |= (uint16_t) this->configuration.shuntVoltageConversionTime << 6;
+		value |= (uint16_t) this->configuration.temperatureConversionTime << 3;
+		value |= (uint16_t) this->configuration.sampleCount;
+		
+		this->writeRegister(Register::ADCConfiguration, value);
 
 #ifdef DEBUG_CURRENT_SENSOR
-		printf("currentLSB : %f\n", this->currentLSB);
-		printf("shuntValue : %f\n", this->configuration.shuntValue);
-		printf("Calibration set to : %#04x\n", value);
-		printf("Read back : %#04x\n", this->readRegister(Register::Calibration));
+		printf("ADC Configuration set to : %#04x\n", value);
+		printf("Read back : %#04x\n", this->readRegister(Register::ADCConfiguration));
+#endif
+	}
+
+	//---------
+	void
+	INA237::setShuntCalibration()
+	{
+		this->currentLSB = this->configuration.maximumCurrent / (float) pow(2, 15);
+		float currLSBCalc = (float) 12107.2e6 * this->currentLSB * this->configuration.shuntValue;
+
+		auto  value = (uint16_t) currLSBCalc;
+		this->writeRegister(Register::ShuntCalibration, value);
+
+#ifdef DEBUG_CURRENT_SENSOR
+		printf("Shunt calibration  set to : %#04x\n", value);
+		printf("Read back : %#04x\n", this->readRegister(Register::ShuntCalibration));
 #endif
 	}
 
@@ -165,6 +182,7 @@ namespace Devices {
 	{
 		printf("Current : %f\n", this->getCurrent());
 		printf("Bus voltage : %f\n", this->getBusVoltage());
+		printf("Temperature : %f\n", this->getTemperature());
 		printf("Errors : %d\n", this->errors);
 		printf("\n");
 	}

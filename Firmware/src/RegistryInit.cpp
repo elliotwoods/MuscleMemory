@@ -214,9 +214,9 @@ Registry::init()
 		}
 	);
 	this->registers.emplace(
-		RegisterType::CPUTemperature
+		RegisterType::Temperature
 		, Register {
-			"CPUTemperature"
+			"Temperature"
 			, 0 // C
 			, Access::ReadOnly
 		}

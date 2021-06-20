@@ -14,7 +14,7 @@ Registry::defaultRegisterReads {
 		, Registry::RegisterType::Current
 		, Registry::RegisterType::BusVoltage
 		, Registry::RegisterType::FreeMemory
-		, Registry::RegisterType::CPUTemperature
+		, Registry::RegisterType::Temperature
 		, Registry::RegisterType::UpTime
 		, Registry::RegisterType::MotorControlFrequency
 		, Registry::RegisterType::AgentControlFrequency

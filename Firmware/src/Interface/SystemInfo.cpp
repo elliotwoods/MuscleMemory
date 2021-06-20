@@ -1,5 +1,6 @@
 #include "SystemInfo.h"
 #include "Registry.h"
+#include "Platform/Platform.h"
 
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
@@ -41,7 +42,12 @@ namespace Interface {
 		registry.registers.at(Registry::RegisterType::Current).value = this->currentSensor.getCurrent() * 1000.0f;
 		registry.registers.at(Registry::RegisterType::BusVoltage).value = this->currentSensor.getBusVoltage() * 1000.0f;
 		registry.registers.at(Registry::RegisterType::ShuntVoltage).value = this->currentSensor.getShuntVoltage() * 1000000.0f;
-		registry.registers.at(Registry::RegisterType::CPUTemperature).value = float(temperature_sens_read() - 32) / 1.8f;
+#ifdef MM_CONFIG_SYSTEM_SENSORS_TEMPERATURE_USE_ESP_SENSOR
+		registry.registers.at(Registry::RegisterType::Temperature).value = float(temperature_sens_read() - 32) / 1.8f;
+#endif
+#ifdef MM_CONFIG_SYSTEM_SENSORS_TEMPERATURE_USE_CURRENT_SENSOR
+		registry.registers.at(Registry::RegisterType::Temperature).value = this->currentSensor.getTemperature() * 1000.0f;
+#endif
 		registry.registers.at(Registry::RegisterType::UpTime).value = esp_timer_get_time() / 1000;
 	}
 }
