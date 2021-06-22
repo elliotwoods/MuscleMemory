@@ -47,7 +47,7 @@ extern "C" {
 
 //#define AGENT_ENABLED
 #define CONTROL_INSIDE_DRIVE_LOOP
-//#define WEBSOCKETS_ENABLED
+#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
@@ -108,14 +108,6 @@ initDevices()
 		// For now we use Arduino - we change this later
 		Serial.begin(115200);
 	}
-
-
-#ifdef MM_CONFIG_MOTOR_DRIVER_ENABLE_ENABLED
-	// Drive enabled
-	gpio_reset_pin(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE);
-	gpio_set_direction(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE, GPIO_MODE_OUTPUT);
-	gpio_set_level(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE, 1);
-#endif
 
 	printf("MUSCLE MEMORY BOOT\n");
 
@@ -183,6 +175,7 @@ motorTask(void*)
 #endif
 		
 #endif
+		motorDriver.update();
 		drive.update();
 	}
 }

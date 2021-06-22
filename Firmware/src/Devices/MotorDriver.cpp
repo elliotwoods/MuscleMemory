@@ -44,11 +44,29 @@ namespace Devices {
 			dac_output_voltage(dac, 0);
 		}
 
+#ifdef MM_CONFIG_MOTOR_DRIVER_ENABLE_ENABLED
+		// Initialise drive enabled output
+		gpio_reset_pin(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE);
+		gpio_set_direction(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE, GPIO_MODE_OUTPUT);
+#endif
+
 		// Calculate sine table values
 		this->calculateCosTable();
 	}
 
 	#define CYCLE_RESOLUTION 256
+
+	//----------
+	void
+	MotorDriver::update()
+	{
+#ifdef MM_CONFIG_MOTOR_DRIVER_ENABLE_ENABLED
+		{
+			auto driveEnabled = getRegisterValue(Registry::RegisterType::ControlMode) > 0;
+			gpio_set_level(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE, driveEnabled ? 1 : 0);
+		}
+#endif
+	}
 
 	//----------
 	void
@@ -139,6 +157,10 @@ namespace Devices {
 	void
 	MotorDriver::step(uint8_t index, uint8_t current)
 	{
+#ifdef MM_CONFIG_MOTOR_DRIVER_ENABLE_ENABLED
+		gpio_set_level(MM_CONFIG_MOTOR_DRIVER_PIN_ENABLE, 1);
+#endif
+
 		for(uint8_t i=0; i<4; i++) {
 			gpio_set_level(this->configuration.coilPinArray[i], i == index);
 		}

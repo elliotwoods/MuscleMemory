@@ -269,6 +269,14 @@ class RegisterView {
 		this.deviceView = deviceView;
 
 		this.tableRow = $(`<tr></tr>`);
+
+		if(registerIndex % 10 == 0) {
+			parentTable.append(`<tr class="table-primary"><td></td></tr>`);
+		}
+		else if(registerIndex % 5 == 0) {
+			parentTable.append(`<tr class="table-secondary"><td></td></tr>`);
+		}
+
 		parentTable.append(this.tableRow);
 
 		// Selector
