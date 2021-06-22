@@ -23,7 +23,9 @@ namespace Control {
 		MultiTurnPosition getMultiTurnPositionNoOffset() const;
 		MultiTurnPosition getMultiTurnPosition() const;
 
-		void saveSession();
+		size_t getWritePosition();
+		void prepareWritableSectors(size_t writePosition);
+		void saveSession(size_t writePosition);
 		bool loadSession(SingleTurnPosition currentSingleTurn);
 	private:
 		size_t getSaveDataSize() const;

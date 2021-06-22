@@ -42,7 +42,8 @@ namespace Devices {
 		};
 
 		void init(const Configuration & = Configuration());
-
+		void update();
+		
 		/// Apply a force with magnitude and direction defined by torque
 		void setTorque(Torque, PositionWithinStepCycle);
 

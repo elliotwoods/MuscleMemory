@@ -13,6 +13,33 @@
 
 #define DEBUG_MULTITURN false
 
+TaskHandle_t shutdownTask;
+QueueHandle_t shutdownQueue;
+bool isShuttingDown = false;
+
+void IRAM_ATTR
+onShutdown(void * args) {
+	if(!isShuttingDown) {
+		static bool value = true;
+		xQueueSend(shutdownQueue, &value, 1000);
+	}
+}
+
+void IRAM_ATTR
+shutdownTaskMethod(void * args) {
+	while(true) {
+		// Wait for queue to trigger
+		bool value;
+		if(xQueueReceive(shutdownQueue, &value, 1000 / portTICK_RATE_MS)) {
+			isShuttingDown = true;
+			auto multiTurn = (Control::MultiTurn*) args;
+			multiTurn->saveSession(multiTurn->getWritePosition());
+			printf("Shutdown complete\n");
+			isShuttingDown = false;
+		}
+	}
+}
+
 namespace Control {
 	//-----------
 	uint8_t
@@ -48,15 +75,14 @@ namespace Control {
 		this->position = this->priorSingleTurnPosition;
 		this->turns = 0;
 
-#ifdef MM_CONFIG_MULTITURN_PARTITION_ENABLE
 		// 'Mount' the partition
 		this->partition = esp_partition_find_first( (esp_partition_type_t) 0x40,  (esp_partition_subtype_t) 0x00, "multiturn");
 		if(!this->partition) {
 			printf("[MultiTurn] Cannot mount MultiTurn partition");
 			abort();
 		}
-#endif
 
+		// Load the session on startup (or format if button is help down)
 		if(!GUI::Controller::X().isDialButtonPressed()) {
 			// Load the multiturn session
 			this->loadSession(singleTurnPosition);
@@ -67,6 +93,30 @@ namespace Control {
 
 		this->zeroOffset = getRegisterValue(Registry::RegisterType::ZeroPos);
 		this->driveLoopUpdate(singleTurnPosition);
+
+		// Erase ready for next write 
+		this->prepareWritableSectors(this->getWritePosition());
+
+#ifdef MM_CONFIG_SHUTDOWN_DETECTION_ENABLED
+		{
+			gpio_pad_select_gpio(MM_CONFIG_SHUTDOWN_DETECTION_PIN);
+			gpio_set_direction(MM_CONFIG_SHUTDOWN_DETECTION_PIN, GPIO_MODE_INPUT);
+			gpio_set_pull_mode(MM_CONFIG_SHUTDOWN_DETECTION_PIN, GPIO_PULLUP_ONLY);
+			gpio_set_intr_type(MM_CONFIG_SHUTDOWN_DETECTION_PIN, GPIO_INTR_ANYEDGE);
+			gpio_intr_enable(MM_CONFIG_SHUTDOWN_DETECTION_PIN);
+
+			gpio_install_isr_service(0);
+			
+			shutdownQueue = xQueueCreate(256, sizeof(bool));
+			xTaskCreate(shutdownTaskMethod
+				, "Shutdown"
+				, 2048
+				, (void*) this
+				, 2 | portPRIVILEGE_BIT
+				, &shutdownTask);
+			gpio_isr_handler_add(MM_CONFIG_SHUTDOWN_DETECTION_PIN, onShutdown, nullptr);
+		}
+#endif
 	}
 
 	//-----------
@@ -113,7 +163,6 @@ namespace Control {
 				Control::FilteredTarget::X().clear();
 			}
 			setRegisterValue(Registry::RegisterType::ControlMode, controlMode);
-			
 		}
 
 		if(getRegisterValue(Registry::RegisterType::MultiTurnSaveEnabled) == 1) {
@@ -122,7 +171,23 @@ namespace Control {
 			{
 				auto stPosition = this->priorSingleTurnPosition;
 				auto closestTurn = this->implyTurns(this->saveData.multiTurnPosition, stPosition);
-				if(closestTurn != this->turns) {
+				auto shouldSave = false;
+				auto hasChanged = closestTurn != this->turns;
+#ifdef MM_CONFIG_MULTITURN_SAVE_ON_CHANGE
+				shouldSave = hasChanged;
+#else
+				// Check based on save interval
+				{
+					auto currentTime = getRegisterValue(Registry::RegisterType::UpTime);
+					auto lastSaveTime = getRegisterValue(Registry::RegisterType::MultiTurnLastSaveTime);
+					auto saveInterval = getRegisterValue(Registry::RegisterType::MultiTurnSaveInterval);
+
+					if(currentTime - lastSaveTime > saveInterval) {
+						shouldSave = hasChanged;
+					}
+				}
+#endif
+				if(shouldSave) {
 					if(DEBUG_MULTITURN) {
 						printf("[MultiTurn] Needs save! SaveData implied turn (%d) from saved multiturn (%d) and current single turn (%d), Actual turns (%d)\n"
 							, closestTurn
@@ -132,7 +197,7 @@ namespace Control {
 					}
 
 					// Then save the session
-					this->saveSession();
+					this->saveSession(this->getWritePosition());
 				}
 			}
 		}
@@ -153,41 +218,48 @@ namespace Control {
 	}
 
 	//-----------
-	void
-	MultiTurn::saveSession()
+	size_t
+	MultiTurn::getWritePosition()
 	{
-		this->saveData.multiTurnPosition = this->positionNoOffset;
-		this->saveData.saveSequenceIndex++;
+		auto writePosition = this->saveIndex * this->getSaveDataSize();
+		if(writePosition >= this->getWriteOffsetForLastEntry()) {
+			this->saveIndex = 0;
+			writePosition = 0;
+		}
+		return writePosition;
+	}
 
-		// Create the checksum
-		this->saveData.storedCRC = saveData.getCRC();
+	//-----------
+	void
+	MultiTurn::prepareWritableSectors(size_t writePosition)
+	{
+		// Erase whenever write position is at the start of a sector
+		if(writePosition % 0x1000 == 0) {
+			if(DEBUG_MULTITURN) {
+				printf("[MultiTurn] Formatting (%d) bytes at sector (%d)\n", 0x1000, writePosition);
+			}
+			ESP_ERROR_CHECK(esp_partition_erase_range(this->partition
+				, writePosition
+				, 0x1000));
+		}
+	}
 
-		// Align the size to 16 bytes
-		auto saveDataSize = this->getSaveDataSize();
+	//-----------
+	void IRAM_ATTR
+	MultiTurn::saveSession(size_t writePosition)
+	{
+		// Erase sectors if needed
+		this->prepareWritableSectors(writePosition);
+
+		// Prepare the save data
+		{
+			this->saveData.multiTurnPosition = this->positionNoOffset;
+			this->saveData.saveSequenceIndex++;
+			this->saveData.storedCRC = this->saveData.getCRC();
+		}
 
 		// Save to multiturn data partition
-#ifdef MM_CONFIG_MULTITURN_PARTITION_ENABLE
 		{
-			auto writePosition = this->saveIndex * saveDataSize;
-
-			// Check if we need to loop
-			if(writePosition >= this->getWriteOffsetForLastEntry()) {
-				this->saveIndex = 0;
-				writePosition = 0;
-			}
-
-			// Format the sector if we're at the start of a sector. WARNING - REQUIRES ALL OTHER CORE FUNCTIONS TO BE IN IRAM OTHERWISE HALTS
-			if(writePosition % 0x1000 == 0) {
-				if(DEBUG_MULTITURN) {
-					printf("[MultiTurn] Formatting (%d) bytes at sector (%d)\n", 0x1000, writePosition);
-				}
-				ESP_ERROR_CHECK(esp_partition_erase_range(this->partition
-					, writePosition
-					, 0x1000));
-			}
-			
-
-
 			// Write the data
 			if(DEBUG_MULTITURN) {
 				printf("[MultiTurn] Saving multiturn (%d) at writePosition (%d)\n", this->saveData.multiTurnPosition, writePosition);
@@ -195,9 +267,11 @@ namespace Control {
 			ESP_ERROR_CHECK(esp_partition_write(this->partition
 				, writePosition
 				, &this->saveData
-				, saveDataSize));
+				, this->getSaveDataSize()));
 		}
-#endif
+
+		// Note the save time
+		setRegisterValue(Registry::RegisterType::MultiTurnLastSaveTime, getRegisterValue(Registry::RegisterType::UpTime));
 
 		this->saveIndex++;
 	}
@@ -215,7 +289,6 @@ namespace Control {
 		size_t saveDataSize = this->getSaveDataSize();
 		const auto lastEntryOffset = this->getWriteOffsetForLastEntry();
 
-#ifdef MM_CONFIG_MULTITURN_PARTITION_ENABLE
 		// Read first position, and if that fails, read last position
 		{
 			SaveData loadedData;
@@ -291,7 +364,6 @@ namespace Control {
 				}
 			}
 		}
-#endif
 
 		if(anyLoaded) {
 			this->saveData = freshestData;
@@ -338,11 +410,6 @@ namespace Control {
 	void
 	MultiTurn::formatPartition()
 	{
-#ifndef MM_CONFIG_MULTITURN_PARTITION_ENABLE
-		if(DEBUG_MULTITURN) {
-			printf("[MultiTurn] Format : No multiturn partition\n");
-		}
-#else
 		if(DEBUG_MULTITURN) {
 			printf("[MultiTurn] Formatting save data partition\n");
 		}
@@ -376,7 +443,6 @@ namespace Control {
 				, offset
 				, this->partition->size - offset));
 		}
-#endif
 	}
 
 	//-----------

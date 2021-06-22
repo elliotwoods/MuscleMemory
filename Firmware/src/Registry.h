@@ -36,10 +36,12 @@ public:
 		MaxVelocity = 18,
 
 		// Encoder
-		EncoderReading = 21,
-		EncoderErrors = 22,
-		EncoderPositionFilterSize = 23,
-		MultiTurnSaveEnabled = 27,
+		EncoderReading = 20,
+		EncoderErrors = 21,
+		EncoderPositionFilterSize = 22,
+		MultiTurnSaveEnabled = 25,
+		MultiTurnSaveInterval = 26,
+		MultiTurnLastSaveTime = 27,
 		ZeroPosSet = 28,
 		ZeroPos = 29,
 
@@ -79,7 +81,8 @@ public:
 		// Offest control
 		DriveOffset = 80,
 		OffsetFactor = 81,
-		OffsetMaximum = 82,
+		OffsetMinimum = 82,
+		OffsetMaximum = 83,
 
 		// Anti-stall
 		AntiStallEnabled = 90,

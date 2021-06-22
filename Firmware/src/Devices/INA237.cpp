@@ -19,6 +19,7 @@ namespace Devices {
 		this->setConfiguration();
 		this->setADCConfiguration();
 		this->setShuntCalibration();
+		this->enableAlerts();
 	}
 
 	//---------
@@ -124,6 +125,9 @@ namespace Devices {
 	{
 		// Set the reset bit
 		this->writeRegister(Register::Configuration, 0xF000);
+
+		// Delay before registers become valid (quite arbitrary - this actually depends on your sample rate and conversion time)
+		vTaskDelay(50 / portTICK_RATE_MS);
 	}
 
 	//---------
@@ -167,13 +171,37 @@ namespace Devices {
 		this->currentLSB = this->configuration.maximumCurrent / (float) pow(2, 15);
 		float currLSBCalc = (float) 12107.2e6 * this->currentLSB * this->configuration.shuntValue;
 
-		auto  value = (uint16_t) currLSBCalc;
+		auto value = (uint16_t) currLSBCalc;
 		this->writeRegister(Register::ShuntCalibration, value);
 
 #ifdef DEBUG_CURRENT_SENSOR
 		printf("Shunt calibration  set to : %#04x\n", value);
 		printf("Read back : %#04x\n", this->readRegister(Register::ShuntCalibration));
 #endif
+	}
+
+	//---------
+	void
+	INA237::enableAlerts()
+	{		
+		this->configuration.alertStates.minimumVoltage = this->getBusVoltage() - 2.0f;
+
+		// Enable the alert states
+		this->writeRegister(Register::DiagnosticFlags, this->configuration.diagnosticAndAlertFlags);
+
+		// Set the maximum temperature
+		{
+			auto value = (int16_t) (this->configuration.alertStates.maximumTemperature / 125e-3f);
+			value = value << 4;
+			this->writeRegister(Register::TemperatureLimit, * (uint16_t*) &value);
+		}
+
+		// Set the minimum voltage
+		{
+			auto value = (uint16_t) (this->configuration.alertStates.minimumVoltage / 3.125e-3f);
+			value &= 0b0111111111111111; // Bit 15 is reserved as 0
+			this->writeRegister(Register::BusUndervoltageThreshold, value);
+		}
 	}
 
 	//---------

@@ -161,9 +161,13 @@ namespace Control {
 		int32_t offset;
 		{
 			const auto offsetFactor = getRegisterValue(Registry::RegisterType::OffsetFactor);
+			const auto offsetMinimum = getRegisterValue(Registry::RegisterType::OffsetMinimum);
 			const auto offsetMaximum = getRegisterValue(Registry::RegisterType::OffsetMaximum);
 			offset = (int32_t) abs(rawErrorOnPosition / (int64_t) offsetFactor);
-			if(offset > offsetMaximum) {
+			if(offset < offsetMinimum) {
+				offset = offsetMinimum;
+			}
+			else if(offset > offsetMaximum) {
 				offset = offsetMaximum;
 			}
 		}

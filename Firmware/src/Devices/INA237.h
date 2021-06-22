@@ -96,6 +96,26 @@ namespace Devices {
 				SampleCount_1024 = 7
 			};
 
+			enum DiagnosticAndAlertFlags : uint16_t
+			{
+				AlertLatchEnable = 1 << 15,
+
+				ConversionReady = 1 << 13,
+				AlertOnAveragedValue = 1 << 13,
+				AlertPolarity = 1 << 12,
+
+				OverflowError = 1 << 9,
+				
+				TemperatureHighAlert = 1 << 7,
+				ShuntVoltageHighAlert = 1 << 6,
+				ShuntVoltageLowAlert = 1 << 5,
+				BusVoltageHighAlert = 1 << 4,
+				BusVoltageLowAlert = 1 << 3,
+				PowerHighAlert = 1 << 2,
+				ConversionCompleted = 1 << 1,
+				MemoryChecksumError = 1 << 0
+			};
+
 			uint8_t address = 0b1000000;
 
 			ConversionDelay conversionDelay = ConversionDelay::ConversionDelay_0s;
@@ -105,31 +125,19 @@ namespace Devices {
 			ConversionTime shuntVoltageConversionTime = ConversionTime::Conversion_150us;
 			ConversionTime temperatureConversionTime = ConversionTime::Conversion_150us;
 			SampleCount sampleCount = SampleCount::SampleCount_64;
-
+			uint16_t diagnosticAndAlertFlags = DiagnosticAndAlertFlags::TemperatureHighAlert
+				| DiagnosticAndAlertFlags::BusVoltageLowAlert;
+			
 			// Shunt resistor value in Ohms (2 * 33mOhm in parallel for MMv3)
 			float shuntValue = 16.5e-3;
 
 			// Used to set the LSB in setShuntCalibration
 			float maximumCurrent = 8;
-		};
 
-		enum DiagnosticFlags : uint16_t
-		{
-			AlertLatchEnable = 1 << 15,
-			ConversionReady = 1 << 13,
-			AlertOnAveragedValue = 1 << 13,
-			AlertPolarity = 1 << 12,
-
-			OverflowError = 1 << 9,
-			
-			TemperatureHighAlert = 1 << 7,
-			ShuntVoltageHighAlert = 1 << 6,
-			ShuntVoltageLowAlert = 1 << 5,
-			BusVoltageHighAlert = 1 << 4,
-			BusVoltageLowAlert = 1 << 3,
-			PowerHighAlert = 1 << 2,
-			ConversionCompleted = 1 << 1,
-			MemoryChecksumError = 1 << 0
+			struct {
+				float maximumTemperature = 90;
+				float minimumVoltage = 12;
+			} alertStates;
 		};
 
 		INA237();
@@ -152,6 +160,7 @@ namespace Devices {
 		void setConfiguration();
 		void setADCConfiguration();
 		void setShuntCalibration();
+		void enableAlerts();
 
 		Configuration configuration;
 

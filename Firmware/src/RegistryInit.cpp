@@ -161,6 +161,24 @@ Registry::init()
 		}
 	);
 	this->registers.emplace(
+		RegisterType::MultiTurnSaveInterval
+		, Register {
+			"MultiTurnSaveInterval"
+			, 1000
+			, Access::ReadWrite
+			, 0
+			, std::numeric_limits<int32_t>::max()
+		}
+	);
+	this->registers.emplace(
+		RegisterType::MultiTurnLastSaveTime
+		, Register {
+			"MultiTurnLastSaveTime"
+			, 0
+			, Access::ReadOnly
+		}
+	);
+	this->registers.emplace(
 		RegisterType::ZeroPosSet
 		, Register {
 			"ZeroPosSet"
@@ -377,15 +395,25 @@ Registry::init()
 		RegisterType::OffsetFactor
 		, Register {
 			"OffsetFactor"
-			, 32
+			, 64
 			, Access::ReadWrite
+		}
+	);
+	this->registers.emplace(
+		RegisterType::OffsetMinimum
+		, Register {
+			"OffsetMinimum"
+			, 16
+			, Access::ReadWrite
+			, 0
+			, 255
 		}
 	);
 	this->registers.emplace(
 		RegisterType::OffsetMaximum
 		, Register {
 			"OffsetMaximum"
-			, 64
+			, 96
 			, Access::ReadWrite
 			, 0
 			, 255
@@ -409,7 +437,7 @@ Registry::init()
 			, 200
 			, Access::ReadWrite
 			, 0
-			, 1 << 16
+			, 20
 		}
 	);
 	this->registers.emplace(
