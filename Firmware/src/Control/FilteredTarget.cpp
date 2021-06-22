@@ -19,32 +19,15 @@ namespace Control {
 	void
 	FilteredTarget::update()
 	{
-		if(this->targetChange) {
-			auto newTarget = getRegisterValue(Registry::RegisterType::TargetPosition);
-			auto now = esp_timer_get_time();
-			this->filterVelocity = (newTarget - this->priorTarget) * 1000 / (int32_t) (now - this->priorTargetTimestamp);
-			this->priorTarget = newTarget;
-			this->priorTargetTimestamp = now;
-			this->targetChange = false;
-		}
 		setRegisterValue(Registry::RegisterType::TargetPositionFiltered, this->getTargetFiltered());
 	}
 
 	//----------
-	void
-	FilteredTarget::clear()
-	{
-		this->filterVelocity = 0;
-		this->targetChange = false;
-		this->priorTarget = getRegisterValue(Registry::RegisterType::TargetPosition);
-		this->priorTargetTimestamp = esp_timer_get_time();
-	}
-	
-	//----------
 	void IRAM_ATTR
-	FilteredTarget::notifyTargetChange()
+	FilteredTarget::notifyTargetChange(int32_t targetPosition)
 	{
-		this->targetChange = true;
+		this->priorTarget = targetPosition;
+		this->priorTargetTimestamp = esp_timer_get_time();
 	}
 
 	//----------
@@ -53,9 +36,7 @@ namespace Control {
 	{
 		const auto now = esp_timer_get_time();
 
-		const auto maxVelocity = getRegisterValue(Registry::RegisterType::MaxVelocity);
 		const auto currentPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
-
 
 		int32_t target;
 		// select target based on how recently a new target has been set
@@ -66,11 +47,13 @@ namespace Control {
 				target = this->priorTarget;
 			}
 			else {
-				target = this->filterVelocity * timeSinceLastSetTargetPosition / 1000 + this->priorTarget;
+				// TargetVelocity is in Position/second. Time is in microseconds
+				target = getRegisterValue(Registry::RegisterType::TargetVelocity) * timeSinceLastSetTargetPosition / 1000000 + this->priorTarget;
 			}
 		}
 		
-		// clamp velocity
+		// clamp target position by max velocity
+		const auto maxVelocity = getRegisterValue(Registry::RegisterType::MaxVelocity);
 		if(maxVelocity > 0) {
 			const auto timeSinceLastUpdate = now - this->priorUpdateTimestamp;
 			const auto deltaLimit = (int64_t) maxVelocity * timeSinceLastUpdate / 1000000LL;

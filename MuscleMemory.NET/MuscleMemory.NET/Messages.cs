@@ -35,29 +35,34 @@ namespace MuscleMemory
 			MultiTurnPosition = 10,
 			Velocity = 11,
 			TargetPosition = 12,
-			Torque = 13,
-			MaximumTorque = 14,
-			SoftLimitMin = 15,
-			SoftLimitMax = 16,
-			TargetPositionFiltered = 17,
-			MaxVelocity = 18,
+			TargetVelocity = 13,
+			TargetPositionFiltered = 14,
+
+			Torque = 15,
+			MaximumTorque = 16,
+			SoftLimitMin = 17,
+			SoftLimitMax = 18,
+			MaxVelocity = 19,
 
 			// Encoder
-			EncoderReading = 21,
-			EncoderErrors = 22,
-			EncoderPositionFilterSize = 23,
-			MultiTurnSaveEnabled = 27,
+			EncoderReading = 20,
+			EncoderErrors = 21,
+			EncoderPositionFilterSize = 22,
+
+			MultiTurnSaveEnabled = 25,
+			MultiTurnSaveInterval = 26,
+			MultiTurnLastSaveTime = 27,
 			ZeroPosSet = 28,
 			ZeroPos = 29,
 
 			// Power
 			Current = 30,
 			BusVoltage = 32,
-			// ShuntVoltage = 33,
+			ShuntVoltage = 33,
 
 			// System
 			FreeMemory = 40,
-			CPUTemperature = 41,
+			Temperature = 41,
 			UpTime = 42,
 			InterfaceEnabled = 43,
 
@@ -86,7 +91,8 @@ namespace MuscleMemory
 			// Offest control
 			DriveOffset = 80,
 			OffsetFactor = 81,
-			OffsetMaximum = 82,
+			OffsetMinimum = 82,
+			OffsetMaximum = 83,
 
 			// Anti-stall
 			AntiStallEnabled = 90,
@@ -114,7 +120,7 @@ namespace MuscleMemory
 			// OTA
 			OTADownloading = 210,
 			OTAWritePosition = 211,
-			OTASize = 212,
+			OTASize = 212
 		}
 
 		public interface IMessage

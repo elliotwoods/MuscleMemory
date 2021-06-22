@@ -62,6 +62,22 @@ Registry::init()
 		}
 	);
 	this->registers.emplace(
+		RegisterType::TargetVelocity
+		, Register {
+			"TargetVelocity"
+			, 0
+			, Access::ReadWrite
+		}
+	);
+	this->registers.emplace(
+		RegisterType::TargetPositionFiltered
+		, Register {
+			"TargetPositionFiltered"
+			, 0
+			, Access::ReadOnly
+		}
+	);
+	this->registers.emplace(
 		RegisterType::Torque
 		, Register {
 			"Torque"
@@ -105,14 +121,6 @@ Registry::init()
 			, Access::ReadWrite
 			, -255
 			, 255
-		}
-	);
-	this->registers.emplace(
-		RegisterType::TargetPositionFiltered
-		, Register {
-			"TargetPositionFiltered"
-			, 0
-			, Access::ReadOnly
 		}
 	);
 	this->registers.emplace(
@@ -437,7 +445,7 @@ Registry::init()
 			, 200
 			, Access::ReadWrite
 			, 0
-			, 20
+			, 1 << 14
 		}
 	);
 	this->registers.emplace(

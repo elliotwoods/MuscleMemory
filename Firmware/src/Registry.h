@@ -28,17 +28,20 @@ public:
 		MultiTurnPosition = 10,
 		Velocity = 11,
 		TargetPosition = 12,
-		Torque = 13,
-		MaximumTorque = 14,
-		SoftLimitMin = 15,
-		SoftLimitMax = 16,
-		TargetPositionFiltered = 17,
-		MaxVelocity = 18,
+		TargetVelocity= 13,
+		TargetPositionFiltered = 14,
+
+		Torque = 15,
+		MaximumTorque = 16,
+		SoftLimitMin = 17,
+		SoftLimitMax = 18,
+		MaxVelocity = 19,
 
 		// Encoder
 		EncoderReading = 20,
 		EncoderErrors = 21,
 		EncoderPositionFilterSize = 22,
+
 		MultiTurnSaveEnabled = 25,
 		MultiTurnSaveInterval = 26,
 		MultiTurnLastSaveTime = 27,
