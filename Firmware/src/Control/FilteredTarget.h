@@ -7,13 +7,10 @@ namespace Control {
 	public:
 		static FilteredTarget & X();
 		void update(); // called from main loop
-		void clear();
-		void notifyTargetChange();
+		void notifyTargetChange(int32_t targetPosition);
 		MultiTurnPosition getTargetFiltered(); // called from drive loop
 	private:
 		FilteredTarget();
-		bool targetChange = true;
-		Velocity filterVelocity = 0;
 		MultiTurnPosition priorTarget = 0;
 		uint64_t priorTargetTimestamp = 0;
 		int64_t priorUpdateTimestamp = 0;

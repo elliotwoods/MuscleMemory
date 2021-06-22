@@ -191,7 +191,7 @@ namespace GUI {
 		{
 			auto & targetPosition = Registry::X().registers.at(Registry::RegisterType::TargetPosition).value;
 			targetPosition += 512 * (int32_t) movement;
-			Control::FilteredTarget::X().notifyTargetChange();
+			Control::FilteredTarget::X().notifyTargetChange(targetPosition);
 
 			setRegisterValue(Registry::RegisterType::ControlMode, 1);
 		}

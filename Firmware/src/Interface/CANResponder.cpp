@@ -363,7 +363,7 @@ namespace Interface {
 							else {
 								findRegister->second.value = value;
 								if(registerID == Registry::RegisterType::TargetPosition) {
-									Control::FilteredTarget::X().notifyTargetChange();
+									Control::FilteredTarget::X().notifyTargetChange(value);
 								}
 							}
 						}
@@ -389,8 +389,9 @@ namespace Interface {
 				if(message.data_length_code == sizeof(int32_t)) {
 					// make a new pointer at the start of the message. dataMover is already advanced by 1
 					auto data = message.data;
-					setRegisterValue(Registry::RegisterType::PrimaryRegister, valueAndMove<int32_t>(data));
-					Control::FilteredTarget::X().notifyTargetChange();
+					auto value = valueAndMove<int32_t>(data);
+					setRegisterValue(Registry::RegisterType::PrimaryRegister, value);
+					Control::FilteredTarget::X().notifyTargetChange(value);
 				}
 				else {
 					if (CAN_PRINT_PREVIEW_ENABLED) {

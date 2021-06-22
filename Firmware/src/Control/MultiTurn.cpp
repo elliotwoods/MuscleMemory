@@ -158,9 +158,6 @@ namespace Control {
 				setRegisterValue(Registry::RegisterType::ZeroPosSet, 0);
 
 				setRegisterValue(Registry::RegisterType::TargetPosition, 0);
-
-				// Set position filter velocity to zero
-				Control::FilteredTarget::X().clear();
 			}
 			setRegisterValue(Registry::RegisterType::ControlMode, controlMode);
 		}

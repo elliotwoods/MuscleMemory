@@ -243,7 +243,7 @@ namespace Interface {
 		}
 
 		if(registerType == Registry::RegisterType::TargetPosition) {
-			Control::FilteredTarget::X().notifyTargetChange();
+			Control::FilteredTarget::X().notifyTargetChange(findRegister->second.value);
 		}
 	}
 

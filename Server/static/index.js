@@ -322,10 +322,10 @@ class RegisterView {
 					if(this.registerInfo) {
 						if(this.registerInfo.range) {
 							if(value < this.registerInfo.range.min) {
-								throw(`Value (${result}) is less than allowed minimum (${this.registerInfo.range.min})`);
+								throw(`Value (${value}) is less than allowed minimum (${this.registerInfo.range.min})`);
 							}
 							if(value > this.registerInfo.range.max) {
-								throw(`Value (${result}) is greater than allowed maximum (${this.registerInfo.range.max})`);
+								throw(`Value (${value}) is greater than allowed maximum (${this.registerInfo.range.max})`);
 							}
 						}
 					}
