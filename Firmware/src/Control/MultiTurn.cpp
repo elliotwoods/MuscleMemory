@@ -158,6 +158,7 @@ namespace Control {
 				setRegisterValue(Registry::RegisterType::ZeroPosSet, 0);
 
 				setRegisterValue(Registry::RegisterType::TargetPosition, 0);
+				FilteredTarget::X().notifyTargetChange(0);
 			}
 			setRegisterValue(Registry::RegisterType::ControlMode, controlMode);
 		}
