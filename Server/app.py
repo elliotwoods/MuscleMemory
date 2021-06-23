@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+import mimetypes
 
 import db
 from datetime import datetime
@@ -18,6 +19,9 @@ from utils import *
 
 from pythonosc.udp_client import SimpleUDPClient
 osc_client = SimpleUDPClient("127.0.0.1", 3355)
+
+mimetypes.init()
+mimetypes.add_type('application/javascript', '.jsm')
 
 app = FastAPI()
 
