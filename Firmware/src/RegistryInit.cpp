@@ -403,7 +403,7 @@ Registry::init()
 		RegisterType::OffsetFactor
 		, Register {
 			"OffsetFactor"
-			, 64
+			, 32
 			, Access::ReadWrite
 		}
 	);
@@ -411,7 +411,7 @@ Registry::init()
 		RegisterType::OffsetMinimum
 		, Register {
 			"OffsetMinimum"
-			, 16
+			, 8
 			, Access::ReadWrite
 			, 0
 			, 255
@@ -442,7 +442,7 @@ Registry::init()
 		RegisterType::AntiStallDeadZone
 		, Register {
 			"AntiStallDeadZone"
-			, 200
+			, 40
 			, Access::ReadWrite
 			, 0
 			, 1 << 14

@@ -160,6 +160,11 @@ namespace MuscleMemory
 
 		public Motor FindMotor(int ID)
 		{
+			if(!this.IsOpen)
+			{
+				return null;
+			}
+
 			foreach (var bus in this.FBuses)
 			{
 				if(bus.Motors.ContainsKey(ID))

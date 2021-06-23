@@ -1,7 +1,7 @@
 #include "INA237.h"
 #include "I2C.h"
 
-//#define DEBUG_CURRENT_SENSOR
+// #define DEBUG_CURRENT_SENSOR
 
 namespace Devices {
 	//---------
@@ -26,9 +26,15 @@ namespace Devices {
 	float
 	INA237::getCurrent()
 	{
+		auto shuntVoltage = this->getShuntVoltage();
+		return shuntVoltage / this->configuration.shuntValue;
+
+		/*
+		Some issue with setting shunt calibration - falling back to calculating this ourselves
 		auto readValue = this->readRegister(Register::Current);
 		auto &signedValue = *(int16_t *)&readValue;
 		return this->currentLSB * (float)signedValue;
+		*/
 	}
 
 	//---------
@@ -169,7 +175,7 @@ namespace Devices {
 	INA237::setShuntCalibration()
 	{
 		this->currentLSB = this->configuration.maximumCurrent / (float) pow(2, 15);
-		float currLSBCalc = (float) 12107.2e6 * this->currentLSB * this->configuration.shuntValue;
+		float currLSBCalc = 13107.2e6f * this->currentLSB * this->configuration.shuntValue;
 
 		auto value = (uint16_t) currLSBCalc;
 		this->writeRegister(Register::ShuntCalibration, value);
