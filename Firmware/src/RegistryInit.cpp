@@ -564,7 +564,7 @@ Registry::init()
 		RegisterType::CANWatchdogEnabled
 		, Register {
 			"CANWatchdogEnabled"
-			, 1
+			, 0
 			, Access::ReadWrite
 			, 0
 			, 1
