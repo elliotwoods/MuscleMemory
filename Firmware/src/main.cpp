@@ -12,6 +12,7 @@
 #include "Control/Agent.h"
 #include "Control/Drive.h"
 #include "Control/PID.h"
+#include "Control/DirectDrive.h"
 #include "Control/Provisioning.h"
 #include "Control/FilteredTarget.h"
 
@@ -47,7 +48,7 @@ extern "C" {
 
 //#define AGENT_ENABLED
 #define CONTROL_INSIDE_DRIVE_LOOP
-#define WEBSOCKETS_ENABLED
+//#define WEBSOCKETS_ENABLED
 #define PROVISIONING_ENABLED
 
 #if defined(AGENT_ENABLED) || defined(WEBSOCKETS_ENABLED)
@@ -65,6 +66,7 @@ Control::MultiTurn multiTurn(encoderCalibration);
 Control::Agent agent;
 #endif
 Control::PID pid;
+Control::DirectDrive directDrive;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
 Interface::SystemInfo systemInfo(currentSensor);
@@ -173,6 +175,9 @@ motorTask(void*)
 			agent.update();
 		}
 #endif
+		else if(controlMode == 3) {
+			directDrive.update();
+		}
 		
 #endif
 		motorDriver.update();
@@ -195,6 +200,9 @@ agentTask(void*)
 				agent.update();
 				break;
 #endif
+			case 3:
+				directDrive.update();
+				break;
 			default:
 				break;
 		}
@@ -280,7 +288,12 @@ initController()
 	multiTurn.init(as5047.getPosition());
 
 	// Initialise target to initial reading
-	Registry::X().registers.at(Registry::RegisterType::TargetPosition).value = multiTurn.getMultiTurnPosition();
+	{
+		auto initialTarget = multiTurn.getMultiTurnPosition();
+		setRegisterValue(Registry::RegisterType::TargetPosition, initialTarget);
+		Control::FilteredTarget::X().notifyTargetChange(initialTarget);
+	}
+	
 
 #ifdef AGENT_ENABLED
 	showSplashMessage("Initialise Agent");
@@ -292,6 +305,9 @@ initController()
 
 	showSplashMessage("Initialise PID");
 	pid.init();
+
+	showSplashMessage("Initialise Direct Drive");
+	directDrive.init();
 
 	showSplashMessage("Starting system tasks");
 
