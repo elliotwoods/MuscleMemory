@@ -18,7 +18,7 @@ QueueHandle_t shutdownQueue;
 bool isShuttingDown = false;
 
 void IRAM_ATTR
-onShutdown(void * args) {
+onPowerAlert(void * args) {
 	if(!isShuttingDown) {
 		static bool value = true;
 		xQueueSend(shutdownQueue, &value, 1000);
@@ -26,7 +26,7 @@ onShutdown(void * args) {
 }
 
 void IRAM_ATTR
-shutdownTaskMethod(void * args) {
+powerAlertTaskMethod(void * args) {
 	while(true) {
 		// Wait for queue to trigger
 		bool value;
@@ -34,7 +34,7 @@ shutdownTaskMethod(void * args) {
 			isShuttingDown = true;
 			auto multiTurn = (Control::MultiTurn*) args;
 			multiTurn->saveSession(multiTurn->getWritePosition());
-			printf("Shutdown complete\n");
+			printf("Low power alert complete\n");
 			isShuttingDown = false;
 		}
 	}
@@ -102,19 +102,19 @@ namespace Control {
 			gpio_pad_select_gpio(MM_CONFIG_SHUTDOWN_DETECTION_PIN);
 			gpio_set_direction(MM_CONFIG_SHUTDOWN_DETECTION_PIN, GPIO_MODE_INPUT);
 			gpio_set_pull_mode(MM_CONFIG_SHUTDOWN_DETECTION_PIN, GPIO_PULLUP_ONLY);
-			gpio_set_intr_type(MM_CONFIG_SHUTDOWN_DETECTION_PIN, GPIO_INTR_ANYEDGE);
+			gpio_set_intr_type(MM_CONFIG_SHUTDOWN_DETECTION_PIN, GPIO_INTR_NEGEDGE);
 			gpio_intr_enable(MM_CONFIG_SHUTDOWN_DETECTION_PIN);
 
 			gpio_install_isr_service(0);
 			
 			shutdownQueue = xQueueCreate(256, sizeof(bool));
-			xTaskCreate(shutdownTaskMethod
+			xTaskCreate(powerAlertTaskMethod
 				, "Shutdown"
 				, 2048
 				, (void*) this
 				, 2 | portPRIVILEGE_BIT
 				, &shutdownTask);
-			gpio_isr_handler_add(MM_CONFIG_SHUTDOWN_DETECTION_PIN, onShutdown, nullptr);
+			gpio_isr_handler_add(MM_CONFIG_SHUTDOWN_DETECTION_PIN, onPowerAlert, nullptr);
 		}
 #endif
 	}
