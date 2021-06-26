@@ -33,7 +33,13 @@ powerAlertTaskMethod(void * args) {
 		if(xQueueReceive(shutdownQueue, &value, 1000 / portTICK_RATE_MS)) {
 			isShuttingDown = true;
 			auto multiTurn = (Control::MultiTurn*) args;
-			multiTurn->saveSession(multiTurn->getWritePosition());
+
+			xSemaphoreTake(multiTurn->partitionMutex, 100);
+			{
+				multiTurn->saveSession(multiTurn->getWritePosition());
+			}
+			xSemaphoreGive(multiTurn->partitionMutex);
+			
 			printf("Low power alert complete\n");
 			isShuttingDown = false;
 		}
@@ -79,6 +85,13 @@ namespace Control {
 		this->partition = esp_partition_find_first( (esp_partition_type_t) 0x40,  (esp_partition_subtype_t) 0x00, "multiturn");
 		if(!this->partition) {
 			printf("[MultiTurn] Cannot mount MultiTurn partition");
+			abort();
+		}
+
+		// Create a mutex for the partition
+		this->partitionMutex = xSemaphoreCreateMutex();
+		if(!this->partitionMutex) {
+			printf("[MultiTurn] Cannot create partition mutex");
 			abort();
 		}
 
@@ -195,7 +208,11 @@ namespace Control {
 					}
 
 					// Then save the session
-					this->saveSession(this->getWritePosition());
+					xSemaphoreTake(this->partitionMutex, 100);
+					{
+						this->saveSession(this->getWritePosition());
+					}
+					xSemaphoreGive(this->partitionMutex);
 				}
 			}
 		}
