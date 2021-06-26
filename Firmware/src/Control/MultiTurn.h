@@ -27,6 +27,8 @@ namespace Control {
 		void prepareWritableSectors(size_t writePosition);
 		void saveSession(size_t writePosition);
 		bool loadSession(SingleTurnPosition currentSingleTurn);
+		
+		SemaphoreHandle_t partitionMutex = NULL;
 	private:
 		size_t getSaveDataSize() const;
 		size_t getWriteOffsetForLastEntry() const;
