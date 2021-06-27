@@ -65,8 +65,8 @@ namespace Control {
 		driveOffset = abs(driveOffset);
 		
 		// Clamp driveOffset range + detorque if we're within max value
-		if(driveOffset < offsetMaximum) {
-			torque = torque * (driveOffset - offsetMinimum) / (offsetMaximum - offsetMinimum);
+		if(driveOffset < offsetMinimum) {
+			torque = torque * driveOffset / offsetMinimum;
 		}
 		if(driveOffset > offsetMaximum) {
 			driveOffset = offsetMaximum;
