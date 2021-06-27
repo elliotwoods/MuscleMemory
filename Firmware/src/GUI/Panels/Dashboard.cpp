@@ -193,7 +193,9 @@ namespace GUI {
 			targetPosition += 512 * (int32_t) movement;
 			Control::FilteredTarget::X().notifyTargetChange(targetPosition);
 
-			setRegisterValue(Registry::RegisterType::ControlMode, 1);
+			if(getRegisterValue(Registry::RegisterType::ControlMode) < 1) {
+				setRegisterValue(Registry::RegisterType::ControlMode, 3);
+			}
 		}
 	}
 }
