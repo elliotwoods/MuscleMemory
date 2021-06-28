@@ -86,7 +86,8 @@ namespace Devices {
 	void IRAM_ATTR
 	MotorDriver::setTorque(Torque torque, PositionWithinStepCycle positionWithinStepCycle)
 	{
-		const auto driveOffset = getRegisterValue(Registry::RegisterType::DriveOffset);
+		const static auto & driveOffset = getRegisterValue(Registry::RegisterType::DriveOffset);
+		const static auto & maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
 
 		bool positiveDirection = torque >= 0;
 
@@ -136,16 +137,38 @@ namespace Devices {
 			}
 		}
 		
+		// Get abs torque and clamp to maximum
+		auto absTorque = (uint32_t) abs(torque);
+		if(absTorque > maximumTorque) {
+			absTorque = maximumTorque;
+		}
 
-		
+		// Torque values (i.e. current) are scaled 0...127
+		// coil_A/coil_B values are scaled -128...128
+		// dac_output_voltage is scaled 0...255
+		// scale = (torque range * coil range) / dac_range
+		uint32_t scaleFactor = (128 * 128) / (256);
+
+		static int frame = 0;
+		frame++;
 
 		// Coil A
-		uint8_t referenceVoltageA = uint8_t (((uint16_t) abs(coil_A) * (uint16_t) abs(torque)) / (uint16_t) (64));
-		dac_output_voltage(this->configuration.vrefDacs.A, referenceVoltageA);
+		{
+			uint8_t referenceVoltageA = uint8_t (((uint32_t) abs(coil_A) * absTorque) / scaleFactor);
+			if(frame % 10000 == 0) {
+				printf("%d (%d, %d), ", referenceVoltageA, coil_A, absTorque);
+			}
+			dac_output_voltage(this->configuration.vrefDacs.A, referenceVoltageA);
+		}
 
 		// Coil B
-		uint8_t referenceVoltageB = uint8_t (((uint16_t) abs(coil_B) * (uint16_t) abs(torque)) / (uint16_t) (64));
-		dac_output_voltage(this->configuration.vrefDacs.B, referenceVoltageB);
+		{
+			uint8_t referenceVoltageB = uint8_t (((uint32_t) abs(coil_B) * absTorque) / scaleFactor);
+			if(frame % 10000 == 0) {
+				printf("%d (%d, %d)\n", referenceVoltageB, coil_B, absTorque);
+			}
+			dac_output_voltage(this->configuration.vrefDacs.B, referenceVoltageB);
+		}
 
 		gpio_set_level(this->configuration.coilPins.coil_A_positive, coil_A > 0);
 		gpio_set_level(this->configuration.coilPins.coil_A_negative, coil_A < 0);
