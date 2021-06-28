@@ -22,12 +22,13 @@ namespace Control {
 		// We move in lock-step at full torque
 
 		// Registry reads
-		const auto multiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
-		const auto softLimitMax = getRegisterValue(Registry::RegisterType::SoftLimitMax);
-		const auto softLimitMin = getRegisterValue(Registry::RegisterType::SoftLimitMin);
-		const auto maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
-		const auto offsetMinimum = getRegisterValue(Registry::RegisterType::OffsetMinimum);
-		const auto offsetMaximum = getRegisterValue(Registry::RegisterType::OffsetMaximum);
+		static const auto & multiTurnPosition = getRegisterValue(Registry::RegisterType::MultiTurnPosition);
+		static const auto & softLimitMax = getRegisterValue(Registry::RegisterType::SoftLimitMax);
+		static const auto & softLimitMin = getRegisterValue(Registry::RegisterType::SoftLimitMin);
+		static const auto & maximumTorque = getRegisterValue(Registry::RegisterType::MaximumTorque);
+		static const auto & offsetMinimum = getRegisterValue(Registry::RegisterType::OffsetMinimum);
+		static const auto & offsetMaximum = getRegisterValue(Registry::RegisterType::OffsetMaximum);
+		static const auto & antiStallDeadZone = getRegisterValue(Registry::RegisterType::AntiStallDeadZone);
 
 		// Get the filtered target position
 		auto targetPosition = FilteredTarget::X().getTargetFiltered();
@@ -61,18 +62,28 @@ namespace Control {
 			torque = maximumTorque;
 		}
 
+		// scale torque within dead zone
+		{
+			auto positionDelta = abs(targetPosition - multiTurnPosition);
+			if(positionDelta < antiStallDeadZone) {
+				torque = torque * positionDelta / antiStallDeadZone;
+			}
+		}
+		
+
 		// Set drive offset to abs value
 		driveOffset = abs(driveOffset);
 		
 		// Clamp driveOffset range + detorque if we're within max value
 		if(driveOffset < offsetMinimum) {
 			torque = torque * driveOffset / offsetMinimum;
+			driveOffset = offsetMinimum;
 		}
 		if(driveOffset > offsetMaximum) {
 			driveOffset = offsetMaximum;
 		}
 
 		setRegisterValue(Registry::RegisterType::Torque, torque);
-		setRegisterValue(Registry::RegisterType::DriveOffset, abs(driveOffset));
+		setRegisterValue(Registry::RegisterType::DriveOffset, driveOffset);
 	}
 }

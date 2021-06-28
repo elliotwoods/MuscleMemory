@@ -21,7 +21,7 @@ Registry::init()
 			, 0 // 0=Standby, 1=PID, 2=Agent
 			, Access::ReadWrite
 			, 0
-			, 3
+			, 4
 		}
 	);
 
@@ -91,7 +91,7 @@ Registry::init()
 		RegisterType::MaximumTorque
 		, Register {
 			"MaximumTorque"
-			, 32
+			, 64
 			, Access::ReadWrite
 			, 0
 			, 128
@@ -411,7 +411,7 @@ Registry::init()
 		RegisterType::OffsetMinimum
 		, Register {
 			"OffsetMinimum"
-			, 8
+			, 32
 			, Access::ReadWrite
 			, 0
 			, 255
@@ -442,7 +442,7 @@ Registry::init()
 		RegisterType::AntiStallDeadZone
 		, Register {
 			"AntiStallDeadZone"
-			, 40
+			, 1000
 			, Access::ReadWrite
 			, 0
 			, 1 << 14
