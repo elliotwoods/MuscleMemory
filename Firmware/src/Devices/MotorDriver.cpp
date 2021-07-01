@@ -155,18 +155,12 @@ namespace Devices {
 		// Coil A
 		{
 			uint8_t referenceVoltageA = uint8_t (((uint32_t) abs(coil_A) * absTorque) / scaleFactor);
-			if(frame % 10000 == 0) {
-				printf("%d (%d, %d), ", referenceVoltageA, coil_A, absTorque);
-			}
 			dac_output_voltage(this->configuration.vrefDacs.A, referenceVoltageA);
 		}
 
 		// Coil B
 		{
 			uint8_t referenceVoltageB = uint8_t (((uint32_t) abs(coil_B) * absTorque) / scaleFactor);
-			if(frame % 10000 == 0) {
-				printf("%d (%d, %d)\n", referenceVoltageB, coil_B, absTorque);
-			}
 			dac_output_voltage(this->configuration.vrefDacs.B, referenceVoltageB);
 		}
 
