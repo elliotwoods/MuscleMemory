@@ -18,24 +18,12 @@ Registry::init()
 		RegisterType::ControlMode
 		, Register {
 			"ControlMode"
-			, 0 // 0=Standby, 1=PID, 2=Agent
+			, 0 // 0=Standby, 1=PID, 2=Agent, 3=DirectDrive, 4=Manual
 			, Access::ReadWrite
 			, 0
 			, 4
 		}
 	);
-
-	this->registers.emplace(
-		RegisterType::ControlMode
-		, Register {
-			"ControlMode"
-			, 0 // 0=Standby, 1=PID, 2=Agent
-			, Access::ReadWrite
-			, 0
-			, 3
-		}
-	);
-
 
 	this->registers.emplace(
 		RegisterType::MultiTurnPosition
@@ -114,21 +102,21 @@ Registry::init()
 		}
 	);
 	this->registers.emplace(
-		RegisterType::DriveOffset
-		, Register {
-			"DriveOffset"
-			, 64
-			, Access::ReadWrite
-			, -255
-			, 255
-		}
-	);
-	this->registers.emplace(
 		RegisterType::MaxVelocity
 		, Register {
 			"MaxVelocity"
 			, 0
 			, Access::ReadWrite
+		}
+	);
+	this->registers.emplace(
+		RegisterType::MaxPositionDeviation
+		, Register {
+			"MaxPositionDeviation"
+			, 1 << 14
+			, Access::ReadWrite
+			, 0
+			, std::numeric_limits<int32_t>::max()
 		}
 	);
 
@@ -303,6 +291,45 @@ Registry::init()
 	);
 
 	this->registers.emplace(
+		RegisterType::DriveOffset
+		, Register {
+			"DriveOffset"
+			, 64
+			, Access::ReadWrite
+			, -255
+			, 255
+		}
+	);
+	this->registers.emplace(
+		RegisterType::OffsetFactor
+		, Register {
+			"OffsetFactor"
+			, 32
+			, Access::ReadWrite
+		}
+	);
+	this->registers.emplace(
+		RegisterType::OffsetMinimum
+		, Register {
+			"OffsetMinimum"
+			, 32
+			, Access::ReadWrite
+			, 0
+			, 255
+		}
+	);
+	this->registers.emplace(
+		RegisterType::OffsetMaximum
+		, Register {
+			"OffsetMaximum"
+			, 96
+			, Access::ReadWrite
+			, 0
+			, 255
+		}
+	);
+
+	this->registers.emplace(
 		RegisterType::AgentLocalHistorySize
 		, Register {
 			"LocalHistorySize"
@@ -399,35 +426,6 @@ Registry::init()
 			, Access::ReadOnly
 		}
 	);
-	this->registers.emplace(
-		RegisterType::OffsetFactor
-		, Register {
-			"OffsetFactor"
-			, 32
-			, Access::ReadWrite
-		}
-	);
-	this->registers.emplace(
-		RegisterType::OffsetMinimum
-		, Register {
-			"OffsetMinimum"
-			, 32
-			, Access::ReadWrite
-			, 0
-			, 255
-		}
-	);
-	this->registers.emplace(
-		RegisterType::OffsetMaximum
-		, Register {
-			"OffsetMaximum"
-			, 96
-			, Access::ReadWrite
-			, 0
-			, 255
-		}
-	);
-	
 	this->registers.emplace(
 		RegisterType::AntiStallEnabled
 		, Register {
