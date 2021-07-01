@@ -16,6 +16,8 @@
 #include "Control/Provisioning.h"
 #include "Control/FilteredTarget.h"
 
+#include "Safety/Trajectory.h"
+
 #include "GUI/Controller.h"
 #include "GUI/Panels/RegisterList.h"
 #include "GUI/Panels/SplashScreen.h"
@@ -69,6 +71,7 @@ Control::PID pid;
 Control::DirectDrive directDrive;
 Control::Drive drive(motorDriver, as5047, encoderCalibration, multiTurn);
 
+Safety::Trajectory safetyTrajectory;
 Interface::SystemInfo systemInfo(currentSensor);
 Interface::CANResponder canResponder;
 
@@ -162,23 +165,31 @@ initDevices()
 
 //----------
 void
+controlLoopUpdate()
+{
+	static const auto & controlMode = getRegisterValue(Registry::RegisterType::ControlMode);
+	if(controlMode == 1) {
+		pid.update();
+	}
+#ifdef AGENT_ENABLED
+	else if(controlMode == 2) {
+		agent.update();
+	}
+#endif
+	else if(controlMode == 3) {
+		directDrive.update();
+	}
+
+	safetyTrajectory.update();
+}
+
+//----------
+void
 motorTask(void*)
 {
 	while(true) {
 #ifdef CONTROL_INSIDE_DRIVE_LOOP
-		const auto & controlMode = getRegisterValue(Registry::RegisterType::ControlMode);
-		if(controlMode == 1) {
-			pid.update();
-		}
-#ifdef AGENT_ENABLED
-		else if(controlMode == 2) {
-			agent.update();
-		}
-#endif
-		else if(controlMode == 3) {
-			directDrive.update();
-		}
-		
+		controlLoopUpdate();
 #endif
 		motorDriver.update();
 		drive.update();
@@ -190,22 +201,7 @@ void
 agentTask(void*)
 {
 	while(true) {
-		switch(getRegisterValue(Registry::RegisterType::ControlMode)) {
-			case 1:
-				// This needs cleaning up
-				pid.update();
-				break;
-#ifdef AGENT_ENABLED
-			case 2:
-				agent.update();
-				break;
-#endif
-			case 3:
-				directDrive.update();
-				break;
-			default:
-				break;
-		}
+		controlLoopUpdate();
 		vTaskDelay(1 / portTICK_PERIOD_MS);
 	}
 }
@@ -347,6 +343,13 @@ initController()
 		, 0);
 
 	showSplashMessage("Controller initialised");
+}
+
+//----------
+void
+initSafety()
+{
+	safetyTrajectory.init();
 }
 
 //----------
