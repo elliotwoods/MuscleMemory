@@ -24,62 +24,51 @@ public:
 		DeviceID = 0,
 		ControlMode = 1,
 
-		// Position, Velocity, Target, Torque
+		// Position, Velocity, Target
 		MultiTurnPosition = 10,
 		Velocity = 11,
 		TargetPosition = 12,
 		TargetVelocity= 13,
 		TargetPositionFiltered = 14,
 
+		// Torque
 		Torque = 15,
 		MaximumTorque = 16,
-		SoftLimitMin = 17,
-		SoftLimitMax = 18,
-		MaxVelocity = 19,
+
+		// Position and velocity limits
+		SoftLimitMin = 20,
+		SoftLimitMax = 21,
+		MaxVelocity = 22,
+		MaxPositionDeviation = 23,
 
 		// Encoder
-		EncoderReading = 20,
-		EncoderErrors = 21,
-		EncoderPositionFilterSize = 22,
+		EncoderReading = 30,
+		EncoderErrors = 31,
+		EncoderPositionFilterSize = 32,
 
-		MultiTurnSaveEnabled = 25,
-		MultiTurnSaveInterval = 26,
-		MultiTurnLastSaveTime = 27,
-		ZeroPosSet = 28,
-		ZeroPos = 29,
+		// Multi-turn
+		MultiTurnSaveEnabled = 40,
+		MultiTurnSaveInterval = 41,
+		MultiTurnLastSaveTime = 42,
+		ZeroPosSet = 43,
+		ZeroPos = 44,
 
 		// Power
-		Current = 30,
-		BusVoltage = 32,
-		ShuntVoltage = 33,
+		Current = 40,
+		BusVoltage = 51,
+		ShuntVoltage = 52,
 
 		// System
-		FreeMemory = 40,
-		Temperature = 41,
-		UpTime = 42,
-		InterfaceEnabled = 43,
+		FreeMemory = 60,
+		Temperature = 61,
+		UpTime = 62,
+		InterfaceEnabled = 63,
 
 		// Update frequencies
-		MotorControlFrequency = 50,
-		AgentControlFrequency = 51,
-		RegistryControlFrequency = 52,
-		MainLoopDelay = 53,
-
-		// Agent
-		AgentLocalHistorySize = 60,
-		AgentTraining = 61,
-		AgentNoiseAmplitude = 62,
-		AgentAddProportional = 63,
-		AgentAddConstant = 64,
-
-		// PID controller
-		PIDProportional = 70,
-		PIDIntegral = 71,
-		PIDDifferential = 72,
-		PIDIntegralMax = 73,
-		PIDResultP = 74,
-		PIDResultI = 75,
-		PIDResultD = 76,
+		MotorControlFrequency = 70,
+		AgentControlFrequency = 71,
+		RegistryControlFrequency = 72,
+		MainLoopDelay = 73,
 
 		// Offest control
 		DriveOffset = 80,
@@ -87,33 +76,49 @@ public:
 		OffsetMinimum = 82,
 		OffsetMaximum = 83,
 
-		// Anti-stall
-		AntiStallEnabled = 90,
-		AntiStallDeadZone = 91,
-		AntiStallMinVelocity = 92,
-		AntiStallAttack = 93,
-		AntiStallDecay = 94,
-		AntiStallValue = 95,
-		AntiStallScale = 96,
+		// Agent
+		AgentLocalHistorySize = 100,
+		AgentTraining = 101,
+		AgentNoiseAmplitude = 102,
+		AgentAddProportional = 103,
+		AgentAddConstant = 104,
 
-		// CAN debug
-		CANRxThisFrame = 150,
-		CANTxThisFrame = 151,
-		CANErrorsThisFrame = 152,
-		CANErrorsTotal = 153,
+		// PID controller
+		PIDProportional = 200,
+		PIDIntegral = 201,
+		PIDDifferential = 202,
+		PIDIntegralMax = 203,
+		PIDResultP = 204,
+		PIDResultI = 205,
+		PIDResultD = 206,
+
+		// Anti-stall
+		AntiStallEnabled = 250,
+		AntiStallDeadZone = 251,
+		AntiStallMinVelocity = 252,
+		AntiStallAttack = 253,
+		AntiStallDecay = 254,
+		AntiStallValue = 255,
+		AntiStallScale = 256,
+
+		// Commmunications
+		CANRxThisFrame = 300,
+		CANTxThisFrame = 301,
+		CANErrorsThisFrame = 302,
+		CANErrorsTotal = 303,
 
 		// Boot
-		Reboot = 200,
-		ProvisioningEnabled = 201,
-		FastBoot = 202,
-		CANWatchdogEnabled = 203,
-		CANWatchdogTimeout = 204,
-		CANWatchdogTimer = 205,
+		Reboot = 400,
+		ProvisioningEnabled = 401,
+		FastBoot = 402,
+		CANWatchdogEnabled = 403,
+		CANWatchdogTimeout = 404,
+		CANWatchdogTimer = 405,
 
 		// OTA
-		OTADownloading = 210,
-		OTAWritePosition = 211,
-		OTASize = 212,
+		OTADownloading = 450,
+		OTAWritePosition = 451,
+		OTASize = 452,
 
 		PrimaryRegister = TargetPosition
 	};
