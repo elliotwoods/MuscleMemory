@@ -131,6 +131,16 @@ Registry::init()
 			, Access::ReadWrite
 		}
 	);
+	this->registers.emplace(
+		RegisterType::MaxPositionDeviation
+		, Register {
+			"MaxPositionDeviation"
+			, 1 << 14
+			, Access::ReadWrite
+			, 0
+			, std::numeric_limits<int32_t>::max()
+		}
+	);
 
 	this->registers.emplace(
 		RegisterType::EncoderReading
