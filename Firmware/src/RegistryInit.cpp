@@ -411,7 +411,7 @@ Registry::init()
 		RegisterType::OffsetMinimum
 		, Register {
 			"OffsetMinimum"
-			, 32
+			, 32	
 			, Access::ReadWrite
 			, 0
 			, 255
@@ -421,7 +421,7 @@ Registry::init()
 		RegisterType::OffsetMaximum
 		, Register {
 			"OffsetMaximum"
-			, 96
+			, 64
 			, Access::ReadWrite
 			, 0
 			, 255
