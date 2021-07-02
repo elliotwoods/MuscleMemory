@@ -7,6 +7,13 @@ namespace Safety {
 	void
 	Trajectory::init()
 	{
+
+	}
+
+	//----------
+	void
+	Trajectory::update()
+	{
 		static const auto & controlMode = getRegisterValue(Registry::RegisterType::ControlMode);
 
 		if(controlMode > 0) {
@@ -22,13 +29,6 @@ namespace Safety {
 
 				// TODO : make a more consistent safety issue, e.g. announce on CAN bus
 			}
-		}
-	}
-
-	//----------
-	void
-	Trajectory::update()
-	{
-		
+		}		
 	}
 }
