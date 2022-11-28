@@ -1,3 +1,26 @@
+# Configuration and building Muscle Memory firmware
+
+## Configuration
+
+In `Platform/Platform.h` uncomment out the version of Muscle Memory that you are using in order to apply the correct configuration, e.g.:
+
+```c++
+#include "MMv2.h"
+//#include "MMv3.h"
+```
+
+## Issues with permissions
+
+sometimes we get 'Accesss is deined' issues with the .pio folder libraries, e.g.:
+
+```
+PermissionError: [WinError 5] Access is denied: 'C:\\dev\\MuscleMemory\\Firmware\\.pio\\libdeps\\ttgo-lora32-v1\\WebSockets'
+```
+
+We tried going to folder Properties (Windows 11) and setting MuscleMemory to Full Access for All Users. It applies this recursively for you, but it still doesn't work.
+
+For now the fix is to run VS Code as admin (which is annoying).
+
 # Building TensorFlow
 
 In the tensorflow repo:

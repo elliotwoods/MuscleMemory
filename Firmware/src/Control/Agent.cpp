@@ -15,7 +15,7 @@
 #include "Registry.h"
 
 extern "C" {
-	#include "crypto/base64.h"
+	#include "thirdparty/mbedtls/base64.h"
 }
 
 tflite::MicroErrorReporter micro_error_reporter;
@@ -222,14 +222,22 @@ namespace Control {
 		while(true) {
 			if(xQueueReceive(this->historyToServer, &history, portMAX_DELAY)) {
 				// Receieve the data into base64 encoding
-				uint8_t * base64Text;
-				size_t base64TextLength;
+				auto rawMessage = (const uint8_t *) history->trajectories;
+				auto rawMessageLength = sizeof(Trajectory) * history->writePosition;
+				size_t base64BufferSize = (rawMessageLength / 3 + 1) * 4;
+				auto base64Text = (uint8_t *) malloc(base64BufferSize);
+				size_t base64MessageLength;
 				if(xSemaphoreTake(this->historyMutex, portMAX_DELAY)) {
 					{
 						// Encode the text
-						base64Text = base64_encode((const uint8_t *) history->trajectories
-							, sizeof(Trajectory) * history->writePosition
-							, &base64TextLength);
+						auto result = mbedtls_base64_encode(base64Text
+							, base64BufferSize
+							, &base64MessageLength
+							, (const uint8_t *) history->trajectories
+							, rawMessageLength);
+						
+						// Ensure we have a standard C-string (this needs testing since we're using uint8_t)
+						base64Text[base64BufferSize] = '\0';
 
 						xSemaphoreGive(this->historyMutex);
 					}
@@ -401,10 +409,16 @@ namespace Control {
 					auto modelJson = cJSON_GetObjectItemCaseSensitive(contentJson, "model");
 					if(modelJson && cJSON_IsString(modelJson) && modelJson->valuestring) {
 						// Decode from BASE64 into local copy
+						size_t base64Length = strlen(modelJson->valuestring);
+						size_t binaryStringBufferLength = (base64Length / 3 + 1) * 4;
+						auto binaryString = (uint8_t*) malloc(binaryStringBufferLength);
 						size_t outputLength;
-						auto binaryString = base64_decode((const unsigned char *) modelJson->valuestring
-							, strlen(modelJson->valuestring)
-							, &outputLength);
+
+						auto result = mbedtls_base64_decode(binaryString
+							, binaryStringBufferLength
+							, &outputLength
+							, (const unsigned char *) modelJson->valuestring
+							, base64Length);
 						
 						this->loadModel((const char *) binaryString, outputLength);
 						free(binaryString);

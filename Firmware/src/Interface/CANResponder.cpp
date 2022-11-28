@@ -2,11 +2,7 @@
 #include "Registry.h"
 #include "Platform/Platform.h"
 
-#ifdef ARDUINO
-#include "FreeRTOS.h"
-#else
-#include <freertos/FreeRTOS.h>
-#endif
+#include "freertos_include.h"
 
 #include "esp_log.h"
 #include "esp_attr.h"

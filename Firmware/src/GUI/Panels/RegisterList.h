@@ -3,6 +3,8 @@
 #include "../Panel.h"
 #include "../../Registry.h"
 
+#include <vector>
+
 namespace GUI {
 	namespace Panels {
 		class RegisterList : public Panel

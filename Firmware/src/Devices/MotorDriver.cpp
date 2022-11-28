@@ -2,7 +2,7 @@
 #include "Registry.h"
 #include "Platform/Platform.h"
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && defined(ARDUINO_OLD_STYLE)
 	#define DAC_A DAC_GPIO25_CHANNEL
 	#define DAC_B DAC_GPIO26_CHANNEL
 #else

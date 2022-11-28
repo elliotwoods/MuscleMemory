@@ -1,11 +1,6 @@
 #pragma once
 
-#ifdef ARDUINO
-#include "FreeRTOS.h"
-#else
-#include <freertos/FreeRTOS.h>
-#endif
-
+#include "freertos_include.h"
 
 extern "C" {
 	#include "driver/gpio.h"

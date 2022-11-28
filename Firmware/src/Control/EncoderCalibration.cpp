@@ -489,7 +489,7 @@ namespace Control {
 			// Check skipped steps by change from prior readings
 			if(visitsPerStepCycle[stepCycle] > 0) {
 				const auto priorMean = accumulatedEncoderValue[stepCycle] / visitsPerStepCycle[stepCycle];
-				const auto delta = (int32_t) abs(priorMean - position);
+				const auto delta = abs((int32_t)priorMean - (int32_t)position);
 				const auto allowableDeviation = 8;
 				if(delta > allowableDeviation) {
 					throw(Exception("Deviation over (%d/%d) at %d", delta, allowableDeviation, stepIndex));

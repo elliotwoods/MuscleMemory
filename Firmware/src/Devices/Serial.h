@@ -2,7 +2,7 @@
 
 #include "driver/uart.h"
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && defined(ARDUINO_OLD_STYLE)
 	#define UART_DEFAULT_PORT uart_port_t::UART_NUM_0
 #else
 	#define UART_DEFAULT_PORT 0

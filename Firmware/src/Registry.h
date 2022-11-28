@@ -1,10 +1,6 @@
 #pragma once
 
-#ifdef ARDUINO
-#include "FreeRTOS.h"
-#else
-#include <freertos/FreeRTOS.h>
-#endif
+#include "freertos_include.h"
 
 #include <map>
 #include <set>
@@ -233,7 +229,6 @@ public:
 	void saveDefault(const RegisterType & );
 private:
 	MotorControlReads motorControlReads;
-	SemaphoreHandle_t motorControlReadsMutex;
 	Utils::FrameTimer frameTimer;
 
 	std::set<RegisterType> defaultsToSave;

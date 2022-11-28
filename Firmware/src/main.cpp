@@ -37,11 +37,7 @@
 
 #include "cJSON.h"
 
-#ifdef Arduino
-#include "FreeRTOS.h"
-#else
-#include <freertos/FreeRTOS.h>
-#endif
+#include "freertos_include.h"
 
 extern "C" {
 	#include "esp_ota_ops.h"

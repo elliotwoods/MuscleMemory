@@ -2,6 +2,8 @@
 #include "Arduino.h"
 #include "Platform/Platform.h"
 
+#include <vector>
+
 // Reference : https://github.com/espressif/esp-idf/blob/master/examples/peripherals/spi_master/lcd/main/spi_master_example_main.c
 // We're on VSPI, Phase=1, MSB first
 

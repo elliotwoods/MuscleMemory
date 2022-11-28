@@ -9,11 +9,7 @@ extern "C" {
 	#include "cJSON.h"
 }
 
-#ifdef ARDUINO
-#include "FreeRTOS.h"
-#else
-#include <freertos/FreeRTOS.h>
-#endif
+#include "freertos_include.h"
 
 #include <string>
 #include <vector>

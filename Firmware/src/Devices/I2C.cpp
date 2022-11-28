@@ -2,7 +2,7 @@
 #include "driver/i2c.h"
 #include "Platform/Platform.h"
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && defined(ARDUINO_OLD_STYLE)
 	#define I2C_PORT i2c_port_t::I2C_NUM_0
 #else
 	#define I2C_PORT I2C_NUM_0
