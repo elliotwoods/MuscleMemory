@@ -17,6 +17,8 @@ namespace MuscleMemory
 		int FRxCountThisFrame = 0;
 		SortedDictionary<int, Motor> FMotors = new SortedDictionary<int, Motor>();
 
+		object FLockIO = new object();
+
 		public Bus(Channel channel)
 		{
 			this.FChannel = channel;
@@ -103,28 +105,34 @@ namespace MuscleMemory
 
 		public void SendRefresh(int maxIndex = Messages.MaxIndex)
 		{
-			this.FMotors.Clear();
-			// Send the request to all indexes
-			try
+			lock (this.FLockIO)
 			{
-				for (int i = 1; i <= maxIndex; i++)
+				this.FMotors.Clear();
+				// Send the request to all indexes
+				try
 				{
-					var message = new Messages.Ping(i);
-					this.FChannel.Send(message.Encode());
-				}
+					for (int i = 1; i <= maxIndex; i++)
+					{
+						var message = new Messages.Ping(i);
+						this.FChannel.Send(message.Encode());
+					}
 
-				this.Channel.Device.BlockUntilActionsComplete(new TimeSpan(0, 0, 5));
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e);
+					this.Channel.Device.BlockUntilActionsComplete(new TimeSpan(0, 0, 5));
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e);
+				}
 			}
 		}
 
 		public void Send(Messages.IMessage message, bool blocking)
 		{
-			var frame = message.Encode();
-			this.FChannel.Send(frame, blocking);
+			lock(this.FLockIO)
+			{
+				var frame = message.Encode();
+				this.FChannel.Send(frame, blocking);
+			}
 		}
 
 		public Channel Channel

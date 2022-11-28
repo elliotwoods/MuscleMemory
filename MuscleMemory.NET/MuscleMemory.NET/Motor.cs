@@ -57,7 +57,7 @@ namespace MuscleMemory
 		public void Receive(Messages.ReadResponse readResponse)
 		{
 			this.FCachedRegisterValues[readResponse.RegisterType] = readResponse.Value;
-			this.OnRegisterReceive.Invoke(readResponse.RegisterType, readResponse.Value);
+			this.OnRegisterReceive?.Invoke(readResponse.RegisterType, readResponse.Value);
 		}
 
 		public int ID

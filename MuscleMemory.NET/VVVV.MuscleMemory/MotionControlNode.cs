@@ -26,6 +26,7 @@ namespace VVVV.MuscleMemory
 			bool FNeedsRequestPosition = true;
 			bool FNeedsTakeIncomingPosition = false;
 			bool FHasValidTracking = false;
+			bool FNeedsEnableDirectDrive = false;
 
 			Motor FMotor = null;
 			double FMaxAcceleration = 1.0;
@@ -105,18 +106,36 @@ namespace VVVV.MuscleMemory
 				}
 			}
 
+			public void GoToPosition(double position)
+			{
+				this.FTargetPosition = position;
+			}
+
 			public void RequestPosition()
 			{
 				this.FNeedsRequestPosition = true;
 			}
 
+			public void EnableDirectDrive()
+			{
+				this.FHasValidTracking = false;
+				this.FNeedsRequestPosition = true;
+				this.FNeedsEnableDirectDrive = true;
+			}
+
 			public void Update()
 			{
+				if(this.FMotor == null)
+				{
+					return;
+				}
+
 				// Request positions from actual motor
 				if (this.FNeedsRequestPosition)
 				{
 					this.FMotor.RequestRegister(Messages.RegisterType.MultiTurnPosition, false);
 					this.FNeedsRequestPosition = false;
+					this.FHasValidTracking = false;
 				}
 
 				// Take incoming positions from actual motor
@@ -125,8 +144,17 @@ namespace VVVV.MuscleMemory
 					var position = (double)this.FMotor.CachedRegisterValues[Messages.RegisterType.MultiTurnPosition] / (double)(1 << 14);
 					this.FLatestActualPosition = position;
 					this.FCurrentPosition = position;
+					this.FTargetPosition = position;
 					this.FCurrentVelocity = 0.0;
 					this.FNeedsTakeIncomingPosition = false;
+					this.FHasValidTracking = true;
+
+					if (this.FNeedsEnableDirectDrive)
+					{
+						this.FMotor.SetRegister(Messages.RegisterType.TargetPosition, (int)(position * (double)(1 << 14)), false);
+						this.FMotor.SetRegister(Messages.RegisterType.ControlMode, 3, false);
+						this.FNeedsEnableDirectDrive = false;
+					}
 				}
 
 				// Don't continue if we don't have tracking
@@ -193,10 +221,18 @@ namespace VVVV.MuscleMemory
 						if (positionDelta > 0)
 						{
 							this.FCurrentVelocity += velocityChangePerTimeStep;
+							if(this.FCurrentVelocity * dt + this.FCurrentPosition > this.FTargetPosition)
+							{
+								this.FCurrentVelocity = (this.FTargetPosition - this.FCurrentPosition) / dt;
+							}
 						}
 						else
 						{
 							this.FCurrentVelocity -= velocityChangePerTimeStep;
+							if (this.FCurrentVelocity * dt + this.FCurrentPosition < this.FTargetPosition)
+							{
+								this.FCurrentVelocity = (this.FTargetPosition - this.FCurrentPosition) / dt;
+							}
 						}
 					}
 				}
@@ -242,6 +278,9 @@ namespace VVVV.MuscleMemory
 		[Input("Force Get Position", IsBang = true)]
 		public ISpread<bool> FInForceGetPosition;
 
+		[Input("Enable Direct Drive", IsBang = true)]
+		public ISpread<bool> FInEnableDirectDrive;
+
 		[Output("Bus Group")]
 		public ISpread<BusGroup> FOutBusGroup;
 
@@ -268,6 +307,7 @@ namespace VVVV.MuscleMemory
 		MotionControlNode()
 		{
 			this.FThread = new Thread(this.ThreadedFunction);
+			this.FThread.Name = "MotionControl";
 			this.FThread.Start();
 		}
 
@@ -293,7 +333,7 @@ namespace VVVV.MuscleMemory
 					}
 
 					// Init and add motor controllers
-					if (FInID.SliceCount < this.FMotorControllers.Count)
+					if (FInID.SliceCount > this.FMotorControllers.Count)
 					{
 						for (int i = this.FMotorControllers.Count; i < this.FInID.SliceCount; i++)
 						{
@@ -303,7 +343,7 @@ namespace VVVV.MuscleMemory
 					}
 
 					// Set config on all motor controllers
-					for (int i = 0; i < FInID.SliceCount; i++)
+					for (int i = 0; i < this.FMotorControllers.Count; i++)
 					{
 						var motorController = this.FMotorControllers[i];
 						var motor = busGroup.FindMotor(this.FInID[i]);
@@ -312,6 +352,25 @@ namespace VVVV.MuscleMemory
 						if (FInForceGetPosition[i])
 						{
 							motorController.RequestPosition();
+						}
+					}
+
+					// Enable direct drive
+					for (int i = 0; i < this.FMotorControllers.Count; i++)
+					{
+						if (FInEnableDirectDrive[i])
+						{
+							this.FMotorControllers[i].EnableDirectDrive();
+
+						}
+					}
+
+					// Update target positions if go command sent
+					for (int i=0; i<this.FMotorControllers.Count; i++)
+					{
+						if(FInGo[i])
+						{
+							this.FMotorControllers[i].GoToPosition(this.FInPosition[i]);
 						}
 					}
 

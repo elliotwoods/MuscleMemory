@@ -36,7 +36,7 @@ If you would like to get involved with development and prototyping then please g
 
 # Prior work
 
-Muscle Memory builds on the work of previous projects, most notably [Mechaduino](https://github.com/jcchurch13/Mechaduino-Firmware) by Tropical Labs.
+Muscle Memory builds on the work of previous projects, most notably [Mechaduino](https://github.com/jcchurch13/Mechaduino-Firmware) by Tropical Labs. A list of other open source motor driver projects can be seen at https://github.com/cajt/list_of_robot_electronics
 
 # Credits
 
