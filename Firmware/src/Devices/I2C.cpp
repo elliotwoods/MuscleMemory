@@ -29,7 +29,8 @@ namespace Devices {
 			busConfiguration.sda_io_num = MM_CONFIG_I2C_PIN_SDA;
 			busConfiguration.scl_pullup_en = gpio_pullup_t::GPIO_PULLUP_ENABLE;
 			busConfiguration.sda_pullup_en = gpio_pullup_t::GPIO_PULLUP_ENABLE;
-			busConfiguration.master.clk_speed = 1000000;
+			busConfiguration.master.clk_speed = 400000;
+			busConfiguration.clk_flags = 0;
 		}
 
 		i2c_driver_install(I2C_PORT, i2c_mode_t::I2C_MODE_MASTER, 0, 0, 0);
